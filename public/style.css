@@ -1,0 +1,124 @@
+@import url("https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css");
+
+:root {
+  /* Color Primario (Lila principal) */
+  --bs-primary: #6B46C1;
+  --bs-primary-rgb: 107, 70, 193;
+
+  /* Color Secundario (Lila suave) */
+  --bs-secondary: #9F7AEA;
+  --bs-secondary-rgb: 159, 122, 234;
+
+  /* Éxito / Ingresos (Verde) */
+  --bs-success: #38A169;
+  --bs-success-rgb: 56, 161, 105;
+
+  /* Peligro / Gastos o Alertas (Rojo) */
+  --bs-danger: #E53E3E;
+  --bs-danger-rgb: 229, 62, 62;
+
+  /* Fondo general limpio */
+  --bs-light: #F7FAFC;
+  --bs-light-rgb: 247, 250, 252;
+}
+
+/* Botón Primario y sus estados */
+.btn-primary {
+  --bs-btn-bg: #6B46C1;
+  --bs-btn-border-color: #6B46C1;
+  --bs-btn-hover-bg: #553c9a;         /* Un tono más oscuro para el hover */
+  --bs-btn-hover-border-color: #44337a;
+  --bs-btn-active-bg: #44337a;
+  --bs-btn-active-border-color: #322659;
+}
+
+/* Botón Secundario y sus estados */
+.btn-secondary {
+  --bs-btn-bg: #9F7AEA;
+  --bs-btn-border-color: #9F7AEA;
+  --bs-btn-hover-bg: #805ad5;         /* Un tono más oscuro para el hover */
+  --bs-btn-hover-border-color: #6b46c1;
+  --bs-btn-active-bg: #6b46c1;
+  --bs-btn-active-border-color: #553c9a;
+}
+
+/* Botón Outline Secundario (Borde y texto con hover) */
+.btn-outline{
+  --bs-btn-color: #9F7AEA;
+  --bs-btn-border-color: #9F7AEA;
+  --bs-btn-hover-bg: #9F7AEA;
+  --bs-btn-hover-border-color: #9F7AEA;
+  --bs-btn-hover-color: #ffffff;
+  --bs-btn-active-bg: #805ad5;
+  --bs-btn-active-border-color: #805ad5;
+}
+
+.btn-outline-b{
+  --bs-btn-color: #F7FAFC;
+  --bs-btn-border-color: #F7FAFC;
+  --bs-btn-hover-bg: #F7FAFC;
+  --bs-btn-hover-border-color: #F7FAFC;
+  --bs-btn-hover-color: #1d1c1c;
+  --bs-btn-active-bg: #c5c5c5;
+  --bs-btn-active-border-color: #c5c5c5;
+}
+
+.con-fondo {
+  background: #6B46C1; /* Fondo general limpio */
+}
+
+.fondo-b {
+  background: #F7FAFC; /* Fondo general limpio */
+  border-radius: 10px;       /* Bordes redondeados */
+  padding: 20px;             /* Espaciado interno */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+
+#sidebar-menu {
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+}
+.nav-pills .nav-link {
+  color: var(--bs-primary);
+  font-weight: 500;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  transition: all 0.2s ease-in-out;
+}
+.nav-pills .nav-link:hover {
+  background-color: var(--bs-secondary);
+  color: #fff;
+}
+.nav-pills .nav-link.active {
+  background-color: var(--bs-primary) !important;
+  color: #fff !important;
+}
+.section-container {
+  padding-top: 20px;
+  padding-bottom: 40px;
+}
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.clickable-row:hover {
+  background-color: rgba(159, 122, 234, 0.15) !important;
+}
+
+#seccion-movimientos{
+  scroll-margin-top: 95px;
+}
+
+#seccion-cuentas{
+  scroll-margin-top: 95px;
+}
+
+#seccion-estados{
+  scroll-margin-top: 95px;
+}
+
+#seccion-beneficiarios{
+  scroll-margin-top: 95px;
+  
+}
