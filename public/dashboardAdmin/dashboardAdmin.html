@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Administrador - STCAO</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body class="bg-light">
+
+  <!-- HEADER SUPERIOR -->
+  <header class="navbar navbar-expand-lg shadow-sm px-4 mb-4 fixed-top con-fondo" style="z-index: 1030;">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-3 text-white">
+        <i class="bi bi-bank2 display-6"></i>
+        <span class="fw-bold fs-5">STCAO - Admin</span>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center gap-2 text-white">
+          <i class="bi bi-person-circle"></i>
+          <span class="fw-semibold">Administrador</span>
+        </div>
+        <a href="../login/login.html" class="btn btn-outline-b d-flex align-items-center gap-1">
+          <i class="bi bi-box-arrow-right"></i> Salir
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <div class="container-fluid" style="margin-top: 100px;">
+    <div class="row px-3">
+      
+      <!-- MENÚ LATERAL -->
+      <nav id="sidebar-menu" class="col-md-3 col-lg-2 d-md-block p-3 rounded shadow-sm mb-4 fondo-b" style="height: calc(100vh - 120px); position: sticky; top: 110px;">
+        <h5 class="text-uppercase text-muted fs-6 mb-3 fw-bold">Admin Panel</h5>
+        <ul class="nav nav-pills flex-column" id="adminTabs">
+          <li class="nav-item">
+            <a class="nav-link active" href="#" data-target="screen-bitacoras"><i class="bi bi-journal-text me-2"></i>Bitácoras</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-target="screen-cuentas"><i class="bi bi-credit-card me-2"></i>Adm. Cuentas</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-target="screen-clientes"><i class="bi bi-people me-2"></i>Adm. Clientes</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-target="screen-import-export"><i class="bi bi-arrow-left-right me-2"></i>Import / Export</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-target="screen-configuraciones"><i class="bi bi-gear me-2"></i>Configuraciones</a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- PANTALLAS (TABS) -->
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+        
+        <!-- 1. BITÁCORAS -->
+        <section id="screen-bitacoras" class="admin-screen active section-container fondo-b mb-5">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="text-primary fw-bold m-0"><i class="bi bi-journal-text me-2"></i>Bitácora</h3>
+            
+            <!-- Dropdown de Filtros -->
+            <div class="dropdown">
+              <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownFiltroBitacora" data-bs-toggle="dropdown" aria-expanded="false">
+                Todo
+              </button>
+              <ul class="dropdown-menu" aria-labelledby="dropdownFiltroBitacora">
+                <li><a class="dropdown-item filtro-opcion" href="#" data-filtro="todo">Todo</a></li>
+                <li><a class="dropdown-item filtro-opcion" href="#" data-filtro="hora">Hora</a></li>
+                <li><a class="dropdown-item filtro-opcion" href="#" data-filtro="dia">Día</a></li>
+                <li><a class="dropdown-item filtro-opcion" href="#" data-filtro="semana">Semana</a></li>
+                <li><a class="dropdown-item filtro-opcion" href="#" data-filtro="mes">Mes</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><div class="px-3 py-1"><label class="form-label small fw-bold">Fecha Específica:</label><input type="date" id="inputFechaEspecifica" class="form-control form-control-sm"></div></li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Tabla de Bitácoras -->
+          <div class="table-responsive">
+            <table class="table table-hover align-middle bg-white rounded shadow-sm">
+              <thead class="table-light">
+                <tr>
+                  <th>Fecha y Hora</th>
+                  <th>IP</th>
+                  <th>Operación</th>
+                  <th>Usuario</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-bitacoras-body">
+                <!-- Se llena dinámicamente con JS -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 2. ADMINISTRAR CUENTAS -->
+        <section id="screen-cuentas" class="admin-screen section-container fondo-b mb-5">
+          <h3 class="mb-4 text-primary fw-bold"><i class="bi bi-credit-card me-2"></i>Cuentas de Ahorro</h3>
+          
+          <div class="input-group mb-4 shadow-sm">
+            <input type="text" id="inputBusquedaCuentas" class="form-control" placeholder="Buscar por número de cuenta o beneficiario...">
+            <span class="input-group-text bg-primary text-white"><i class="bi bi-search"></i></span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-hover align-middle bg-white rounded shadow-sm">
+              <thead class="table-light">
+                <tr>
+                  <th>ID</th>
+                  <th>Dueño</th>
+                  <th># Cuentas Objetivo</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-cuentas-body">
+                <!-- Se llena dinámicamente con JS -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 3. ADMINISTRAR CLIENTES -->
+        <section id="screen-clientes" class="admin-screen section-container fondo-b mb-5 text-center py-5">
+          <i class="bi bi-people display-1 text-secondary mb-3"></i>
+          <h3 class="fw-bold text-dark">Administrar Clientes</h3>
+          <p class="text-muted">Sección completa basada en la interfaz de gestión de clientes y cuentas de ahorro.</p>
+          <button class="btn btn-primary px-4 mt-2 btn-proceso-trigger">Ver Detalles / Gestión</button>
+        </section>
+
+        <!-- 4. IMPORTAR / EXPORTAR -->
+        <section id="screen-import-export" class="admin-screen section-container fondo-b mb-5">
+          <h3 class="mb-4 text-primary fw-bold"><i class="bi bi-arrow-left-right me-2"></i>Importar y Exportar</h3>
+          
+          <!-- IMPORTAR -->
+          <div class="card p-4 shadow-sm mb-4 border-0">
+            <h5 class="text-secondary fw-bold mb-3">Importar Base de Datos (XML)</h5>
+            <div class="drop-zone" id="dropZoneXml">
+              <i class="bi bi-cloud-arrow-up display-3 text-primary mb-2"></i>
+              <h5 class="fw-bold">IMPORTAR XML</h5>
+              <p class="text-muted small m-0">Arrastre o seleccione un archivo XML del cual quiere que se genere o sobrescriba la base de datos.</p>
+              <input type="file" id="fileInputXml" accept=".xml" class="d-none">
+            </div>
+            <div id="fileInfo" class="mt-2 text-success small fw-semibold text-center"></div>
+          </div>
+
+          <!-- EXPORTAR -->
+          <div class="card p-4 shadow-sm border-0">
+            <h5 class="text-secondary fw-bold mb-3">Exportar Base de Datos</h5>
+            <p class="text-muted small">Exportar la base de datos en un archivo XML para manejo de versiones o backups.</p>
+            
+            <div class="d-flex gap-2 mb-3">
+              <button class="btn btn-primary btn-proceso-trigger"><i class="bi bi-download me-1"></i> Exportar Todo</button>
+            </div>
+
+            <hr>
+            <label class="form-label fw-bold text-muted small">Seleccionar Datos a Exportar:</label>
+            
+            <div class="row g-3 mb-3">
+              <!-- Columna 1 -->
+              <div class="col-md-6">
+                <div class="form-check mb-2">
+                  <input class="form-check-input parent-check" type="checkbox" id="chkPersonas" data-group="grupo-personas">
+                  <label class="form-check-label fw-semibold" for="chkPersonas">Personas</label>
+                </div>
+                <div class="ms-4 d-flex flex-column gap-1" id="grupo-personas">
+                  <div class="form-check"><input class="form-check-input child-check" type="checkbox" id="h1"><label class="form-check-label" for="h1">Clientes</label></div>
+                  <div class="form-check"><input class="form-check-input child-check" type="checkbox" id="h2"><label class="form-check-label" for="h2">Beneficiarios</label></div>
+                  <div class="form-check"><input class="form-check-input child-check" type="checkbox" id="h3"><label class="form-check-label" for="h3">Usuarios</label></div>
+                  <div class="form-check"><input class="form-check-input child-check" type="checkbox" id="h4"><label class="form-check-label" for="h4">Administradores</label></div>
+                </div>
+
+                <div class="form-check mt-3 mb-2">
+                  <input class="form-check-input parent-check" type="checkbox" id="chkBitacoras" data-group="grupo-bitacoras">
+                  <label class="form-check-label fw-semibold" for="chkBitacoras">Bitácoras</label>
+                </div>
+                <div class="ms-4" id="grupo-bitacoras">
+                  <div class="form-check"><input class="form-check-input child-check" type="checkbox" id="h5"><label class="form-check-label" for="h5">Registros de Bitácora</label></div>
+                </div>
+              </div>
+
+              <!-- Columna 2 -->
+              <div class="col-md-6">
+                <div class="form-check mb-2">
+                  <input class="form-check-input parent-check" type="checkbox" id="chkCuentasAhorro" data-group="grupo-cuentas">
+                  <label class="form-check-label fw-semibold" for="chkCuentasAhorro">Cuentas de Ahorro</label>
+                </div>
+                <div class="ms-4 d-flex flex-column gap-1" id="grupo-cuentas">
+                  <div class="form-check"><input class="form-check-input child-check" type="checkbox" id="h6"><label class="form-check-label" for="h6">Cuentas Objetivo</label></div>
+                  <div class="form-check"><input class="form-check-input child-check" type="checkbox" id="h7"><label class="form-check-label" for="h7">Estados de Cuenta</label></div>
+                </div>
+
+                <div class="form-check mt-3 mb-2">
+                  <input class="form-check-input parent-check" type="checkbox" id="chkConfiguraciones" data-group="grupo-configs">
+                  <label class="form-check-label fw-semibold" for="chkConfiguraciones">Configuraciones</label>
+                </div>
+                <div class="ms-4" id="grupo-configs">
+                  <div class="form-check"><input class="form-check-input child-check" type="checkbox" id="h8"><label class="form-check-label" for="h8">Parámetros del Sistema</label></div>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn btn-secondary text-white btn-proceso-trigger mt-2">Exportar Selección</button>
+          </div>
+        </section>
+
+        <!-- 5. CONFIGURACIONES -->
+        <section id="screen-configuraciones" class="admin-screen section-container fondo-b mb-5 text-center py-5">
+          <i class="bi bi-gear display-1 text-secondary mb-3"></i>
+          <h3 class="fw-bold text-dark">Configuración del Sistema</h3>
+          <p class="text-muted">Parámetros generales de administración y control.</p>
+          <button class="btn btn-primary px-4 mt-2 btn-proceso-trigger">Configurar Parámetros</button>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL DINÁMICO DE BITÁCORA -->
+  <div class="modal fade" id="modalBitacoraDetalle" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content p-4">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold text-primary" id="modalBitacoraTitulo">Detalle de Operación</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="modalBitacoraContenido">
+          <!-- Se inyecta dinámicamente según sea operación simple o compleja -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL GENÉRICO EN PROCESO -->
+  <div class="modal fade" id="modalEnProceso" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content text-center p-5">
+        <div class="modal-body">
+          <i class="bi bi-cone-striped display-2 text-warning mb-3"></i>
+          <h3 class="fw-bold text-dark">Pantalla / Acción en Proceso</h3>
+          <p class="text-muted">Esta sección o funcionalidad se encuentra actualmente en desarrollo.</p>
+          <button type="button" class="btn btn-primary px-4 mt-2" data-bs-dismiss="modal">Aceptar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="bg-white text-center py-3 mt-5 shadow-sm border-top">
+    <div class="container">
+      <p class="mb-1 text-muted fw-semibold" style="color: var(--bs-primary) !important;">STCAO - Panel de Administración</p>
+      <p class="mb-0 text-muted small">&copy; 2026 Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="dashboardAdmin.js"></script>
+</body>
+</html>

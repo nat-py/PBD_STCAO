@@ -1,0 +1,22 @@
+[
+  {
+    "id": 201,
+    "dueno": "Paco Pacal",
+    "cuentasObjetivo": 3
+  },
+  {
+    "id": 202,
+    "dueno": "Sofía Soto",
+    "cuentasObjetivo": 1
+  },
+  {
+    "id": 203,
+    "dueno": "Carlos Mendoza",
+    "cuentasObjetivo": 2
+  },
+  {
+    "id": 204,
+    "dueno": "Lucía Fernández",
+    "cuentasObjetivo": 4
+  }
+]
