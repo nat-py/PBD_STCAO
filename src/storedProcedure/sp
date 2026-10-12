@@ -29,12 +29,12 @@ async function insertarParentesco(id, nombre)
   const result = await pool.request()
     .input('inID', sql.VarChar(4), id)
     .input('inNombre', sql.VarChar(32), nombre)
-    .execute('dbo.sp_InsertTipoOperacion'); //llamar al SP que inserta tipo cuenta
+    .execute('dbo.sp_InsertParentesco'); //llamar al SP que inserta tipo cuenta
   
   return result.returnValue;
 }
 
-async function insertarTipoCuentaAhorros(id, nombre, idTipoMoneda, saldoMinimo, multaSaldoMinimo, cargoAnual, numRetirosHumano,
+async function insertarTipoCuentaAhorro(id, nombre, idTipoMoneda, saldoMinimo, multaSaldoMinimo, cargoAnual, numRetirosHumano,
     numRetirosAutomatico, comisionHumano) 
 {
   const pool = await poolPromise;
@@ -134,6 +134,8 @@ async function insertarUsuario(usuario, contrasena, esAdmin, valorDocuIdentidad)
   
   return result.returnValue; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
+
+/*faltaria insert usuarios ver*/
 
 
 
