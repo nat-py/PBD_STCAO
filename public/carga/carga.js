@@ -30,8 +30,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  //variable temporal para saber si ya se cargó un catálogo, para que no se pueda cargar un no catálogo antes de cargar un catálogo
-  let catalogoCargado = false;
 
   function validarYProcesarArchivo(file) {
     if (file.type === "text/xml" || file.name.endsWith(".xml")) {
@@ -46,6 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function validarCatalogoYNoCatalogo(file) {
     const formData = new FormData();
     formData.append('archivoXml', file);
+
 /* 
     try {
       const respuesta = await fetch('/api/carga/catalogos', {
@@ -66,6 +65,9 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("Error al enviar el archivo:", error);
     }
- */  }
+ */  
+  }
+  
 
 });
+
