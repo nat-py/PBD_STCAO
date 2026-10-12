@@ -8,7 +8,7 @@ async function subirXml(req, res) {
     }
 
     // El controlador le pasa el archivo al Servicio y espera el resultado
-    const resultado = await xmlService.procesarSubidaXml(req.file.path);
+    const resultado = await xmlService.subirXml(req.file.path);
 
     // Si todo salió bien, responde al cliente
     return res.status(200).json(resultado);

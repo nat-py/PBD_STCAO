@@ -44,8 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function validarCatalogoYNoCatalogo(file) {
     const formData = new FormData();
     formData.append('archivoXml', file);
-
-/* 
+    
     try {
       const respuesta = await fetch('/api/carga/catalogos', {
         method: 'POST',
@@ -65,8 +64,9 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("Error al enviar el archivo:", error);
     }
- */  
   }
+
+
   
 
 });
