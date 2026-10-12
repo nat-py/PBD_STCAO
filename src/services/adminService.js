@@ -206,3 +206,12 @@ async function eliminarBeneficiario(valorDocuIdentidad)
   
   return result.returnValue; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
+
+async function existenTablasCatalogo() 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .execute('dbo.sp_ExistenciaTablasCatalogo'); //llamar al SP que inserta usuario
+  
+  return result.returnValue; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
