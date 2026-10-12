@@ -135,15 +135,65 @@ async function insertarUsuario(usuario, contrasena, esAdmin, valorDocuIdentidad)
   return result.returnValue; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
 
-/*faltaria insert usuarios ver*/
+async function insertarUsuarioVer(usuario, numCuenta) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inUser', sql.VarChar(15), usuario)
+    .input('inNumCuenta', sql.VarChar(10), numCuenta)
+    .execute('dbo.sp_InsertUsuarioVer'); //llamar al SP que inserta usuario
+  
+  return result.returnValue; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
 
+async function existeUsuario(usuario, contrasena) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inUser', sql.VarChar(15), usuario)
+    .input('inPassword', sql.VarChar(15), contrasena)
+    .execute('dbo.sp_ExisteUsuario'); //llamar al SP que inserta usuario
+  
+  return result.returnValue; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
 
+async function beneficiariosAsociadosCuentaAhorro(numCuenta) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inNumCuenta', sql.VarChar(10), numCuenta)
+    .execute('dbo.sp_beneficiarioAsociadoCuenta'); //llamar al SP que inserta usuario
+  
+  return result.recordset; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
 
+async function estadoCuentaAsociadosCuentaAhorro(numCuenta) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inNumCuenta', sql.VarChar(10), numCuenta)
+    .execute('dbo.sp_EstadoCuentaAsociadoCuenta'); //llamar al SP que inserta usuario
+  
+  return result.recordset; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
 
+async function retornarBeneficiario(numCuenta, valorDocuIdentidad) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inNumCuenta', sql.VarChar(10), numCuenta)
+    .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
+    .execute('dbo.sp_RetornarBeneficiario'); //llamar al SP que inserta usuario
+  
+  return result.recordset; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
 
-
-
-
-
-
-
+async function eliminarBeneficiario(valorDocuIdentidad) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
+    .execute('dbo.sp_EliminarBeneficiario'); //llamar al SP que inserta usuario
+  
+  return result.returnValue; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
