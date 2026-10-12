@@ -35,19 +35,20 @@ async function insertarParentesco(id, nombre)
 }
 
 async function insertarTipoCuentaAhorro(id, nombre, idTipoMoneda, saldoMinimo, multaSaldoMinimo, cargoAnual, numRetirosHumano,
-    numRetirosAutomatico, comisionHumano) 
+    numRetirosAutomatico, comisionHumano, comisionAutomatico, interes) 
 {
   const pool = await poolPromise;
   const result = await pool.request()
     .input('inID', sql.VarChar(4), id)
     .input('inNombre', sql.VarChar(32), nombre)
     .input('inIDTipoMoneda', sql.VarChar(4), idTipoMoneda)
-    .input('inSaldoMinimo', sql.VarChar(12), saldoMinimo)
-    .input('inMultaSaldoMinimo', sql.VarChar(12), multaSaldoMinimo)
+    .input('inSaldoMinimo', sql.MONEY, saldoMinimo)
+    .input('inMultaSaldoMinimo', sql.MONEY, multaSaldoMinimo)
     .input('inCargoAnual', sql.VarChar(12), cargoAnual)
-    .input('inNumRetirosHumano', sql.VarChar(2), numRetirosHumano)
-    .input('inNumRetirosAutomatico', sql.VarChar(2), numRetirosAutomatico)
+    .input('inNumRetirosHumano', sql.INT, numRetirosHumano)
+    .input('inNumRetirosAutomatico', sql.INT, numRetirosAutomatico)
     .input('inComisionHumano', sql.VarChar(5), comisionHumano)
+    .input('inComisionAutomatico', sql.VarChar(5), comisionAutomatico)
     .input('inInteres', sql.VarChar(2), interes)
     .execute('dbo.sp_InsertTipoCuentaAhorros'); //llamar al SP que inserta tipo cuenta
   
@@ -108,7 +109,9 @@ async function insertarBeneficiario(numCuenta, valorDocuIdentidad, idParentesco,
   return result.returnValue;
 }
 
-async function insertarEstadoCuenta(numCuenta, fechaIni, fechaFin, saldoIni, saldoFin) 
+async function insertarEstadoCuenta(numCuenta, fechaIni, fechaFin, saldoIni, saldoMini, saldoFin,
+interesesAcumulados, cantidadRetiros, cantidadDepositos, cantidadSinpeEntrantes, 
+cantidadSinpeSalientes) 
 {
   const pool = await poolPromise;
   const result = await pool.request()
@@ -116,7 +119,13 @@ async function insertarEstadoCuenta(numCuenta, fechaIni, fechaFin, saldoIni, sal
     .input('inFechaIni', sql.DATE, fechaIni)
     .input('inFechaFin', sql.DATE, fechaFin)
     .input('inSaldoIni', sql.MONEY, saldoIni)
+    .input('inSaldoMini', sql.MONEY, saldoMini)
     .input('inSaldoFin', sql.MONEY, saldoFin)
+    .input('inInteresesAcumulados', sql.MONEY, interesesAcumulados)
+    .input('inCantidadRetiros', sql.MONEY, cantidadRetiros)
+    .input('inCantidadDepositos', sql.MONEY, cantidadDepositos)
+    .input('inCantidadSinpeEntrantes', sql.MONEY, cantidadSinpeEntrantes)
+    .input('inCantidadSinpeSalientes', sql.MONEY, cantidadSinpeSalientes)
     .execute('dbo.sp_InsertEstadoCuenta'); //llamar al SP que inserta tipo cuenta
   
   return result.returnValue;
@@ -135,15 +144,65 @@ async function insertarUsuario(usuario, contrasena, esAdmin, valorDocuIdentidad)
   return result.returnValue; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
 
-/*faltaria insert usuarios ver*/
+async function insertarUsuarioVer(usuario, numCuenta) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inUser', sql.VarChar(15), usuario)
+    .input('inNumCuenta', sql.VarChar(10), numCuenta)
+    .execute('dbo.sp_InsertUsuarioVer'); //llamar al SP que inserta usuario
+  
+  return result.returnValue; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
 
+async function existeUsuario(usuario, contrasena) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inUser', sql.VarChar(15), usuario)
+    .input('inPassword', sql.VarChar(15), contrasena)
+    .execute('dbo.sp_ExisteUsuario'); //llamar al SP que inserta usuario
+  
+  return result.returnValue; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
 
+async function beneficiariosAsociadosCuentaAhorro(numCuenta) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inNumCuenta', sql.VarChar(10), numCuenta)
+    .execute('dbo.sp_beneficiarioAsociadoCuenta'); //llamar al SP que inserta usuario
+  
+  return result.recordset; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
 
+async function estadoCuentaAsociadosCuentaAhorro(numCuenta) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inNumCuenta', sql.VarChar(10), numCuenta)
+    .execute('dbo.sp_EstadoCuentaAsociadoCuenta'); //llamar al SP que inserta usuario
+  
+  return result.recordset; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
 
+async function retornarBeneficiario(numCuenta, valorDocuIdentidad) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inNumCuenta', sql.VarChar(10), numCuenta)
+    .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
+    .execute('dbo.sp_RetornarBeneficiario'); //llamar al SP que inserta usuario
+  
+  return result.recordset; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
 
-
-
-
-
-
-
+async function eliminarBeneficiario(valorDocuIdentidad) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
+    .execute('dbo.sp_EliminarBeneficiario'); //llamar al SP que inserta usuario
+  
+  return result.returnValue; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
