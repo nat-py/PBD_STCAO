@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
+  
+  
   // 1. Manejo del Modal de Pantalla en Proceso
   const modalProcesoEl = document.getElementById('modalEnProceso');
   const modalProceso = new bootstrap.Modal(modalProcesoEl);
@@ -9,6 +11,13 @@ document.addEventListener('DOMContentLoaded', () => {
       modalProceso.show();
     });
   });
+
+
+  // 2. estados de cuenta
+  
+
+
+
 
   // 2. Lógica de Beneficiarios Dinámicos (Plantilla de hasta 3 beneficiarios)
   let modoEdicion = false;

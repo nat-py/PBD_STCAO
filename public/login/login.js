@@ -30,17 +30,16 @@
 
       const resultado = await respuesta.json();
 
-      if (!resultado.success) {
-        alert(resultado.message);
-        return;
-      }
-      
-      alert('¡Inicio de sesión exitoso!');
+      if (resultado.success) {
+        alert('¡Inicio de sesión exitoso!');
 
-      if (resultado.isAdmin) {
-        window.location.href = '/dashboardAdmin/dashboardAdmin.html';
+        if (resultado.isAdmin) {
+          window.location.href = '/dashboardAdmin/dashboardAdmin.html';
+        } else {
+          window.location.href = `/lista_cuentas/listaCuentas.html?usuario=${usuario}`;
+        }
       } else {
-        window.location.href = `/lista_cuentas/listaCuentas.html?usuario=${usuario}`;
+        alert('Usuario o contraseña incorrectos');
       }
       
     } catch (error) {
