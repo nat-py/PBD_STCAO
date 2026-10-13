@@ -21,6 +21,7 @@
   "dependencies": {
     "bootstrap": "^5.3.8",
     "express": "^5.2.1",
+    "fast-xml-parser": "^5.11.2",
     "mssql": "^12.7.2"
   }
 }

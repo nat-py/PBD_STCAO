@@ -63,6 +63,10 @@ document.addEventListener("DOMContentLoaded", () => {
           }
           
           alert("Archivo procesado correctamente.");
+
+          // mandar a login
+          window.location.href = "/login/login.html";
+
       } catch (error) {
           console.error("Error:", error);
       }

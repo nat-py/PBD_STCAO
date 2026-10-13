@@ -4,7 +4,7 @@
   const form = document.querySelector('.needs-validation')
   const errorGeneral = document.querySelector('#errorGeneral')
 
-  form.addEventListener('submit', event => {
+  form.addEventListener('submit', async event => {
     
     if (!form.checkValidity()) {
       event.preventDefault()
@@ -16,18 +16,35 @@
 
     event.preventDefault() 
 
-    const usuarioIngresado = document.querySelector('#username').value;
-    const passwordIngresado = document.querySelector('#password').value;
+    const usuario = document.querySelector('#username').value;
+    const password = document.querySelector('#password').value;
 
-    // A aquí harías tu validación real (contra una base de datos o datos fijos de prueba)
-    const usuarioCorrecto = "admin";
-    const passwordCorrecto = "123456";
+    try {
+      const respuesta = await fetch('/api/login/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ usuario: usuario, contrasena: password })
+      });
 
-    if (usuarioIngresado === usuarioCorrecto && passwordIngresado === passwordCorrecto) {
-      errorGeneral.classList.add('d-none');
-      alert('¡Inicio de sesión exitoso!');
-    } else {
+      const resultado = await respuesta.json();
+
+      if (!resultado.success) {
+        alert(resultado.message);
+        return;
+      }
       
+      alert('¡Inicio de sesión exitoso!');
+
+      if (resultado.isAdmin) {
+        window.location.href = '/dashboardAdmin/dashboardAdmin.html';
+      } else {
+        window.location.href = `/lista_cuentas/listaCuentas.html?usuario=${usuario}`;
+      }
+      
+    } catch (error) {
+      console.error('Error:', error);
       errorGeneral.classList.remove('d-none');
     }
 

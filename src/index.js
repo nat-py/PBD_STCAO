@@ -6,6 +6,7 @@ const loginRoutes = require('./routers/loginRoute');
 const adminRoutes = require('./routers/adminRoute');
 const ahorroRoutes = require('./routers/ahorroRoute');
 const cargarRoutes = require('./routers/cargaRoute');
+const listaCuentasRoutes = require('./routers/listaCuentasRoute');
 
 const app = express();
 
@@ -16,11 +17,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // 3. Rutas de Vistas (Servir los archivos HTML con rutas limpias)
-/* app.get('/login', (req, res) => {
+app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'login', 'login.html'));
 });
 
-app.get('/admin', (req, res) => {
+/* app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'dashboardAdmin', 'dashboardAdmin.html'));
 });
 
@@ -32,11 +33,16 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'carga', 'carga.html'));
 });
 
+app.get('/lista_cuentas', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'lista_cuentas', 'listaCuentas.html'));
+});
+
 // 4. Rutas de la API (Endpoints de datos JSON)
-/* app.use('/api/login', loginRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/login', loginRoutes);
+/* app.use('/api/admin', adminRoutes);
 app.use('/api/ahorro', ahorroRoutes); */
 app.use('/api/carga', cargarRoutes);
+app.use('/api/lista_cuentas', listaCuentasRoutes);
 
 app.listen(3000, () => {
     console.log('Servidor corriendo en http://localhost:3000');

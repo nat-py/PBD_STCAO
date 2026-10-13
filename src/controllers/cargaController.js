@@ -12,7 +12,7 @@ async function recibirXmlTexto(req, res) {
     }
 
     // Procesamos el XML a diccionario mediante el servicio
-    const datosDiccionario = cargaService.procesarXmlString(xmlData);
+    const datosDiccionario = await cargaService.xmlBD(xmlData);
 
     return res.status(200).json({
       success: true,
