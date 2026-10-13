@@ -1,7 +1,6 @@
 const { sql, poolPromise } = require('../config/conexionBD.js');
 const { XMLParser } = require('fast-xml-parser');
 
-
 /* este sirve para validar que se llene primero catálogo y luego no catálogo */
 async function existenTablasCatalogo() 
 {
@@ -66,7 +65,7 @@ async function insertarTipoCuentaAhorro(id, nombre, idTipoMoneda, saldoMinimo, m
     .input('inNumRetirosAutomatico', sql.INT, numRetirosAutomatico)
     .input('inComisionHumano', sql.VarChar(5), comisionHumano)
     .input('inComisionAutomatico', sql.VarChar(5), comisionAutomatico)
-    .input('inInteres', sql.VarChar(2), interes)
+    .input('inInteres', sql.VarChar(5), interes)
     .output('outFlagError', sql.INT)
     .execute('dbo.sp_InsertTipoCuentaAhorros');
   
@@ -93,7 +92,7 @@ async function insertarPersona(tipoDocuIdentidad, nombre, valorDocuIdentidad, fe
     .input('inTipoDocuIdentidad', sql.VarChar(4), tipoDocuIdentidad)
     .input('inNombre', sql.VarChar(64), nombre)
     .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
-    .input('inFechaNacimiento', sql.DATE, fechaNacimiento)
+    .input('inFechaNacimiento', sql.Date, new Date(fechaNacimiento))
     .input('inEmail', sql.VarChar(50), email)
     .input('inTelefono1', sql.VarChar(16), telefono1)
     .input('inTelefono2', sql.VarChar(16), telefono2)
@@ -110,7 +109,7 @@ async function insertarCuentaAhorro(valorDocuIdentidad, idTipoCuenta, numCuenta,
     .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
     .input('inIdTipoCuenta', sql.VarChar(4), idTipoCuenta)
     .input('inNumCuenta', sql.VarChar(10), numCuenta)
-    .input('inFechaCreacion', sql.DATE, fechaCreacion)
+    .input('inFechaCreacion', sql.Date, new Date(fechaCreacion))
     .input('inSaldo', sql.MONEY, saldo)
     .output('outFlagError', sql.INT)
     .execute('dbo.sp_InsertCuentaAhorro');
@@ -139,8 +138,8 @@ cantidadSinpeSalientes)
   const pool = await poolPromise;
   const result = await pool.request()
     .input('inNumCuenta', sql.VarChar(10), numCuenta)
-    .input('inFechaIni', sql.DATE, fechaIni)
-    .input('inFechaFin', sql.DATE, fechaFin)
+    .input('inFechaIni', sql.Date, new Date(fechaIni))
+    .input('inFechaFin', sql.Date, new Date(fechaFin))
     .input('inSaldoIni', sql.MONEY, saldoIni)
     .input('inSaldoMini', sql.MONEY, saldoMini)
     .input('inSaldoFin', sql.MONEY, saldoFin)
@@ -181,28 +180,6 @@ async function insertarUsuarioVer(usuario, numCuenta)
   return result.output.outFlagError;
 }
 
-async function subirJson(jsonData) {
-  try {
-
-    // impresion de verificacion de llegada
-
-    const hayCatalogo = await existenTablasCatalogo();
-
-    console.log("Valor de hayCatalogo:", hayCatalogo);
-
-    const datosBD = await procesarXmlString(jsonData);
-
-    console.log("Datos procesados a diccionario:", datosBD);
-
-
-    return { success: true, message: "No catálogo procesado y guardado con éxito" };
-    
-  } catch (error) {
-    throw new Error(`Error al procesar el JSON: ${error.message}`);
-  }
-}
-
-
 /* segmentacion de xml */
 async function procesarXmlString(xmlData) {
   try {
@@ -213,7 +190,7 @@ async function procesarXmlString(xmlData) {
 
     const resultadoJson = parser.parse(xmlData);
     
-    const raizKey = Object.keys(resultadoJson)[0];
+    const raizKey = Object.keys(resultadoJson)[1];
     const contenidoRaiz = resultadoJson[raizKey];
 
     const diccionarioEstructurado = {};
@@ -239,4 +216,119 @@ async function procesarXmlString(xmlData) {
   }
 }
 
-module.exports = { subirJson };
+async function xmlBD(jsonData) {
+  try {
+
+    // impresion de verificacion de llegada
+
+    const hayCatalogo = await existenTablasCatalogo();
+
+    const datosBD = await procesarXmlString(jsonData);
+
+
+/*     if (datosBD?.Tipo_Doc) {
+      for (const item of datosBD.Tipo_Doc) {
+        if (await insertarTipoDocuIdentidad(item.Id, item.Nombre) !== 0) {
+          console.error(`Error al insertar TipoDocuIdentidad con ID: ${item.Id}`);
+        }
+      }
+    }
+
+    if (datosBD?.Tipo_Moneda) {
+      for (const item of datosBD.Tipo_Moneda) {
+        if (await insertarTipoMoneda(item.Id, item.Nombre, item.Simbolo) !== 0) {
+          console.error(`Error al insertar TipoDocuIdentidad con ID: ${item.Id}`);
+        }
+      }
+    }
+
+    if (datosBD?.Parentezcos) {
+      for (const item of datosBD.Parentezcos) {
+        if (await insertarParentesco(item.Id, item.Nombre) !== 0) {
+          console.error(`Error al insertar Parentesco con ID: ${item.Id}`);
+        }
+      }
+    }
+
+    if (datosBD?.Tipo_Cuenta_Ahorros) {
+      for (const item of datosBD.Tipo_Cuenta_Ahorros) {
+        if (await insertarTipoCuentaAhorro(item.Id, item.Nombre, item.IdTipoMoneda, item.SaldoMinimo, item.MultaSaldoMin,
+          item.CargoAnual, item.NumRetirosHumano, item.NumRetirosAutomatico, item.comisionHumano,
+          item.comisionAutomatico, item.interes) !== 0) {
+            console.error(`Error al insertar TipoCuentaAhorros con ID: ${item.Id}`);
+        }
+      }
+    }
+
+    if (datosBD?.TipoOperacionesBitacora) {
+      for (const item of datosBD.TipoOperacionesBitacora) {
+        if (await insertarTipoOperacion(item.id, item.nombre) !== 0) {
+          console.error(`Error al insertar TipoOperacion con ID: ${item.id}`);
+        }
+      }
+    }
+
+    
+    if (hayCatalogo) {
+      if (datosBD?.Personas) {
+        for (const item of datosBD.Personas) {
+          if (await insertarPersona(item.TipoDocuIdentidad, item.Nombre, item.ValorDocumentoIdentidad, item.FechaNacimiento, item.Email,
+            item.telefono1, item.telefono1) !== 0) {
+            console.error(`Error al insertar Persona con ValorDocumentoIdentidad: ${item.ValorDocumentoIdentidad}`);
+          }
+        }
+      }
+
+      if (datosBD?.Cuentas_Ahorro) {
+        for (const item of datosBD.Cuentas_Ahorro) {
+          if (await insertarCuentaAhorro(item.ValorDocumentoIdentidadDelCliente, item.TipoCuentaId, item.NumeroCuenta, item.FechaCreacion,
+            item.Saldo) !== 0) {
+            console.error(`Error al insertar CuentaAhorro con Num_Cuenta: ${item.NumeroCuenta}`);
+          }
+        }
+      }
+
+      if (datosBD?.Beneficiarios) {
+        for (const item of datosBD.Beneficiarios) {
+          if (await insertarBeneficiario(item.NumeroCuenta, item.ValorDocumentoIdentidadBeneficiario, item.IdParentezco, item.Porcentaje) !== 0) {
+            console.error(`Error al insertar Beneficiario con Num_Cuenta: ${item.NumeroCuenta}`);
+          }
+        }
+      }
+
+      if (datosBD?.Estados_de_Cuenta ) {
+        for (const item of datosBD.Estados_de_Cuenta ) {
+          if (await insertarEstadoCuenta(item.NumeroCuenta, item.fechaInicio, item.fechafin, item.saldoinicial,
+            item.saldoMinimo, item.saldo_final, item.interesesAcumulados, item.cantRetiros,
+            item.cantDepositos, item.cantSinpeEntrantes, item.cantSinpeSalientes) !== 0) {
+            console.error(`Error al insertar EstadoCuenta con Num_Cuenta: ${item.NumeroCuenta}`);
+          }
+        }
+      }
+      
+      if (datosBD?.Usuarios) {
+        for (const item of datosBD.Usuarios) {
+          if (await insertarUsuario(item.User, item.Pass, item.EsAdministrador, item.ValorDocId) !== 0) {
+            console.error(`Error al insertar Usuario con Usuario: ${item.User}`);
+          }
+        }
+      }
+      
+      if (datosBD?.Usuarios_Ver) {
+        for (const item of datosBD.Usuarios_Ver) {
+          if (await insertarUsuarioVer(item.User, item.NumeroCuenta) !== 0) {
+            console.error(`Error al insertar UsuarioVer con Usuario: ${item.User}`);
+          }
+        }
+      }
+    } */
+
+
+  } catch (error) {
+    throw new Error(`Error al procesar el JSON: ${error.message}`);
+  }
+}
+
+
+
+module.exports = { xmlBD };
