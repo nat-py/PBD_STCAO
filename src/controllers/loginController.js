@@ -14,7 +14,8 @@ async function validarUsuario(req, res) {
     return res.status(200).json({ message: 'Usuario validado correctamente', isAdmin: estados.outFlagEsdmin === 1, success: true });
     
   } catch (error) {
-    res.status(500).json({ message: 'Error al validar usuario' });
+    console.error('Error al validar usuario:', error);
+    res.status(500).json({ message: 'Error al validar usuario'});
   }
 }
 
