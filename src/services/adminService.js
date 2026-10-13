@@ -1,6 +1,4 @@
-const { sql, poolPromise } = require('../config/conexionBD.js');
-
-
+const { sql, poolPromise } = require('../config/conexionBD');
 
 async function existeUsuario(usuario, contrasena) 
 {
@@ -69,3 +67,113 @@ async function eliminarBeneficiario(valorDocuIdentidad)
   return outFlagError; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
 
+async function existenTablasCatalogo() 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .execute('dbo.sp_ExistenciaTablasCatalogo'); //llamar al SP que verifica existencia
+  
+  const outFlagError = result.output.outFlagError
+  return outFlagError; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
+
+/*------------------------------- Services Select Tablas Activas -------------------------------*/
+
+async function tablaTipoDocuIdentidadActivo() 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .execute('dbo.sp_TablaDocumentoIdentidadActivo');
+  
+  return result.recordset;
+}
+
+async function tablaTipoMonedaActivo() 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .execute('dbo.sp_TablaTipoMonedaActivo');
+  
+  return result.recordset;
+}
+
+async function tablaParentescoActivo() 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .execute('dbo.sp_TablaParentescoActivo');
+  
+  return result.recordset;
+}
+
+async function tablaTipoCuentaAhorroActivo() 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .execute('dbo.sp_TablaTipoCuentaAhorroActivo');
+  
+  return result.recordset;
+}
+
+async function tablaTipoOperacionActivo() 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .execute('dbo.sp_TablaTipoOperacionActivo');
+  
+  return result.recordset;
+}
+
+async function tablaPersonaActiva() 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .execute('dbo.sp_TablaPersonaActivo');
+  
+  return result.recordset;
+}
+
+async function tablaCuentaAhorroActivo() 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .execute('dbo.sp_TablaCuentaAhorroActivo');
+  
+  return result.recordset;
+}
+
+async function tablaBeneficiarioActivo() 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .execute('dbo.sp_TablaBeneficiarioActivo');
+  
+  return result.recordset;
+}
+
+async function tablaEstadoCuentaActivo() 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .execute('dbo.sp_TablaEstadoCuentaActivo');
+  
+  return result.recordset;
+}
+
+async function tablaUsuarioActivo() 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .execute('dbo.sp_TablaUsuarioActivo');
+  
+  return result.recordset;
+}
+
+async function tablaUsuariosVerActivo() 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .execute('dbo.sp_TablaUsuariosVerActivo');
+  
+  return result.recordset;
+}
