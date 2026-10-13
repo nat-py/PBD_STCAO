@@ -31,10 +31,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
 
+
   function validarYProcesarArchivo(file) {
     if (file.type === "text/xml" || file.name.endsWith(".xml")) {
-      validarCatalogoYNoCatalogo(file);
       fileInfo.innerText = `Archivo: ${file.name}, listo para ser procesado`;
+      validarCatalogoYNoCatalogo(file);
     } else {
       alert("Por favor, seleccione únicamente un archivo en formato XML.");
       fileInput.value = "";
@@ -42,32 +43,31 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   
   async function validarCatalogoYNoCatalogo(file) {
-    const formData = new FormData();
-    formData.append('archivoXml', file);
-    
-    try {
-      const respuesta = await fetch('/api/carga/catalogos', {
-        method: 'POST',
-        body: formData
-      });
+    const reader = new FileReader();
 
-      const resultado = await respuesta.json();
-
-      if (!respuesta.ok) {
-        alert(resultado.message);
-        return;
+    reader.onload = async function (e) {
+      const contenidoXML = e.target.result;
+      
+      try {
+          const respuesta = await fetch('/api/carga/catalogos', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ xmlData: contenidoXML })
+          });
+          const resultado = await respuesta.json();
+          if (!respuesta.ok) {
+              alert(resultado.message);
+              return;
+          }
+          
+          alert("Archivo procesado correctamente.");
+      } catch (error) {
+          console.error("Error:", error);
       }
-
-      console.log("¡Éxito!", resultado.message);
-      alert("Archivo procesado y guardado correctamente.");
-
-    } catch (error) {
-      console.error("Error al enviar el archivo:", error);
-    }
+    };
+    reader.readAsText(file);
   }
 
-
-  
-
 });
-

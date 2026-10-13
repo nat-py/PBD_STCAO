@@ -1,4 +1,4 @@
-const { sql, poolPromise } = require('../config/conexionBD');
+const { sql, poolPromise } = require('../config/conexionBD.js');
 
 
 

@@ -6,7 +6,7 @@ const config = {
   user: 'ProySTCAO',
   password: 'stcao_Proyecto',
   server: 'base-stcao.database.windows.net',
-  database: 'PBD-STCAO',
+  database: 'stcao',
 
   // options es para evitar problemas al conectar con una base Azure
   options: {

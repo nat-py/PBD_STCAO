@@ -1,22 +1,31 @@
-const xmlService = require('../services/cargaService');
+const cargaService = require('../services/cargaService');
 
-async function subirXml(req, res) {
+async function recibirXmlTexto(req, res) {
   try {
-    // Validar si multer realmente recibió un archivo
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: "No se subió ningún archivo." });
+    const { xmlData } = req.body; // Viene del JSON.stringify del frontend
+
+    if (!xmlData) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "No se proporcionó contenido XML." 
+      });
     }
 
-    // El controlador le pasa el archivo al Servicio y espera el resultado
-    const resultado = await xmlService.subirXml(req.file.path);
+    // Procesamos el XML a diccionario mediante el servicio
+    const datosDiccionario = cargaService.procesarXmlString(xmlData);
 
-    // Si todo salió bien, responde al cliente
-    return res.status(200).json(resultado);
+    return res.status(200).json({
+      success: true,
+      message: "XML procesado exitosamente en diccionario",
+      data: datosDiccionario
+    });
 
   } catch (error) {
-    // Si el Servicio lanzó un error (ej: "Primero debe cargar un catálogo"), 
-    return res.status(400).json({ success: false, message: error.message });
-  }
+    return res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
+}
 }
 
-module.exports = { subirXml };
+module.exports = { recibirXmlTexto };

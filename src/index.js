@@ -9,7 +9,7 @@ const cargarRoutes = require('./routers/cargaRoute');
 
 const app = express();
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // sin esto petatea con archivos grandes
 app.use(express.urlencoded({ extended: true }));
 
 // 2. Servir archivos estáticos (CSS, JS, imágenes, etc.)
