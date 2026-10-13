@@ -152,8 +152,8 @@ async function insertarUsuario(usuario, contrasena, esAdmin, valorDocuIdentidad)
 {
   const pool = await poolPromise;
   const result = await pool.request()
-    .input('inUser', sql.VarChar(15), usuario)
-    .input('inPassword', sql.VarChar(15), contrasena)
+    .input('inUser', sql.VarChar(20), usuario)
+    .input('inPassword', sql.VarChar(20), contrasena)
     .input('esAdmin', sql.BIT, esAdmin)
     .input('valorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
     .output('outFlagExiste', sql.BIT)
@@ -167,7 +167,7 @@ async function insertarUsuarioVer(usuario, numCuenta)
 {
   const pool = await poolPromise;
   const result = await pool.request()
-    .input('inUser', sql.VarChar(15), usuario)
+    .input('inUser', sql.VarChar(20), usuario)
     .input('inNumCuenta', sql.VarChar(10), numCuenta)
     .output('outFlagExiste', sql.BIT)
     .execute('dbo.sp_InsertUsuarioVer'); //llamar al SP que inserta usuarios ver
@@ -180,8 +180,8 @@ async function existeUsuario(usuario, contrasena)
 {
   const pool = await poolPromise;
   const result = await pool.request()
-    .input('inUser', sql.VarChar(15), usuario)
-    .input('inPassword', sql.VarChar(15), contrasena)
+    .input('inUser', sql.VarChar(20), usuario)
+    .input('inPassword', sql.VarChar(20), contrasena)
     .output('outFlagExiste', sql.BIT)
     .output('outFlagEsAdmin', sql.BIT)
     .execute('dbo.sp_ExisteUsuario'); //llamar al SP que verifica existencia
@@ -201,18 +201,17 @@ async function top8_EstadoCuenta_AsociadoCuenta(numCuenta)
   return result.recordset; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
 
-async function innerJoin_ListarCuentas(usuario) 
+async function innerJoin_ListarCuentas(usuario) /*cambio TEC*/ 
 {
   const pool = await poolPromise;
   const result = await pool.request()
-    .input('inUsuario', sql.VarChar(15), usuario)
+    .input('inUsuario', sql.VarChar(20), usuario)
     .execute('sp_innerJoin_ListarCuentas'); //llamar al SP que hace el inner join
   
   return result.recordset; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
 
-/*
-async function beneficiariosAsociadosCuentaAhorro(numCuenta) 
+async function beneficiariosAsociadosCuenta(numCuenta) 
 {
   const pool = await poolPromise;
   const result = await pool.request()
@@ -221,7 +220,6 @@ async function beneficiariosAsociadosCuentaAhorro(numCuenta)
   
   return result.recordset; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
-*/
 
 async function retornarBeneficiario(numCuenta, valorDocuIdentidad) 
 {
