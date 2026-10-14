@@ -213,27 +213,9 @@ async function estadoCuentaAsociadosCuentaAhorro(numCuenta)
 }
 */
 
-async function retornarBeneficiario(numCuenta, valorDocuIdentidad) 
-{
-  const pool = await poolPromise;
-  const result = await pool.request()
-    .input('inNumCuenta', sql.VarChar(10), numCuenta)
-    .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
-    .execute('dbo.sp_RetornarBeneficiario'); //llamar al SP que devuelve el beneficiario
-  
-  return result.recordset; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
-}
 
-async function eliminarBeneficiario(valorDocuIdentidad) 
-{
-  const pool = await poolPromise;
-  const result = await pool.request()
-    .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
-    .execute('dbo.sp_EliminarBeneficiario'); //llamar al SP que elimina beneficiario
-  
-  const outFlagError = result.output.outFlagError
-  return outFlagError; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
-}
+
+
 
 async function existenTablasCatalogo() 
 {

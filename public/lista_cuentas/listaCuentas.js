@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function recibirCuentas() {
     try {
       const response = await fetch('/api/lista_cuentas/lista_cuentas', {
-        method: 'POST',
+        method: 'POST', // post es cuando
         headers: {
           'Content-Type': 'application/json'
         },
@@ -28,7 +28,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
       
       if (data.success) {
-        console.log('Cuentas recibidas:', data.cuentas);
         
         const tbody = document.querySelector('table tbody');
         tbody.innerHTML = '';
@@ -36,7 +35,6 @@ document.addEventListener("DOMContentLoaded", () => {
         data.cuentas.forEach((cuenta, index) => {
           const tr = document.createElement('tr');
           
-          // Opcional: Agregar clase visual de Bootstrap para indicar que es clickeable
           tr.style.cursor = 'pointer'; 
 
           tr.innerHTML = `
@@ -52,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             alert(`Número de cuenta seleccionado: ${cuenta.numCuenta}\nSaldo: ${cuenta.saldo}`);
             
-            // window.location.href = `detalleCuenta.html?numCuenta=${cuenta.numCuenta}&usuario=${usuarioActual}`;
+            window.location.href = `/dashboardAhorro/dashboardAhorro.html?numCuenta=${cuenta.numCuenta}&usuario=${usuarioActual}`;
           });
           
           tbody.appendChild(tr);

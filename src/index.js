@@ -24,11 +24,11 @@ app.get('/login', (req, res) => {
 /* app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'dashboardAdmin', 'dashboardAdmin.html'));
 });
-
+ */
 app.get('/ahorro', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'dashboardAhorro', 'dashboardAhorro.html'));
 });
- */
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'carga', 'carga.html'));
 });
@@ -39,8 +39,8 @@ app.get('/lista_cuentas', (req, res) => {
 
 // 4. Rutas de la API (Endpoints de datos JSON)
 app.use('/api/login', loginRoutes);
-/* app.use('/api/admin', adminRoutes);
-app.use('/api/ahorro', ahorroRoutes); */
+/* app.use('/api/admin', adminRoutes); */
+app.use('/api/ahorro', ahorroRoutes); 
 app.use('/api/carga', cargarRoutes);
 app.use('/api/lista_cuentas', listaCuentasRoutes);
 

@@ -13,9 +13,76 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 
-  // 2. estados de cuenta
-  
+  // 2. recibir usuario, enviar estados de cuenta y beneficiarios
 
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+
+  const usuarioActual = urlParams.get('usuario');
+  const numCuenta = urlParams.get('numCuenta');
+
+  console.log('Usuario actual:', usuarioActual);
+  console.log('Número de cuenta:', numCuenta);
+
+
+  const usuarioHeader = document.getElementById('usuarioHeader');
+  if (usuarioActual) {
+    usuarioHeader.textContent = usuarioActual;
+    recibirEstadosCuenta();
+
+  } else {
+    usuarioHeader.textContent = "Usuario no encontrado";
+  }
+
+
+  function formatearFecha(fechaStr) {
+    if (!fechaStr) return '';
+    // Extraemos solo los primeros 10 caracteres (YYYY-MM-DD) y cambiamos los guiones por barras con espacios
+    return fechaStr.substring(0, 10).replace(/-/g, '/');
+  }
+
+  // obtener estados de cuenta
+  async function recibirEstadosCuenta() {
+    try {
+      const response = await fetch('/api/ahorro/top8_estado_cuenta', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ numCuenta: numCuenta })
+      });
+      const data = await response.json();
+      if (data.success) {
+        const tbody = document.querySelector('#tablaEstadosCuenta tbody');
+        tbody.innerHTML = '';
+
+        data.cuentas.forEach((cuenta, index) => {
+          
+          const tr = document.createElement('tr');
+          tr.style.cursor = 'pointer'; 
+
+          tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${formatearFecha(cuenta.fechaIni)}</td>
+            <td>${formatearFecha(cuenta.fechaFin)}</td>
+            <td>${cuenta.saldoIni}</td>
+            <td>${cuenta.saldoMini}</td>
+            <td>${cuenta.saldoFin}</td>
+            <td>${cuenta.interesesAcumulados}</td>
+            <td>${cuenta.cantidadRetiros}</td>
+            <td>${cuenta.cantidadDepositos}</td>
+            <td>${cuenta.cantidadSinpeEntrantes}</td>
+            <td>${cuenta.cantidadSinpeSalientes}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+      }
+
+    } catch (error) {
+      console.error('Error al recibir estados de cuenta:', error);
+    }
+  }
 
 
 
