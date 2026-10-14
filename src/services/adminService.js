@@ -19,6 +19,7 @@ async function insertarTipoMoneda(id, nombre, simbolo)
     .input('inID', sql.VarChar(4), id)
     .input('inNombre', sql.VarChar(32), nombre)
     .input('inSimbolo', sql.VarChar(4), simbolo)
+    .output('outFlagExiste', sql.BIT)
     .execute('dbo.sp_InsertTipoMoneda'); //llamar al SP que inserta tipo moneda
   
   const outFlagError = result.output.outFlagError
@@ -31,6 +32,7 @@ async function insertarParentesco(id, nombre)
   const result = await pool.request()
     .input('inID', sql.VarChar(4), id)
     .input('inNombre', sql.VarChar(32), nombre)
+    .output('outFlagExiste', sql.BIT)
     .execute('dbo.sp_InsertParentesco'); //llamar al SP que inserta parentesco
   
   const outFlagError = result.output.outFlagError
@@ -53,6 +55,7 @@ async function insertarTipoCuentaAhorro(id, nombre, idTipoMoneda, saldoMinimo, m
     .input('inComisionHumano', sql.VarChar(5), comisionHumano)
     .input('inComisionAutomatico', sql.VarChar(5), comisionAutomatico)
     .input('inInteres', sql.VarChar(2), interes)
+    .output('outFlagExiste', sql.BIT)
     .execute('dbo.sp_InsertTipoCuentaAhorros'); //llamar al SP que inserta tipo cuenta
   
   const outFlagError = result.output.outFlagError
@@ -65,6 +68,7 @@ async function insertarTipoOperacion(id, nombre)
   const result = await pool.request()
     .input('inID', sql.VarChar(4), id)
     .input('inNombre', sql.VarChar(50), nombre)
+    .output('outFlagExiste', sql.BIT)
     .execute('dbo.sp_InsertTipoOperacion'); //llamar al SP que inserta tipo operacion
   
   const outFlagError = result.output.outFlagError
@@ -82,6 +86,7 @@ async function insertarPersona(tipoDocuIdentidad, nombre, valorDocuIdentidad, fe
     .input('inEmail', sql.VarChar(50), email)
     .input('inTelefono1', sql.VarChar(16), telefono1)
     .input('inTelefono2', sql.VarChar(16), telefono2)
+    .output('outFlagExiste', sql.BIT)
     .execute('dbo.sp_InsertPersona'); //llamar al SP que inserta persona
   
   const outFlagError = result.output.outFlagError
@@ -97,6 +102,7 @@ async function insertarCuentaAhorro(valorDocuIdentidad, idTipoCuenta, numCuenta,
     .input('inNumCuenta', sql.VarChar(10), numCuenta)
     .input('inFechaCreacion', sql.DATE, fechaCreacion)
     .input('inSaldo', sql.MONEY, saldo)
+    .output('outFlagExiste', sql.BIT)
     .execute('dbo.sp_InsertCuentaAhorro'); //llamar al SP que insertar cuenta ahorro
   
   const outFlagError = result.output.outFlagError
@@ -111,6 +117,7 @@ async function insertarBeneficiario(numCuenta, valorDocuIdentidad, idParentesco,
     .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
     .input('inIDParentesco', sql.VarChar(4), idParentesco)
     .input('inPorcentaje', sql.INT, porcentaje)
+    .output('outFlagExiste', sql.BIT)
     .execute('dbo.sp_InsertBeneficiario'); //llamar al SP que inserta beneficiario
   
   const outFlagError = result.output.outFlagError
@@ -130,10 +137,11 @@ cantidadSinpeSalientes)
     .input('inSaldoMini', sql.MONEY, saldoMini)
     .input('inSaldoFin', sql.MONEY, saldoFin)
     .input('inInteresesAcumulados', sql.MONEY, interesesAcumulados)
-    .input('inCantidadRetiros', sql.MONEY, cantidadRetiros)
-    .input('inCantidadDepositos', sql.MONEY, cantidadDepositos)
-    .input('inCantidadSinpeEntrantes', sql.MONEY, cantidadSinpeEntrantes)
-    .input('inCantidadSinpeSalientes', sql.MONEY, cantidadSinpeSalientes)
+    .input('inCantidadRetiros', sql.INT, cantidadRetiros)
+    .input('inCantidadDepositos', sql.INT, cantidadDepositos)
+    .input('inCantidadSinpeEntrantes', sql.INT, cantidadSinpeEntrantes)
+    .input('inCantidadSinpeSalientes', sql.INT, cantidadSinpeSalientes)
+    .output('outFlagExiste', sql.BIT)
     .execute('dbo.sp_InsertEstadoCuenta'); //llamar al SP que inserta estado cuenta
   
   const outFlagError = result.output.outFlagError
@@ -144,10 +152,11 @@ async function insertarUsuario(usuario, contrasena, esAdmin, valorDocuIdentidad)
 {
   const pool = await poolPromise;
   const result = await pool.request()
-    .input('inUser', sql.VarChar(15), usuario)
-    .input('inPassword', sql.VarChar(15), contrasena)
+    .input('inUser', sql.VarChar(20), usuario)
+    .input('inPassword', sql.VarChar(20), contrasena)
     .input('esAdmin', sql.BIT, esAdmin)
     .input('valorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
+    .output('outFlagExiste', sql.BIT)
     .execute('dbo.sp_InsertUsuario'); //llamar al SP que inserta usuario
   
   const outFlagError = result.output.outFlagError
@@ -158,8 +167,9 @@ async function insertarUsuarioVer(usuario, numCuenta)
 {
   const pool = await poolPromise;
   const result = await pool.request()
-    .input('inUser', sql.VarChar(15), usuario)
+    .input('inUser', sql.VarChar(20), usuario)
     .input('inNumCuenta', sql.VarChar(10), numCuenta)
+    .output('outFlagExiste', sql.BIT)
     .execute('dbo.sp_InsertUsuarioVer'); //llamar al SP que inserta usuarios ver
   
   const outFlagError = result.output.outFlagError
@@ -170,29 +180,38 @@ async function existeUsuario(usuario, contrasena)
 {
   const pool = await poolPromise;
   const result = await pool.request()
-    .input('inUser', sql.VarChar(15), usuario)
-    .input('inPassword', sql.VarChar(15), contrasena)
-    .input('outFlagExiste', sql.BIT, 0)
-    .input('outFlagEsAdmin', sql.BIT, 0)
+    .input('inUser', sql.VarChar(20), usuario)
+    .input('inPassword', sql.VarChar(20), contrasena)
+    .output('outFlagExiste', sql.BIT)
+    .output('outFlagEsAdmin', sql.BIT)
     .execute('dbo.sp_ExisteUsuario'); //llamar al SP que verifica existencia
   
-  const outFlagError = result.output.outFlagError
-  const outFlagEsdmin = result.output.outFlagEsAdmin
-  return {outFlagError, outFlagEsdmin}; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+  const outFlagExiste = result.output.outFlagExiste
+  const outFlagEsAdmin = result.output.outFlagEsAdmin
+  return {outFlagExiste, outFlagEsAdmin}; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
 
-async function innerJoin_Beneficiario_EstadoCuenta_AsociadoCuenta(numCuenta) 
+async function top8_EstadoCuenta_AsociadoCuenta(numCuenta) 
 {
   const pool = await poolPromise;
   const result = await pool.request()
     .input('inNumCuenta', sql.VarChar(10), numCuenta)
-    .execute('dbo.sp_innerJoin_Beneficiario_EstadoCuenta_AsociadoCuenta'); //llamar al SP que hace el inner join
+    .execute('dbo.sp_Top8_EstadoCuenta_AsociadoCuenta'); //llamar al SP
   
   return result.recordset; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
 
-/*
-async function beneficiariosAsociadosCuentaAhorro(numCuenta) 
+async function innerJoin_ListarCuentas(usuario) /*cambio TEC*/ 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inUsuario', sql.VarChar(20), usuario)
+    .execute('sp_innerJoin_ListarCuentas'); //llamar al SP que hace el inner join
+  
+  return result.recordset; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
+
+async function beneficiariosAsociadosCuenta(numCuenta) 
 {
   const pool = await poolPromise;
   const result = await pool.request()
@@ -201,17 +220,6 @@ async function beneficiariosAsociadosCuentaAhorro(numCuenta)
   
   return result.recordset; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
-
-async function estadoCuentaAsociadosCuentaAhorro(numCuenta) 
-{
-  const pool = await poolPromise;
-  const result = await pool.request()
-    .input('inNumCuenta', sql.VarChar(10), numCuenta)
-    .execute('dbo.sp_EstadoCuentaAsociadoCuenta'); //llamar al SP que inserta usuario
-  
-  return result.recordset; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
-}
-*/
 
 async function retornarBeneficiario(numCuenta, valorDocuIdentidad) 
 {
@@ -230,6 +238,61 @@ async function eliminarBeneficiario(valorDocuIdentidad)
   const result = await pool.request()
     .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
     .execute('dbo.sp_EliminarBeneficiario'); //llamar al SP que elimina beneficiario
+  
+  const outFlagError = result.output.outFlagError
+  return outFlagError; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
+
+async function editarBeneficiarioDocuDiferente(valorDocuIdentidadPasado, valorDocuIdentidadNuevo, nombreBeneficiario, nombreParentesco,
+  porcentaje, fechaNacimiento, nombreTipoDocuIdentidad, email, telefono1, telefono2, numCuenta) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inValorDocuIdentidadPasado', sql.VarChar(32), valorDocuIdentidadPasado)
+    .input('inValorDocuIdentidadNuevo', sql.VarChar(32), valorDocuIdentidadNuevo)
+    .input('inNombreBeneficiario', sql.VarChar(64), nombreBeneficiario)
+    .input('inNombreParentesco', sql.VarChar(32), nombreParentesco)
+    .input('inPorcentajeBeneficio', sql.INT, porcentaje)
+    .input('inFechaNacimiento', sql.DATE, fechaNacimiento)
+    .input('inNombreTipoDocuIdentidad', sql.VarChar(32), nombreTipoDocuIdentidad)
+    .input('inEmail', sql.VarChar(50), email)
+    .input('inTelefono1', sql.VarChar(16), telefono1)
+    .input('inTelefono2', sql.VarChar(16), telefono2)
+    .input('inNumCuenta', sql.VarChar(10), numCuenta)
+    .output('outFlagExistePersona', sql.BIT)
+    .output('outFlagDocuIdentidadRepetido', sql.BIT)
+    .output('outFlagExisteBeneficiario', sql.BIT)
+    .output('outFlagExisteParentesco', sql.BIT)
+    .output('outFlagExisteTipoDocuIdentidad', sql.BIT)
+    .output('outFlagError', sql.BIT)
+    .execute('dbo.sp_EditarBeneficiario'); //llamar al SP que edita beneficiario
+  
+  const outFlagError = result.output.outFlagError
+  return outFlagError; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
+
+async function editarBeneficiarioDocuIgual(valorDocuIdentidad, nombreBeneficiario, nombreParentesco,
+  porcentaje, fechaNacimiento, nombreTipoDocuIdentidad, email, telefono1, telefono2, numCuenta) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
+    .input('inNombreBeneficiario', sql.VarChar(64), nombreBeneficiario)
+    .input('inNombreParentesco', sql.VarChar(32), nombreParentesco)
+    .input('inPorcentajeBeneficio', sql.INT, porcentaje)
+    .input('inFechaNacimiento', sql.DATE, fechaNacimiento)
+    .input('inNombreTipoDocuIdentidad', sql.VarChar(32), nombreTipoDocuIdentidad)
+    .input('inEmail', sql.VarChar(50), email)
+    .input('inTelefono1', sql.VarChar(16), telefono1)
+    .input('inTelefono2', sql.VarChar(16), telefono2)
+    .input('inNumCuenta', sql.VarChar(10), numCuenta)
+    .output('outFlagExistePersona', sql.BIT)
+    .output('outFlagDocuIdentidadRepetido', sql.BIT)
+    .output('outFlagExisteBeneficiario', sql.BIT)
+    .output('outFlagExisteParentesco', sql.BIT)
+    .output('outFlagExisteTipoDocuIdentidad', sql.BIT)
+    .output('outFlagError', sql.BIT)
+    .execute('dbo.sp_EditarBeneficiario'); //llamar al SP que edita beneficiario
   
   const outFlagError = result.output.outFlagError
   return outFlagError; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
