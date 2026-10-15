@@ -191,6 +191,18 @@ async function existeUsuario(usuario, contrasena)
   return {outFlagExiste, outFlagEsAdmin}; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
 
+async function personaAsociadaUsuario(usuario) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inUser', sql.VarChar(20), usuario)
+    .output('outFlagExisteUsuario', sql.BIT)
+    .execute('dbo.sp_PersonaAsociadaUsuario'); //llamar al SP que devuelve persona
+  
+  const outFlagExiste = result.output.outFlagExisteUsuario
+  return outFlagExisteUsuario; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
+
 async function top8_EstadoCuenta_AsociadoCuenta(numCuenta) 
 {
   const pool = await poolPromise;
@@ -237,6 +249,7 @@ async function eliminarBeneficiario(valorDocuIdentidad)
   const pool = await poolPromise;
   const result = await pool.request()
     .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
+    .output('outFlagError', sql.BIT)
     .execute('dbo.sp_EliminarBeneficiario'); //llamar al SP que elimina beneficiario
   
   const outFlagError = result.output.outFlagError
