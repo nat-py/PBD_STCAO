@@ -103,11 +103,17 @@ async function insertarCuentaAhorro(valorDocuIdentidad, idTipoCuenta, numCuenta,
     .input('inNumCuenta', sql.VarChar(10), numCuenta)
     .input('inFechaCreacion', sql.DATE, fechaCreacion)
     .input('inSaldo', sql.MONEY, saldo)
-    .output('outFlagExiste', sql.BIT)
+    .output('outFlagError', sql.BIT)
+    .output('outFlagNumCuentaRepetido', sql.BIT)
+    .output('outFlagEntroCatch', sql.BIT)
+    .output('outFlagInserto', sql.BIT)
     .execute('dbo.sp_InsertCuentaAhorro'); //llamar al SP que insertar cuenta ahorro
   
   const outFlagError = result.output.outFlagError
-  return outFlagError;
+  const cuentaRepetida = result.output.outFlagNumCuentaRepetido
+  const entroCatch = result.output.outFlagEntroCatch
+  const inserto = result.output.outFlagInserto
+  return {outFlagError, cuentaRepetida, entroCatch, inserto};
 }
 
 async function insertarBeneficiario(numCuenta, valorDocuIdentidad, idParentesco, porcentaje) 
@@ -265,10 +271,10 @@ async function editarBeneficiarioDocuDiferente(valorDocuIdentidadPasado, valorDo
     .input('inValorDocuIdentidadPasado', sql.VarChar(32), valorDocuIdentidadPasado)
     .input('inValorDocuIdentidadNuevo', sql.VarChar(32), valorDocuIdentidadNuevo)
     .input('inNombreBeneficiario', sql.VarChar(64), nombreBeneficiario)
-    .input('inNombreParentesco', sql.VarChar(32), nombreParentesco)
+    .input('inIDParentesco', sql.VarChar(4), nombreParentesco)
     .input('inPorcentajeBeneficio', sql.INT, porcentaje)
     .input('inFechaNacimiento', sql.DATE, fechaNacimiento)
-    .input('inNombreTipoDocuIdentidad', sql.VarChar(32), nombreTipoDocuIdentidad)
+    .input('inIDTipoDocuIdentidad', sql.VarChar(4), nombreTipoDocuIdentidad)
     .input('inEmail', sql.VarChar(50), email)
     .input('inTelefono1', sql.VarChar(16), telefono1)
     .input('inTelefono2', sql.VarChar(16), telefono2)
@@ -292,10 +298,10 @@ async function editarBeneficiarioDocuIgual(valorDocuIdentidad, nombreBeneficiari
   const result = await pool.request()
     .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
     .input('inNombreBeneficiario', sql.VarChar(64), nombreBeneficiario)
-    .input('inNombreParentesco', sql.VarChar(32), nombreParentesco)
+    .input('inIDParentesco', sql.VarChar(4), nombreParentesco)
     .input('inPorcentajeBeneficio', sql.INT, porcentaje)
     .input('inFechaNacimiento', sql.DATE, fechaNacimiento)
-    .input('inNombreTipoDocuIdentidad', sql.VarChar(32), nombreTipoDocuIdentidad)
+    .input('inIDTipoDocuIdentidad', sql.VarChar(4), nombreTipoDocuIdentidad)
     .input('inEmail', sql.VarChar(50), email)
     .input('inTelefono1', sql.VarChar(16), telefono1)
     .input('inTelefono2', sql.VarChar(16), telefono2)
