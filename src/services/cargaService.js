@@ -158,8 +158,8 @@ async function insertarUsuario(usuario, contrasena, esAdmin, valorDocuIdentidad)
 {
   const pool = await poolPromise;
   const result = await pool.request()
-    .input('inUser', sql.VarChar(15), usuario)
-    .input('inPassword', sql.VarChar(15), contrasena)
+    .input('inUser', sql.VarChar(20), usuario)
+    .input('inPassword', sql.VarChar(20), contrasena)
     .input('esAdmin', sql.BIT, esAdmin)
     .input('valorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
     .output('outFlagError', sql.INT)
@@ -172,7 +172,7 @@ async function insertarUsuarioVer(usuario, numCuenta)
 {
   const pool = await poolPromise;
   const result = await pool.request()
-    .input('inUser', sql.VarChar(15), usuario)
+    .input('inUser', sql.VarChar(20), usuario)
     .input('inNumCuenta', sql.VarChar(10), numCuenta)
     .output('outFlagError', sql.INT)
     .execute('dbo.sp_InsertUsuarioVer');

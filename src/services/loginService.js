@@ -4,8 +4,8 @@ async function existeUsuario(usuario, contrasena)
 {
   const pool = await poolPromise;
   const result = await pool.request()
-    .input('inUser', sql.VarChar(15), usuario)
-    .input('inPassword', sql.VarChar(15), contrasena)
+    .input('inUser', sql.VarChar(20), usuario)
+    .input('inPassword', sql.VarChar(20), contrasena)
     .output('outFlagExiste', sql.BIT)
     .output('outFlagEsAdmin', sql.BIT)
     .execute('dbo.sp_ExisteUsuario'); //llamar al SP que verifica existencia
