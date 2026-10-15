@@ -46,10 +46,6 @@ document.addEventListener("DOMContentLoaded", () => {
           `;
 
           tr.addEventListener('click', () => {
-            console.log('Cuenta seleccionada:', cuenta);
-            
-            alert(`Número de cuenta seleccionado: ${cuenta.numCuenta}\nSaldo: ${cuenta.saldo}`);
-            
             window.location.href = `/dashboardAhorro/dashboardAhorro.html?numCuenta=${cuenta.numCuenta}&usuario=${usuarioActual}`;
           });
           

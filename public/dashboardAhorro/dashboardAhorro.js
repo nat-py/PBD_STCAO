@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
   
-  
   // 1. Manejo del Modal de Pantalla en Proceso
   const modalProcesoEl = document.getElementById('modalEnProceso');
   const modalProceso = new bootstrap.Modal(modalProcesoEl);
@@ -12,43 +11,60 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-
-  // 2. recibir usuario, enviar estados de cuenta y beneficiarios
-
+  // 2. Recibir usuario, enviar estados de cuenta y beneficiarios
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
 
   const usuarioActual = urlParams.get('usuario');
   const numCuenta = urlParams.get('numCuenta');
 
-  console.log('Usuario actual:', usuarioActual);
-  console.log('Número de cuenta:', numCuenta);
-
-
   const usuarioHeader = document.getElementById('usuarioHeader');
-  if (usuarioActual) {
+  if (usuarioActual && numCuenta) {
     usuarioHeader.textContent = usuarioActual;
-    recibirEstadosCuenta();
-
+    recibirEstadosCuentaAPI();
+    recibirBeneficiariosAPI();
+    obtenerParentescosYTiposDocumentoAPI();
   } else {
     usuarioHeader.textContent = "Usuario no encontrado";
   }
 
-
   function formatearFecha(fechaStr) {
     if (!fechaStr) return '';
-    // Extraemos solo los primeros 10 caracteres (YYYY-MM-DD) y cambiamos los guiones por barras con espacios
     return fechaStr.substring(0, 10).replace(/-/g, '/');
   }
 
-  // obtener estados de cuenta
-  async function recibirEstadosCuenta() {
+  let parentescos = [];
+  let tiposDocumento = [];
+
+  // Obtener parentescos y tipos de documento para los select
+  async function obtenerParentescosYTiposDocumentoAPI() {
+    try {
+      const [parentescosResponse, tiposDocumentoResponse] = await Promise.all([
+        fetch('/api/ahorro/parentescos', { method: 'POST' }),
+        fetch('/api/ahorro/tipos_documento', { method: 'POST' })
+      ]);
+
+      const dataParentescos = await parentescosResponse.json();
+      const dataTiposDoc = await tiposDocumentoResponse.json();
+
+      if (dataParentescos.success) {
+        parentescos = dataParentescos.parentescos; // Ajusta según la propiedad que devuelva tu BD (ej. descripcion o nombre)
+      }
+      if (dataTiposDoc.success) {
+        tiposDocumento = dataTiposDoc.tiposDocumento; // Ajusta según la propiedad que devuelva tu BD
+      }
+
+    } catch (error) {
+      console.error('Error al obtener parentescos y tipos de documento:', error);
+    }
+  }
+
+  // Obtener estados de cuenta
+  async function recibirEstadosCuentaAPI() {
     try {
       const response = await fetch('/api/ahorro/top8_estado_cuenta', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ numCuenta: numCuenta })
       });
       const data = await response.json();
@@ -57,7 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
         tbody.innerHTML = '';
 
         data.cuentas.forEach((cuenta, index) => {
-          
           const tr = document.createElement('tr');
           tr.style.cursor = 'pointer'; 
 
@@ -76,42 +91,69 @@ document.addEventListener('DOMContentLoaded', () => {
           `;
           tbody.appendChild(tr);
         });
-
       }
-
     } catch (error) {
       console.error('Error al recibir estados de cuenta:', error);
     }
   }
 
+  let beneficiarios = [];
 
+  // Obtener beneficiarios
+  async function recibirBeneficiariosAPI() {
+    try {
+      const response = await fetch('/api/ahorro/beneficiarios_asociados', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ numCuenta: numCuenta })
+      });
+      const data = await response.json();
+      if (data.success) {
+        beneficiarios = data.beneficiarios.map((b, index) => ({
+          id: index + 1,
+          nDoc: b.nombreTipoDocuIdentidad || '',
+          doc: b.valorDocuIdentidad,
+          nombre: b.nombre,
+          parentesco: b.nombreParentesco,
+          fechaNacimiento: formatearFecha(b.fechaNacimiento),
+          telefono1: b.telefono1,
+          telefono2: b.telefono2,
+          email: b.email,
+          porcentaje: Number(b.porcentaje)
+        }));
 
-  // 2. Lógica de Beneficiarios Dinámicos (Plantilla de hasta 3 beneficiarios)
-  let modoEdicion = false;
-  
-  // Datos base iniciales (2 beneficiarios)
-  let beneficiarios = [
-    {
-      id: 1,
-      nombre: 'Paco Pacal',
-      parentesco: 'Hermano',
-      fechaNacimiento: '2006-08-07',
-      telefono1: '88888888',
-      telefono2: '70707070',
-      email: 'paco@gmail.com',
-      porcentaje: 60
-    },
-    {
-      id: 2,
-      nombre: 'Maria Pacal',
-      parentesco: 'Madre',
-      fechaNacimiento: '1980-05-12',
-      telefono1: '81111111',
-      telefono2: '72222222',
-      email: 'maria@gmail.com',
-      porcentaje: 40
+        if (beneficiarios.length === 1) {
+          beneficiarios[0].porcentaje = 100;
+        }
+
+        renderBeneficiarios();
+      }
+    } catch (error) {
+      console.error('Error al recibir beneficiarios:', error);
     }
-  ];
+  }
+
+  // eliminar beneficiario
+  async function eliminarBeneficiarioAPI(valorDocuIdentidad) {
+    try {
+      const response = await fetch(`/api/ahorro/eliminar_beneficiario?valorDocuIdentidad=${encodeURIComponent(valorDocuIdentidad)}`, {
+        method: 'POST'
+      });
+      const data = await response.json();
+      if (data.success) {
+        alert('Beneficiario eliminado correctamente.');
+        recibirBeneficiariosAPI();
+      } else {
+        alert('Error al eliminar beneficiario: ' + (data.error || 'Error desconocido'));
+      }
+    } catch (error) {
+      console.error('Error al eliminar beneficiario:', error);
+      alert('Error al eliminar beneficiario. Por favor, inténtelo de nuevo.');
+    }
+  }
+
+  // Lógica de Beneficiarios Dinámicos
+  let modoEdicion = false;
 
   const container = document.getElementById('beneficiarios-container');
   const btnToggleEdit = document.getElementById('btn-toggle-edit');
@@ -119,27 +161,33 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderBeneficiarios() {
     container.innerHTML = '';
 
+    if (beneficiarios.length === 0) {
+      container.innerHTML = `<p class="text-center text-muted">No hay beneficiarios asociados a esta cuenta.</p>`;
+      return;
+    }
+
     beneficiarios.forEach((b, index) => {
       const col = document.createElement('div');
       col.className = 'col-md-4 position-relative';
 
-      // Botones de inserción lateral si el límite es menor a 3
       let botonesLateralesHTML = '';
       if (beneficiarios.length < 3) {
         if (index === 0) {
-          botonesLateralesHTML += `<button class="btn btn-outline position-absolute top-50 shadow-sm" style="z-index:5; left: -50px;" title="Agregar a la izquierda" onclick="agregarBeneficiario(${index})"> <i class="bi bi-person-plus"></i></button>`;
+          botonesLateralesHTML += `<button class="btn btn-outline position-absolute top-50 shadow-sm" style="z-index:5; left: -30px;" title="Agregar a la izquierda" onclick="agregarBeneficiario(${index})"> <i class="bi bi-person-plus"></i></button>`;
         }
         if (index === beneficiarios.length - 1) {
-          botonesLateralesHTML += `<button class="btn btn-outline position-absolute top-50 shadow-sm" style="z-index:5; right: -50px;" title="Agregar a la derecha" onclick="agregarBeneficiario(${index + 1})"> <i class="bi bi-person-plus"></i></button>`;
+          botonesLateralesHTML += `<button class="btn btn-outline position-absolute top-50 shadow-sm" style="z-index:5; right: -30px;" title="Agregar a la derecha" onclick="agregarBeneficiario(${index + 1})"> <i class="bi bi-person-plus"></i></button>`;
         }
       }
 
       if (!modoEdicion) {
-        // Vista Normal (Slider disabled)
+        // Vista Normal
         col.innerHTML = `
           ${botonesLateralesHTML}
           <div class="card shadow-sm p-3 border-0 h-100">
             <h5 class="text-secondary fw-bold mb-3">Beneficiario ${index + 1}</h5>
+            <p class="mb-1"><strong>Tipo Doc:</strong> ${b.nDoc}</p>
+            <p class="mb-1"><strong>Documento:</strong> ${b.doc || 'N/A'}</p>
             <p class="mb-1"><strong>Nombre:</strong> ${b.nombre}</p>
             <p class="mb-1"><strong>Parentesco:</strong> ${b.parentesco}</p>
             <p class="mb-1"><strong>Fecha Nacimiento:</strong> ${b.fechaNacimiento}</p>
@@ -153,19 +201,48 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         `;
       } else {
-        // Vista Editable (Inputs, selector, email, barra habilitada y basurero de eliminar)
+        // Vista Editable con Selects dinámicos para Tipos de Documento y Parentescos
+        const esUnico = beneficiarios.length === 1;
+
+        // Construir opciones de Tipos de Documento
+        let opcionesTiposDoc = tiposDocumento.map(t => {
+          // Ajusta 't.nombre' o 't.id' según la estructura de tu API de tipos de documento
+          let valorTipo = t.nombre || t; 
+          let seleccionado = (b.nDoc === valorTipo) ? 'selected' : '';
+          return `<option value="${valorTipo}" ${seleccionado}>${valorTipo}</option>`;
+        }).join('');
+
+        // Construir opciones de Parentescos
+        let opcionesParentescos = parentescos.map(p => {
+          // Ajusta 'p.nombre' o 'p.id' según la estructura de tu API de parentescos
+          let valorParentesco = p.nombre || p; 
+          let seleccionado = (b.parentesco === valorParentesco) ? 'selected' : '';
+          return `<option value="${valorParentesco}" ${seleccionado}>${valorParentesco}</option>`;
+        }).join('');
+
         col.innerHTML = `
           ${botonesLateralesHTML}
           <div class="card shadow-sm p-3 border-primary h-100 position-relative">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h5 class="text-primary fw-bold m-0">Beneficiario ${index + 1}</h5>
-              <button class="btn btn-outline-danger btn-sm border-0" onclick="eliminarBeneficiario(${index})" title="Eliminar beneficiario">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
-                  <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1H2.5zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5zM8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5zm3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0z"/>
-                </svg>
-              </button>
+              ${!esUnico ? `
+                <button class="btn btn-outline-danger btn-sm border-0" onclick="eliminarBeneficiario(${index})" title="Eliminar beneficiario">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
+                    <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1H2.5zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5zM8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5zm3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0z"/>
+                  </svg>
+                </button>` : ''}
             </div>
             
+            <div class="mb-2">
+              <label class="form-label small fw-bold">Tipo Documento:</label>
+              <select class="form-select form-select-sm" onchange="actualizarDato(${index}, 'nDoc', this.value)">
+                ${opcionesTiposDoc}
+              </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small fw-bold">Número Documento:</label>
+              <input type="text" class="form-control form-control-sm" value="${b.doc}" onchange="actualizarDato(${index}, 'doc', this.value)">
+            </div>
             <div class="mb-2">
               <label class="form-label small fw-bold">Nombre:</label>
               <input type="text" class="form-control form-control-sm" value="${b.nombre}" onchange="actualizarDato(${index}, 'nombre', this.value)">
@@ -173,16 +250,12 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="mb-2">
               <label class="form-label small fw-bold">Parentesco:</label>
               <select class="form-select form-select-sm" onchange="actualizarDato(${index}, 'parentesco', this.value)">
-                <option value="Hermano" ${b.parentesco === 'Hermano' ? 'selected' : ''}>Hermano</option>
-                <option value="Madre" ${b.parentesco === 'Madre' ? 'selected' : ''}>Madre</option>
-                <option value="Padre" ${b.parentesco === 'Padre' ? 'selected' : ''}>Padre</option>
-                <option value="Cónyuge" ${b.parentesco === 'Cónyuge' ? 'selected' : ''}>Cónyuge</option>
-                <option value="Hijo/a" ${b.parentesco === 'Hijo/a' ? 'selected' : ''}>Hijo/a</option>
+                ${opcionesParentescos}
               </select>
             </div>
             <div class="mb-2">
               <label class="form-label small fw-bold">Fecha Nacimiento:</label>
-              <input type="date" class="form-control form-control-sm" value="${b.fechaNacimiento}" onchange="actualizarDato(${index}, 'fechaNacimiento', this.value)">
+              <input type="date" class="form-control form-control-sm" value="${b.fechaNacimiento.replace(/\//g, '-')}" onchange="actualizarDato(${index}, 'fechaNacimiento', this.value)">
             </div>
             <div class="mb-2">
               <label class="form-label small fw-bold">Teléfono 1:</label>
@@ -198,7 +271,10 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="mt-2">
               <label class="form-label fw-semibold small">Porcentaje: <span id="val-range-${index}" class="text-primary">${b.porcentaje}%</span></label>
-              <input type="range" class="form-range" min="0" max="100" value="${b.porcentaje}" oninput="document.getElementById('val-range-${index}').innerText = this.value + '%'" onchange="actualizarDato(${index}, 'porcentaje', this.value)">
+              <input type="range" class="form-range" min="0" max="100" value="${b.porcentaje}" 
+                ${esUnico ? 'disabled' : ''}
+                oninput="document.getElementById('val-range-${index}').innerText = this.value + '%'" 
+                onchange="cambiarPorcentaje(${index}, Number(this.value))">
             </div>
           </div>
         `;
@@ -208,42 +284,142 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Botón para alternar modo edición
+  // Lógica de distribución proporcional con enteros exactos
+  window.cambiarPorcentaje = function(indexModificado, nuevoValor) {
+    if (beneficiarios.length <= 1) return;
+
+    nuevoValor = Math.round(nuevoValor);
+    let valorAntiguo = beneficiarios[indexModificado].porcentaje;
+    let diferencia = nuevoValor - valorAntiguo;
+
+    beneficiarios[indexModificado].porcentaje = nuevoValor;
+
+    let otrosIndices = beneficiarios.map((_, i) => i).filter(i => i !== indexModificado);
+
+    if (otrosIndices.length === 1) {
+      let otroIndex = otrosIndices[0];
+      beneficiarios[otroIndex].porcentaje -= diferencia;
+
+      if (beneficiarios[otroIndex].porcentaje < 0) {
+        beneficiarios[indexModificado].porcentaje += beneficiarios[otroIndex].porcentaje;
+        beneficiarios[otroIndex].porcentaje = 0;
+      } else if (beneficiarios[otroIndex].porcentaje > 100) {
+        beneficiarios[indexModificado].porcentaje -= (beneficiarios[otroIndex].porcentaje - 100);
+        beneficiarios[otroIndex].porcentaje = 100;
+      }
+    } else if (otrosIndices.length === 2) {
+      let sumaOtros = otrosIndices.reduce((acc, i) => acc + beneficiarios[i].porcentaje, 0);
+
+      if (sumaOtros === 0) {
+        let repartir = Math.floor(diferencia / 2);
+        beneficiarios[otrosIndices[0]].porcentaje -= repartir;
+        beneficiarios[otrosIndices[1]].porcentaje -= (diferencia - repartir);
+      } else {
+        let restoDiferencia = diferencia;
+        otrosIndices.forEach((i, idx) => {
+          if (idx === otrosIndices.length - 1) {
+            beneficiarios[i].porcentaje -= restoDiferencia;
+          } else {
+            let proporcion = beneficiarios[i].porcentaje / sumaOtros;
+            let reduccion = Math.round(diferencia * proporcion);
+            beneficiarios[i].porcentaje -= reduccion;
+            restoDiferencia -= reduccion;
+          }
+        });
+      }
+
+      otrosIndices.forEach(i => {
+        beneficiarios[i].porcentaje = Math.round(beneficiarios[i].porcentaje);
+        if (beneficiarios[i].porcentaje < 0) beneficiarios[i].porcentaje = 0;
+        if (beneficiarios[i].porcentaje > 100) beneficiarios[i].porcentaje = 100;
+      });
+    }
+
+    // Ajuste final para asegurar que la suma dé 100 exacto tras el redondeo entero
+    let sumaActual = beneficiarios.reduce((acc, b) => acc + b.porcentaje, 0);
+    if (sumaActual !== 100) {
+      let diferenciaTotal = 100 - sumaActual;
+      let indiceAjuste = beneficiarios.findIndex((_, i) => i !== indexModificado);
+      if (indiceAjuste !== -1) {
+        beneficiarios[indiceAjuste].porcentaje += diferenciaTotal;
+      }
+    }
+
+    renderBeneficiarios();
+  };
+
+  // Botón para alternar modo edición y validar al guardar
   btnToggleEdit.addEventListener('click', () => {
+    if (modoEdicion) {
+      let sumaTotal = beneficiarios.reduce((acc, b) => acc + b.porcentaje, 0);
+
+      if (sumaTotal < 100) {
+        alert(`La suma de los porcentajes es ${sumaTotal}%. Debe sumar exactamente 100% para poder guardar.`);
+        return;
+      }
+      if (sumaTotal > 100) {
+        alert(`La suma de los porcentajes supera el 100% (${sumaTotal}%). Por favor, ajústelo.`);
+        return;
+      }
+
+      alert('¡Cambios guardados exitosamente!');
+    }
+
     modoEdicion = !modoEdicion;
     btnToggleEdit.textContent = modoEdicion ? 'Guardar Cambios' : 'Editar Beneficiarios';
     btnToggleEdit.className = modoEdicion ? 'btn btn-success text-white' : 'btn btn-secondary text-white';
     renderBeneficiarios();
   });
 
-  // Funciones globales auxiliares para interactuar con la plantilla
+  // Funciones globales auxiliares
   window.agregarBeneficiario = function(index) {
     if (beneficiarios.length >= 3) return;
+    
+    let nuevoPorcentaje = Math.floor(100 / (beneficiarios.length + 1));
+    beneficiarios.forEach(b => b.porcentaje = nuevoPorcentaje);
+
     const nuevo = {
       id: Date.now(),
+      nDoc: tiposDocumento.length > 0 ? (tiposDocumento[0].nombre || tiposDocumento[0]) : 'Cédula de Identidad',
+      doc: '',
       nombre: 'Nuevo Beneficiario',
-      parentesco: 'Hermano',
-      fechaNacimiento: '2010-01-01',
-      telefono1: '00000000',
-      telefono2: '00000000',
-      email: 'correo@gmail.com',
-      porcentaje: 0
+      parentesco: parentescos.length > 0 ? (parentescos[0].nombre || parentescos[0]) : 'Hermano',
+      fechaNacimiento: '2010/01/01',
+      telefono1: '',
+      telefono2: '',
+      email: '',
+      porcentaje: 100 - (nuevoPorcentaje * beneficiarios.length)
     };
+    
     beneficiarios.splice(index, 0, nuevo);
     renderBeneficiarios();
   };
 
   window.eliminarBeneficiario = function(index) {
+    if (beneficiarios.length <= 1) {
+      alert('Debe haber al menos un beneficiario.');
+      return;
+    }
+
     if (confirm('¿Quieres eliminar este beneficiario?')) {
-      beneficiarios.splice(index, 1);
-      renderBeneficiarios();
+      if (eliminarBeneficiarioAPI(beneficiarios[index].doc)) {
+
+        beneficiarios.splice(index, 1);
+      
+        if (beneficiarios.length === 1) {
+          beneficiarios[0].porcentaje = 100;
+        } else {
+          let resto = Math.round(100 / beneficiarios.length);
+          beneficiarios.forEach(b => b.porcentaje = resto);
+          beneficiarios[0].porcentaje += (100 - (resto * beneficiarios.length)); // Ajuste entero de residuo
+        }
+        
+        renderBeneficiarios();
+      }
     }
   };
 
   window.actualizarDato = function(index, campo, valor) {
     beneficiarios[index][campo] = valor;
   };
-
-  // Render inicial
-  renderBeneficiarios();
 });

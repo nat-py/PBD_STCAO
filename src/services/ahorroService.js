@@ -25,11 +25,30 @@ async function eliminarBeneficiario(valorDocuIdentidad)
   const pool = await poolPromise;
   const result = await pool.request()
     .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
+    .output('outFlagError', sql.BIT)
     .execute('dbo.sp_EliminarBeneficiario'); //llamar al SP que elimina beneficiario
-  
+
   const outFlagError = result.output.outFlagError
   return outFlagError; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
 
+async function tablaParentescoActivo() 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .execute('dbo.sp_TablaParentescoActivo');
+  
+  return result.recordset;
+}
 
-module.exports = { top8_EstadoCuenta_AsociadoCuenta, beneficiariosAsociadosCuenta, eliminarBeneficiario };
+async function tablaTipoDocuIdentidadActivo() 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .execute('dbo.sp_TablaDocumentoIdentidadActivo');
+  
+  return result.recordset;
+}
+
+
+module.exports = { top8_EstadoCuenta_AsociadoCuenta, beneficiariosAsociadosCuenta, eliminarBeneficiario, tablaParentescoActivo, tablaTipoDocuIdentidadActivo };
