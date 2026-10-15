@@ -103,11 +103,17 @@ async function insertarCuentaAhorro(valorDocuIdentidad, idTipoCuenta, numCuenta,
     .input('inNumCuenta', sql.VarChar(10), numCuenta)
     .input('inFechaCreacion', sql.DATE, fechaCreacion)
     .input('inSaldo', sql.MONEY, saldo)
-    .output('outFlagExiste', sql.BIT)
+    .output('outFlagError', sql.BIT)
+    .output('outFlagNumCuentaRepetido', sql.BIT)
+    .output('outFlagEntroCatch', sql.BIT)
+    .output('outFlagInserto', sql.BIT)
     .execute('dbo.sp_InsertCuentaAhorro'); //llamar al SP que insertar cuenta ahorro
   
   const outFlagError = result.output.outFlagError
-  return outFlagError;
+  const cuentaRepetida = result.output.outFlagNumCuentaRepetido
+  const entroCatch = result.output.outFlagEntroCatch
+  const inserto = result.output.outFlagInserto
+  return {outFlagError, cuentaRepetida, entroCatch, inserto};
 }
 
 async function insertarBeneficiario(numCuenta, valorDocuIdentidad, idParentesco, porcentaje) 
