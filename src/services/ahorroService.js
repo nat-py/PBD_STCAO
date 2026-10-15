@@ -37,7 +37,7 @@ async function tablaParentescoActivo()
   const pool = await poolPromise;
   const result = await pool.request()
     .execute('dbo.sp_TablaParentescoActivo');
-  
+
   return result.recordset;
 }
 
@@ -46,9 +46,30 @@ async function tablaTipoDocuIdentidadActivo()
   const pool = await poolPromise;
   const result = await pool.request()
     .execute('dbo.sp_TablaDocumentoIdentidadActivo');
-  
+
   return result.recordset;
 }
 
+async function insertarBeneficiario(numCuenta, valorDocuIdentidad, idParentesco, porcentaje) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inNumCuenta', sql.VarChar(10), numCuenta)
+    .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
+    .input('inIDParentesco', sql.VarChar(4), idParentesco)
+    .input('inPorcentaje', sql.INT, porcentaje)
+    .output('outFlagError', sql.INT)
+    .execute('dbo.sp_InsertBeneficiario');
+  
+  return result.output.outFlagError;
+}
 
-module.exports = { top8_EstadoCuenta_AsociadoCuenta, beneficiariosAsociadosCuenta, eliminarBeneficiario, tablaParentescoActivo, tablaTipoDocuIdentidadActivo };
+
+module.exports = { 
+  top8_EstadoCuenta_AsociadoCuenta, 
+  beneficiariosAsociadosCuenta, 
+  eliminarBeneficiario, 
+  tablaParentescoActivo, 
+  tablaTipoDocuIdentidadActivo,
+  insertarBeneficiario
+};

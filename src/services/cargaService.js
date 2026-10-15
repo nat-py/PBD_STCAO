@@ -78,10 +78,11 @@ async function insertarTipoOperacion(id, nombre)
   const result = await pool.request()
     .input('inID', sql.VarChar(4), id)
     .input('inNombre', sql.VarChar(50), nombre)
-    .output('outFlagError', sql.INT)
-    .execute('dbo.sp_InsertTipoOperacion');
-  
-  return result.output.outFlagError;
+    .output('outFlagExiste', sql.BIT)
+    .execute('dbo.sp_InsertTipoOperacion'); //llamar al SP que inserta tipo operacion
+
+  const outFlagError = result.output.outFlagExiste
+  return outFlagError;
 }
 
 /* ------------------------------------------------------ NO CATALOGOS ------------------------------------------------------ */
@@ -109,12 +110,20 @@ async function insertarCuentaAhorro(valorDocuIdentidad, idTipoCuenta, numCuenta,
     .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
     .input('inIdTipoCuenta', sql.VarChar(4), idTipoCuenta)
     .input('inNumCuenta', sql.VarChar(10), numCuenta)
-    .input('inFechaCreacion', sql.Date, new Date(fechaCreacion))
+    .input('inFechaCreacion', sql.DATE, fechaCreacion)
     .input('inSaldo', sql.MONEY, saldo)
-    .output('outFlagError', sql.INT)
-    .execute('dbo.sp_InsertCuentaAhorro');
-  
-  return result.output.outFlagError;
+    .output('outFlagError', sql.BIT)
+    .output('outFlagNumCuentaRepetido', sql.BIT)
+    .output('outFlagEntroCatch', sql.BIT)
+    .output('outFlagInserto', sql.BIT)
+    .execute('dbo.sp_InsertCuentaAhorro'); //llamar al SP que insertar cuenta ahorro
+
+
+  const outFlagError = result.output.outFlagError
+  const cuentaRepetida = result.output.outFlagNumCuentaRepetido
+  const entroCatch = result.output.outFlagEntroCatch
+  const inserto = result.output.outFlagInserto
+  return {outFlagError, cuentaRepetida, entroCatch, inserto};
 }
 
 async function insertarBeneficiario(numCuenta, valorDocuIdentidad, idParentesco, porcentaje) 
@@ -158,8 +167,8 @@ async function insertarUsuario(usuario, contrasena, esAdmin, valorDocuIdentidad)
 {
   const pool = await poolPromise;
   const result = await pool.request()
-    .input('inUser', sql.VarChar(15), usuario)
-    .input('inPassword', sql.VarChar(15), contrasena)
+    .input('inUser', sql.VarChar(20), usuario)
+    .input('inPassword', sql.VarChar(20), contrasena)
     .input('esAdmin', sql.BIT, esAdmin)
     .input('valorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
     .output('outFlagError', sql.INT)
@@ -172,7 +181,7 @@ async function insertarUsuarioVer(usuario, numCuenta)
 {
   const pool = await poolPromise;
   const result = await pool.request()
-    .input('inUser', sql.VarChar(15), usuario)
+    .input('inUser', sql.VarChar(20), usuario)
     .input('inNumCuenta', sql.VarChar(10), numCuenta)
     .output('outFlagError', sql.INT)
     .execute('dbo.sp_InsertUsuarioVer');
@@ -221,8 +230,6 @@ async function xmlBD(jsonData) {
 
     // impresion de verificacion de llegada
 
-    const hayCatalogo = await existenTablasCatalogo();
-
     const datosBD = await procesarXmlString(jsonData);
 
 
@@ -267,7 +274,8 @@ async function xmlBD(jsonData) {
         }
       }
     }
-
+    
+    const hayCatalogo = await existenTablasCatalogo();
     
     if (hayCatalogo) {
       if (datosBD?.Personas) {
@@ -279,11 +287,13 @@ async function xmlBD(jsonData) {
         }
       }
 
-      if (datosBD?.Cuentas_Ahorro) {
-        for (const item of datosBD.Cuentas_Ahorro) {
-          if (await insertarCuentaAhorro(item.ValorDocumentoIdentidadDelCliente, item.TipoCuentaId, item.NumeroCuenta, item.FechaCreacion,
-            item.Saldo) !== 0) {
-            console.error(`Error al insertar CuentaAhorro con Num_Cuenta: ${item.NumeroCuenta}`);
+      if (datosBD?.Cuentas) {
+        for (const item of datosBD.Cuentas) {
+          const resultado = await insertarCuentaAhorro(item.ValorDocumentoIdentidadDelCliente, item.TipoCuentaId, item.NumeroCuenta, item.FechaCreacion,
+            item.Saldo);
+            console.log(`bandera de insercion de cuenta: ${resultado.cuentaRepetida}, ${resultado.entroCatch}, ${resultado.inserto}, ${resultado.outFlagError}`);
+          if (resultado !== 0) {
+            console.error(`Error al insertar CuentaAhorro con Num_Cuenta: ${item.NumeroCuenta}, Error: ${resultado.message}`);
           }
         }
       }
@@ -321,8 +331,8 @@ async function xmlBD(jsonData) {
           }
         }
       }
-    } */
-
+    }
+ */
 
   } catch (error) {
     throw new Error(`Error al procesar el JSON: ${error.message}`);

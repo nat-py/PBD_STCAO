@@ -1,4 +1,5 @@
 const listaService = require('../services/listaCuentasService');
+const bitacoraService = require('../services/bitacora');
 
 async function listaCuentas(req, res) {
   try {
@@ -13,8 +14,18 @@ async function listaCuentas(req, res) {
   }
 }
 
+async function registrarBitacora(req, res) {
+  try {
+    const { usuario} = req.body;
+    bitacoraService.registrarBitacora('Logout', usuario, req.ip);
+  } catch (error) {
+    console.error('Error al registrar en la bitácora:', error);
+  }
+}
+
 module.exports = {
-  listaCuentas
+  listaCuentas,
+  registrarBitacora
 };
 
 

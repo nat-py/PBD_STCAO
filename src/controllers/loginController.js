@@ -1,4 +1,5 @@
 const loginService = require('../services/loginService');
+const bitacoraService = require('../services/bitacora');
 
 async function validarUsuario(req, res) {
   try {
@@ -11,6 +12,7 @@ async function validarUsuario(req, res) {
     if (estados.outFlagExiste == false) {
       return res.status(401).json({ message: 'Usuario o contraseña incorrectos', success: false });
     }
+    bitacoraService.registrarBitacora('Login', usuario, req.ip);
     return res.status(200).json({ message: 'Usuario validado correctamente', isAdmin: estados.outFlagEsAdmin === 1, success: true });
     
   } catch (error) {

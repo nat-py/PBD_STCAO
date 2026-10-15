@@ -90,14 +90,32 @@ document.addEventListener('DOMContentLoaded', () => {
             <td>${cuenta.cantidadSinpeSalientes}</td>
           `;
           tbody.appendChild(tr);
+          tr.addEventListener('click', () => {
+            registrarEstado();
+          });
         });
+
       }
     } catch (error) {
       console.error('Error al recibir estados de cuenta:', error);
     }
   }
 
+  //seguimiento de estado de cuenta
+  async function registrarEstado() {
+    try {
+      const response = await fetch('/api/ahorro/registrar_estado', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario: usuarioActual})
+      });
+    } catch (error) {
+      console.error('Error al obtener la bitácora de estados de cuenta:', error);
+    }
+  }
+
   let beneficiarios = [];
+  const beneficiariosOriginales = [];
 
   // Obtener beneficiarios
   async function recibirBeneficiariosAPI() {
@@ -125,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (beneficiarios.length === 1) {
           beneficiarios[0].porcentaje = 100;
         }
-
+        beneficiariosOriginales.push(...beneficiarios);
         renderBeneficiarios();
       }
     } catch (error) {
@@ -137,7 +155,9 @@ document.addEventListener('DOMContentLoaded', () => {
   async function eliminarBeneficiarioAPI(valorDocuIdentidad) {
     try {
       const response = await fetch(`/api/ahorro/eliminar_beneficiario?valorDocuIdentidad=${encodeURIComponent(valorDocuIdentidad)}`, {
-        method: 'POST'
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario: usuarioActual })
       });
       const data = await response.json();
       if (data.success) {
@@ -204,22 +224,21 @@ document.addEventListener('DOMContentLoaded', () => {
         // Vista Editable con Selects dinámicos para Tipos de Documento y Parentescos
         const esUnico = beneficiarios.length === 1;
 
-        // Construir opciones de Tipos de Documento
+        // Construir opciones de Tipos de Documento usando su ID como value
         let opcionesTiposDoc = tiposDocumento.map(t => {
-          // Ajusta 't.nombre' o 't.id' según la estructura de tu API de tipos de documento
-          let valorTipo = t.nombre || t; 
-          let seleccionado = (b.nDoc === valorTipo) ? 'selected' : '';
-          return `<option value="${valorTipo}" ${seleccionado}>${valorTipo}</option>`;
+          let idTipo = t.id !== undefined ? t.id : t; 
+          let nombreTipo = t.nombre || t.descripcion || t;
+          let seleccionado = (String(b.nDoc) === String(idTipo)) ? 'selected' : '';
+          return `<option value="${idTipo}" ${seleccionado}>${nombreTipo}</option>`;
         }).join('');
 
-        // Construir opciones de Parentescos
+        // Construir opciones de Parentescos usando su ID como value
         let opcionesParentescos = parentescos.map(p => {
-          // Ajusta 'p.nombre' o 'p.id' según la estructura de tu API de parentescos
-          let valorParentesco = p.nombre || p; 
-          let seleccionado = (b.parentesco === valorParentesco) ? 'selected' : '';
-          return `<option value="${valorParentesco}" ${seleccionado}>${valorParentesco}</option>`;
+          let idParentesco = p.id !== undefined ? p.id : p;
+          let nombreParentesco = p.nombre || p.descripcion || p;
+          let seleccionado = (String(b.parentesco) === String(idParentesco)) ? 'selected' : '';
+          return `<option value="${idParentesco}" ${seleccionado}>${nombreParentesco}</option>`;
         }).join('');
-
         col.innerHTML = `
           ${botonesLateralesHTML}
           <div class="card shadow-sm p-3 border-primary h-100 position-relative">
@@ -348,47 +367,156 @@ document.addEventListener('DOMContentLoaded', () => {
     renderBeneficiarios();
   };
 
-  // Botón para alternar modo edición y validar al guardar
-  btnToggleEdit.addEventListener('click', () => {
-    if (modoEdicion) {
-      let sumaTotal = beneficiarios.reduce((acc, b) => acc + b.porcentaje, 0);
+// Variable global para almacenar el estado original al entrar a edición
 
+  // Botón para alternar modo edición y validar al guardar
+  btnToggleEdit.addEventListener('click', async () => {
+    if (!modoEdicion) {
+      // estado anterior 
+      
+      modoEdicion = true;
+      btnToggleEdit.textContent = 'Guardar Cambios';
+      btnToggleEdit.className = 'btn btn-success text-white';
+      renderBeneficiarios();
+
+    } else {
+
+      // no salir si hay campos vacíos
+      for (let i = 0; i < beneficiarios.length; i++) {
+        let b = beneficiarios[i];
+        if (!b.nDoc || !b.doc || !b.nombre || !b.parentesco || !b.fechaNacimiento || !b.telefono1 || !b.email) {
+          alert(`Por favor, complete todos los campos obligatorios del Beneficiario ${i + 1} antes de guardar.`);
+          return; 
+        }
+      }
+
+      // validación de porcentajes (Exactamente 100%)
+      let sumaTotal = beneficiarios.reduce((acc, b) => acc + b.porcentaje, 0);
       if (sumaTotal < 100) {
         alert(`La suma de los porcentajes es ${sumaTotal}%. Debe sumar exactamente 100% para poder guardar.`);
-        return;
+        return; 
       }
       if (sumaTotal > 100) {
         alert(`La suma de los porcentajes supera el 100% (${sumaTotal}%). Por favor, ajústelo.`);
         return;
       }
 
-      alert('¡Cambios guardados exitosamente!');
+      let nuevosBeneficiarios = [];
+      let beneficiariosEditados = [];
+      
+      // revisar si es original, revisa primero si ya existe, despues compara si hay cambios
+      beneficiarios.forEach(actual => {
+        let original = beneficiariosOriginales.find(orig => orig.doc === actual.doc );
+
+        if (!original) {
+          nuevosBeneficiarios.push({
+            nombreBeneficiario: actual.nombre,
+            tipoDoc: actual.nDoc,
+            valorDoc: actual.doc,
+            parentesco: actual.parentesco,
+            fechaNacimiento: actual.fechaNacimiento,
+            telefono1: actual.telefono1,
+            telefono2: actual.telefono2,
+            email: actual.email,
+            porcentaje: actual.porcentaje,
+            cuentaAsociada: numCuenta
+          });
+        } else {
+          let haCambiado = 
+            original.nombre !== actual.nombre ||
+            original.nDoc !== actual.nDoc ||
+            original.doc !== actual.doc ||
+            original.parentesco !== actual.parentesco ||
+            original.fechaNacimiento !== actual.fechaNacimiento ||
+            original.telefono1 !== actual.telefono1 ||
+            original.telefono2 !== actual.telefono2 ||
+            original.email !== actual.email ||
+            original.porcentaje !== actual.porcentaje;
+
+          if (haCambiado) {
+            beneficiariosEditados.push({
+              old: {
+                nombreBeneficiario: original.nombre,
+                tipoDoc: original.nDoc,
+                valorDoc: original.doc,
+                parentesco: original.parentesco,
+                fechaNacimiento: original.fechaNacimiento,
+                telefono1: original.telefono1,
+                telefono2: original.telefono2,
+                email: original.email,
+                porcentaje: original.porcentaje,
+                cuentaAsociada: numCuenta
+              },
+              new: {
+                nombreBeneficiario: actual.nombre,
+                tipoDoc: actual.nDoc,
+                valorDoc: actual.doc,
+                parentesco: actual.parentesco,
+                fechaNacimiento: actual.fechaNacimiento,
+                telefono1: actual.telefono1,
+                telefono2: actual.telefono2,
+                email: actual.email,
+                porcentaje: actual.porcentaje,
+                cuentaAsociada: numCuenta
+              }
+            });
+          }
+        }
+      });
+
+      // aqui a backend
+      for (let i = 0; i < nuevosBeneficiarios.length; i++) {
+        console.log('Insertando nuevo beneficiario:', nuevosBeneficiarios[i]);
+        try {
+          const response = await fetch('/api/ahorro/insertar_beneficiario', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ beneficiario: nuevosBeneficiarios[i], usuario: usuarioActual })
+          });
+          const data = await response.json();
+          if (!data.success) {
+            alert(`Error al insertar beneficiario: ${data.error || 'Error desconocido'}`);
+          }
+        } catch (error) {
+          console.error('Error al insertar beneficiario:', error);
+        }
+      }
+
+      alert('¡Cambios validados y procesados con éxito!');
+
+      modoEdicion = false;
+      btnToggleEdit.textContent = 'Editar Beneficiarios';
+      btnToggleEdit.className = 'btn btn-secondary text-white';
+      renderBeneficiarios();
+
     }
-
-    modoEdicion = !modoEdicion;
-    btnToggleEdit.textContent = modoEdicion ? 'Guardar Cambios' : 'Editar Beneficiarios';
-    btnToggleEdit.className = modoEdicion ? 'btn btn-success text-white' : 'btn btn-secondary text-white';
-    renderBeneficiarios();
   });
-
+  
   // Funciones globales auxiliares
   window.agregarBeneficiario = function(index) {
     if (beneficiarios.length >= 3) return;
     
+    // 1. Forzar que la pantalla pase a Modo Edición automáticamente
+    modoEdicion = true;
+    btnToggleEdit.textContent = 'Guardar Cambios';
+    btnToggleEdit.className = 'btn btn-success text-white';
+
+    // 2. Repartir porcentajes equitativamente de forma entera
     let nuevoPorcentaje = Math.floor(100 / (beneficiarios.length + 1));
     beneficiarios.forEach(b => b.porcentaje = nuevoPorcentaje);
 
+    // 3. Crear el objeto con TODOS los campos en blanco
     const nuevo = {
       id: Date.now(),
-      nDoc: tiposDocumento.length > 0 ? (tiposDocumento[0].nombre || tiposDocumento[0]) : 'Cédula de Identidad',
+      nDoc: tiposDocumento.length > 0 ? (tiposDocumento[0].nombre || tiposDocumento[0]) : '',
       doc: '',
-      nombre: 'Nuevo Beneficiario',
-      parentesco: parentescos.length > 0 ? (parentescos[0].nombre || parentescos[0]) : 'Hermano',
-      fechaNacimiento: '2010/01/01',
+      nombre: '',
+      parentesco: parentescos.length > 0 ? (parentescos[0].nombre || parentescos[0]) : '',
+      fechaNacimiento: '',
       telefono1: '',
       telefono2: '',
       email: '',
-      porcentaje: 100 - (nuevoPorcentaje * beneficiarios.length)
+      porcentaje: 100 - (nuevoPorcentaje * beneficiarios.length) // El sobrante para redondear a 100
     };
     
     beneficiarios.splice(index, 0, nuevo);
@@ -418,6 +546,21 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   };
+
+    // salir
+  const salirBtn = document.getElementById('salir');
+  salirBtn.addEventListener('click', () => {
+    window.location.href = '../login/login.html';
+    
+    fetch('/api/ahorro/salir', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ usuario: usuarioActual })
+    });
+
+  });
 
   window.actualizarDato = function(index, campo, valor) {
     beneficiarios[index][campo] = valor;

@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const tablaBitacorasBody = document.getElementById("tabla-bitacoras-body");
   const modalBitacora = new bootstrap.Modal(document.getElementById("modalBitacoraDetalle"));
 
-  fetch("bitacoras.json")
+  fetch("../../bitacora.json")
     .then(response => response.json())
     .then(data => {
       bitacorasData = data;

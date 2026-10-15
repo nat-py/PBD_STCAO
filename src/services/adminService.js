@@ -6,6 +6,7 @@ async function insertarTipoDocuIdentidad(id, nombre)
   const result = await pool.request()
     .input('inID', sql.VarChar(4), id)
     .input('inNombre', sql.VarChar(32), nombre)
+    .output('outFlagExiste', sql.BIT)
     .execute('dbo.sp_InsertTipoDocuIdentidad'); //llamar al SP que inserta docu
   
   const outFlagError = result.output.outFlagError
@@ -71,7 +72,7 @@ async function insertarTipoOperacion(id, nombre)
     .output('outFlagExiste', sql.BIT)
     .execute('dbo.sp_InsertTipoOperacion'); //llamar al SP que inserta tipo operacion
   
-  const outFlagError = result.output.outFlagError
+  const outFlagError = result.output.outFlagExiste
   return outFlagError;
 }
 
