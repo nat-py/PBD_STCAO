@@ -9,7 +9,8 @@ router.post('/parentescos', ahorroController.tablaParentescoActivo);
 router.post('/tipos_documento', ahorroController.tablaTipoDocuIdentidadActivo);
 router.post('/salir', ahorroController.registrarSalir);
 router.post('/registrar_estado', ahorroController.registrarEstado);
-
 router.post('/insertar_beneficiario', ahorroController.insertarBeneficiario);
+router.put('/editar_beneficiario_DocuDiferente', ahorroController.editarBeneficiarioDocuDiferente);
+router.put('/editar_beneficiario_DocuIgual', ahorroController.editarBeneficiarioDocuIgual);
 
 module.exports = router;

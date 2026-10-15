@@ -198,5 +198,13 @@
     "operacion": "Insertar beneficiario",
     "usuario": "lsoto",
     "detalles": null
+  },
+  {
+    "id": 26,
+    "fechaHora": "2026-10-15 08:07:03",
+    "ip": "::1",
+    "operacion": "Login",
+    "usuario": "lsoto",
+    "detalles": null
   }
 ]

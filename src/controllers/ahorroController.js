@@ -92,6 +92,37 @@ async function insertarBeneficiario(req, res) {
   }
 }
 
+async function editarBeneficiarioDocuDiferente(req, res) {
+  const { usuario, beneficiario } = req.body;
+  try {
+    const result = await ahorroService.editarBeneficiarioDocuDiferente(beneficiario.old.valorDoc, beneficiario.new.valorDoc, beneficiario.new.nombreBeneficiario, 
+      beneficiario.new.nombreParentesco, beneficiario.new.porcentaje, beneficiario.new.fechaNacimiento, beneficiario.new.nombreTipoDocuIdentidad, 
+      beneficiario.new.email, beneficiario.new.telefono1, beneficiario.new.telefono2, beneficiario.new.cuentaAsociada);
+    console.log('Resultado de la edición del beneficiario (documento diferente):', result);
+    bitacoraService.registrarBitacora('Actualizar beneficiario', usuario, req.ip, beneficiario);
+    res.status(200).json({ message: 'Beneficiario editado correctamente (documento diferente)', success: true });
+  } catch (error) {
+    console.error('Error al editar el beneficiario (documento diferente):', error);
+    res.status(500).json({ error: 'Error al editar el beneficiario (documento diferente)' });
+  }
+}
+
+async function editarBeneficiarioDocuIgual(req, res) {
+  const { usuario, beneficiario } = req.body;
+  try {
+    const result = await ahorroService.editarBeneficiarioDocuIgual(beneficiario.old.valorDoc, beneficiario.new.nombreBeneficiario, beneficiario.new.nombreParentesco, 
+      beneficiario.new.porcentaje, beneficiario.new.fechaNacimiento, beneficiario.new.nombreTipoDocuIdentidad, beneficiario.new.email, 
+      beneficiario.new.telefono1, beneficiario.new.telefono2, beneficiario.new.cuentaAsociada);
+    console.log('Resultado de la edición del beneficiario (documento igual):', result);
+    bitacoraService.registrarBitacora('Actualizar beneficiario', usuario, req.ip, beneficiario);
+    res.status(200).json({ message: 'Beneficiario editado correctamente (documento igual)', success: true });
+  } catch (error) {
+    console.error('Error al editar el beneficiario (documento igual):', error);
+    res.status(500).json({ error: 'Error al editar el beneficiario (documento igual)' });
+  }
+}
+
+
 module.exports = { 
   top8_EstadoCuenta_AsociadoCuenta, 
   beneficiariosAsociadosCuenta, 
@@ -100,5 +131,7 @@ module.exports = {
   tablaTipoDocuIdentidadActivo, 
   registrarSalir,
   insertarBeneficiario,
+  editarBeneficiarioDocuDiferente,
+  editarBeneficiarioDocuIgual,
   registrarEstado 
 };

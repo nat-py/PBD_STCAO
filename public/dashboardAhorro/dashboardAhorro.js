@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   let beneficiarios = [];
-  const beneficiariosOriginales = [];
+  let beneficiariosOriginales = [];
 
   // Obtener beneficiarios
   async function recibirBeneficiariosAPI() {
@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (beneficiarios.length === 1) {
           beneficiarios[0].porcentaje = 100;
         }
-        beneficiariosOriginales.push(...beneficiarios);
+        beneficiariosOriginales = JSON.parse(JSON.stringify(beneficiarios));
         renderBeneficiarios();
       }
     } catch (error) {
@@ -464,9 +464,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
+      console.log('Nuevos Beneficiarios:', nuevosBeneficiarios);
+      console.log('Beneficiarios Editados:', beneficiariosEditados);
+
       // aqui a backend
       for (let i = 0; i < nuevosBeneficiarios.length; i++) {
-        console.log('Insertando nuevo beneficiario:', nuevosBeneficiarios[i]);
         try {
           const response = await fetch('/api/ahorro/insertar_beneficiario', {
             method: 'POST',
@@ -479,6 +481,30 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         } catch (error) {
           console.error('Error al insertar beneficiario:', error);
+        }
+      }
+
+      for (let i = 0; i < beneficiariosEditados.length; i++) {
+        try {
+          if (beneficiariosEditados[i].old.valorDoc !== beneficiariosEditados[i].new.valorDoc) {
+            const response = await fetch('/api/ahorro/editar_beneficiario_DocuDiferente', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ beneficiario: beneficiariosEditados[i], usuario: usuarioActual })
+            });
+          } else {
+            const response = await fetch('/api/ahorro/editar_beneficiario_DocuIgual', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ beneficiario: beneficiariosEditados[i], usuario: usuarioActual })
+            });
+          }
+          const data = await response.json();
+          if (!data.success) {
+            alert(`Error al editar beneficiario: ${data.error || 'Error desconocido'}`);
+          }
+        } catch (error) {
+          console.error('Error al editar beneficiario:', error);
         }
       }
 
