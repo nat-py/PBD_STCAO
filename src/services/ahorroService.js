@@ -52,6 +52,9 @@ async function tablaTipoDocuIdentidadActivo()
 
 async function insertarBeneficiario(numCuenta, valorDocuIdentidad, idParentesco, porcentaje) 
 {
+
+  console.log('insertarBeneficiario called with:', { numCuenta, valorDocuIdentidad, idParentesco, porcentaje });
+
   const pool = await poolPromise;
   const result = await pool.request()
     .input('inNumCuenta', sql.VarChar(10), numCuenta)

@@ -291,7 +291,6 @@ async function xmlBD(jsonData) {
         for (const item of datosBD.Cuentas) {
           const resultado = await insertarCuentaAhorro(item.ValorDocumentoIdentidadDelCliente, item.TipoCuentaId, item.NumeroCuenta, item.FechaCreacion,
             item.Saldo);
-            console.log(`bandera de insercion de cuenta: ${resultado.cuentaRepetida}, ${resultado.entroCatch}, ${resultado.inserto}, ${resultado.outFlagError}`);
           if (resultado === 0) {
             console.error(`Error al insertar CuentaAhorro con Num_Cuenta: ${item.NumeroCuenta}, Error: ${resultado.message}`);
           }
@@ -311,7 +310,7 @@ async function xmlBD(jsonData) {
           if (await insertarEstadoCuenta(item.NumeroCuenta, item.fechaInicio, item.fechafin, item.saldoinicial,
             item.saldoMinimo, item.saldo_final, item.interesesAcumulados, item.cantRetiros,
             item.cantDepositos, item.cantSinpeEntrantes, item.cantSinpeSalientes) === 0) {
-            console.error(`Error al insertar EstadoCuenta con Num_Cuenta: ${item.NumeroCuenta}`);
+            console.error(` `);
           }
         }
       }

@@ -452,15 +452,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!original) {
 
-          console.log('Nuevo Beneficiario:', actual);
-
           parentescos.forEach(p => {
             if (p.id === actual.parentesco) {
               parentescoID = p.id;
             }
           });
-
-          console.log('parentescoID:', parentescoID);
 
           tiposDocumento.forEach(t => {
             if (t.nombre === actual.nDoc) {
@@ -523,8 +519,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
-      console.log('Nuevos Beneficiarios:', nuevosBeneficiarios);
-      console.log('Beneficiarios Editados:', beneficiariosEditados);
 
       // aqui a backend
       for (let i = 0; i < nuevosBeneficiarios.length; i++) {
@@ -553,7 +547,6 @@ document.addEventListener('DOMContentLoaded', () => {
               body: JSON.stringify({ beneficiario: beneficiariosEditados[i], usuario: usuarioActual })
             });
           } else {
-            console.log('Editando beneficiario con documento igual:', beneficiariosEditados[i]);
             response = await fetch('/api/ahorro/editar_beneficiario_DocuIgual', {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
