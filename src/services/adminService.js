@@ -285,8 +285,8 @@ async function editarBeneficiarioDocuDiferente(valorDocuIdentidadPasado, valorDo
     .output('outFlagExisteParentesco', sql.BIT)
     .output('outFlagExisteTipoDocuIdentidad', sql.BIT)
     .output('outFlagError', sql.BIT)
-    .execute('dbo.sp_EditarBeneficiario'); //llamar al SP que edita beneficiario
-  
+    .execute('dbo.sp_EditarBeneficiarioDocuDiferente'); //llamar al SP que edita beneficiario
+
   const outFlagError = result.output.outFlagError
   return outFlagError; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
@@ -312,8 +312,8 @@ async function editarBeneficiarioDocuIgual(valorDocuIdentidad, nombreBeneficiari
     .output('outFlagExisteParentesco', sql.BIT)
     .output('outFlagExisteTipoDocuIdentidad', sql.BIT)
     .output('outFlagError', sql.BIT)
-    .execute('dbo.sp_EditarBeneficiario'); //llamar al SP que edita beneficiario
-  
+    .execute('dbo.sp_EditarBeneficiarioDocuIgual'); //llamar al SP que edita beneficiario
+
   const outFlagError = result.output.outFlagError
   return outFlagError; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }

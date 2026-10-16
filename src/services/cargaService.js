@@ -233,7 +233,7 @@ async function xmlBD(jsonData) {
     const datosBD = await procesarXmlString(jsonData);
 
 
-/*     if (datosBD?.Tipo_Doc) {
+     if (datosBD?.Tipo_Doc) {
       for (const item of datosBD.Tipo_Doc) {
         if (await insertarTipoDocuIdentidad(item.Id, item.Nombre) !== 0) {
           console.error(`Error al insertar TipoDocuIdentidad con ID: ${item.Id}`);
@@ -269,7 +269,7 @@ async function xmlBD(jsonData) {
 
     if (datosBD?.TipoOperacionesBitacora) {
       for (const item of datosBD.TipoOperacionesBitacora) {
-        if (await insertarTipoOperacion(item.id, item.nombre) !== 0) {
+        if (await insertarTipoOperacion(item.id, item.nombre) === 0) {
           console.error(`Error al insertar TipoOperacion con ID: ${item.id}`);
         }
       }
@@ -292,7 +292,7 @@ async function xmlBD(jsonData) {
           const resultado = await insertarCuentaAhorro(item.ValorDocumentoIdentidadDelCliente, item.TipoCuentaId, item.NumeroCuenta, item.FechaCreacion,
             item.Saldo);
             console.log(`bandera de insercion de cuenta: ${resultado.cuentaRepetida}, ${resultado.entroCatch}, ${resultado.inserto}, ${resultado.outFlagError}`);
-          if (resultado !== 0) {
+          if (resultado === 0) {
             console.error(`Error al insertar CuentaAhorro con Num_Cuenta: ${item.NumeroCuenta}, Error: ${resultado.message}`);
           }
         }
@@ -310,7 +310,7 @@ async function xmlBD(jsonData) {
         for (const item of datosBD.Estados_de_Cuenta ) {
           if (await insertarEstadoCuenta(item.NumeroCuenta, item.fechaInicio, item.fechafin, item.saldoinicial,
             item.saldoMinimo, item.saldo_final, item.interesesAcumulados, item.cantRetiros,
-            item.cantDepositos, item.cantSinpeEntrantes, item.cantSinpeSalientes) !== 0) {
+            item.cantDepositos, item.cantSinpeEntrantes, item.cantSinpeSalientes) === 0) {
             console.error(`Error al insertar EstadoCuenta con Num_Cuenta: ${item.NumeroCuenta}`);
           }
         }
@@ -332,7 +332,7 @@ async function xmlBD(jsonData) {
         }
       }
     }
- */
+
 
   } catch (error) {
     throw new Error(`Error al procesar el JSON: ${error.message}`);

@@ -72,10 +72,10 @@ async function editarBeneficiarioDocuDiferente(valorDocuIdentidadPasado, valorDo
     .input('inValorDocuIdentidadPasado', sql.VarChar(32), valorDocuIdentidadPasado)
     .input('inValorDocuIdentidadNuevo', sql.VarChar(32), valorDocuIdentidadNuevo)
     .input('inNombreBeneficiario', sql.VarChar(64), nombreBeneficiario)
-    .input('inNombreParentesco', sql.VarChar(32), nombreParentesco)
+    .input('inIDParentesco', sql.VarChar(4), nombreParentesco)
     .input('inPorcentajeBeneficio', sql.INT, porcentaje)
     .input('inFechaNacimiento', sql.DATE, fechaNacimiento)
-    .input('inNombreTipoDocuIdentidad', sql.VarChar(32), nombreTipoDocuIdentidad)
+    .input('inIDTipoDocuIdentidad', sql.VarChar(4), nombreTipoDocuIdentidad)
     .input('inEmail', sql.VarChar(50), email)
     .input('inTelefono1', sql.VarChar(16), telefono1)
     .input('inTelefono2', sql.VarChar(16), telefono2)
@@ -86,8 +86,9 @@ async function editarBeneficiarioDocuDiferente(valorDocuIdentidadPasado, valorDo
     .output('outFlagExisteParentesco', sql.BIT)
     .output('outFlagExisteTipoDocuIdentidad', sql.BIT)
     .output('outFlagError', sql.BIT)
-    .execute('dbo.sp_EditarBeneficiario'); //llamar al SP que edita beneficiario
-  
+    
+    .execute('dbo.sp_EditarBeneficiarioDocuDiferente'); //llamar al SP que edita beneficiario
+
   const outFlagError = result.output.outFlagError
   return outFlagError; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
@@ -99,10 +100,10 @@ async function editarBeneficiarioDocuIgual(valorDocuIdentidad, nombreBeneficiari
   const result = await pool.request()
     .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
     .input('inNombreBeneficiario', sql.VarChar(64), nombreBeneficiario)
-    .input('inNombreParentesco', sql.VarChar(32), nombreParentesco)
+    .input('inIDParentesco', sql.VarChar(4), nombreParentesco)
     .input('inPorcentajeBeneficio', sql.INT, porcentaje)
     .input('inFechaNacimiento', sql.DATE, fechaNacimiento)
-    .input('inNombreTipoDocuIdentidad', sql.VarChar(32), nombreTipoDocuIdentidad)
+    .input('inIDTipoDocuIdentidad', sql.VarChar(4), nombreTipoDocuIdentidad)
     .input('inEmail', sql.VarChar(50), email)
     .input('inTelefono1', sql.VarChar(16), telefono1)
     .input('inTelefono2', sql.VarChar(16), telefono2)
@@ -113,10 +114,25 @@ async function editarBeneficiarioDocuIgual(valorDocuIdentidad, nombreBeneficiari
     .output('outFlagExisteParentesco', sql.BIT)
     .output('outFlagExisteTipoDocuIdentidad', sql.BIT)
     .output('outFlagError', sql.BIT)
-    .execute('dbo.sp_EditarBeneficiario'); //llamar al SP que edita beneficiario
-  
+    .output('outFlagEncontroParentesco', sql.BIT)
+    .execute('dbo.sp_EditarBeneficiarioDocuIgual'); //llamar al SP que edita beneficiario
+
   const outFlagError = result.output.outFlagError
-  return outFlagError; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+  const outFlagExistePersona = result.output.outFlagExistePersona
+  const outFlagDocuIdentidadRepetido = result.output.outFlagDocuIdentidadRepetido
+  const outFlagExisteBeneficiario = result.output.outFlagExisteBeneficiario
+  const outFlagExisteParentesco = result.output.outFlagExisteParentesco
+  const outFlagExisteTipoDocuIdentidad = result.output.outFlagExisteTipoDocuIdentidad
+  const outFlagEncontroParentesco = result.output.outFlagEncontroParentesco
+  return {
+    outFlagError,
+    outFlagExistePersona,
+    outFlagDocuIdentidadRepetido,
+    outFlagExisteBeneficiario,
+    outFlagExisteParentesco,
+    outFlagExisteTipoDocuIdentidad,
+    outFlagEncontroParentesco
+  }; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
 
 

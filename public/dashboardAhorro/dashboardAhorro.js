@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     usuarioHeader.textContent = usuarioActual;
     recibirEstadosCuentaAPI();
     recibirBeneficiariosAPI();
-    obtenerParentescosYTiposDocumentoAPI();
   } else {
     usuarioHeader.textContent = "Usuario no encontrado";
   }
@@ -92,6 +91,8 @@ document.addEventListener('DOMContentLoaded', () => {
           tbody.appendChild(tr);
           tr.addEventListener('click', () => {
             registrarEstado();
+            modalProceso.show();
+            
           });
         });
 
@@ -126,19 +127,40 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ numCuenta: numCuenta })
       });
       const data = await response.json();
+      
+      await obtenerParentescosYTiposDocumentoAPI();
+
       if (data.success) {
-        beneficiarios = data.beneficiarios.map((b, index) => ({
-          id: index + 1,
-          nDoc: b.nombreTipoDocuIdentidad || '',
-          doc: b.valorDocuIdentidad,
-          nombre: b.nombre,
-          parentesco: b.nombreParentesco,
-          fechaNacimiento: formatearFecha(b.fechaNacimiento),
-          telefono1: b.telefono1,
-          telefono2: b.telefono2,
-          email: b.email,
-          porcentaje: Number(b.porcentaje)
-        }));
+        beneficiarios = data.beneficiarios.map((b, index) => {
+        
+          let parentescoID = 0;
+          let tipoDocID = 0;
+          
+          parentescos.forEach(p => {
+            if (p.nombre === b.nombreParentesco) {
+              parentescoID = p.id;
+            }
+          });
+
+          tiposDocumento.forEach(t => {
+            if (t.nombre === b.nombreTipoDocuIdentidad) {
+              tipoDocID = t.id;
+            }
+          });
+
+          return {
+            id: index + 1,
+            nDoc: tipoDocID,
+            doc: b.valorDocuIdentidad,
+            nombre: b.nombre,
+            parentesco: parentescoID,
+            fechaNacimiento: formatearFecha(b.fechaNacimiento),
+            telefono1: b.telefono1,
+            telefono2: b.telefono2,
+            email: b.email,
+            porcentaje: Number(b.porcentaje)
+          };
+        });
 
         if (beneficiarios.length === 1) {
           beneficiarios[0].porcentaje = 100;
@@ -150,6 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Error al recibir beneficiarios:', error);
     }
   }
+
 
   // eliminar beneficiario
   async function eliminarBeneficiarioAPI(valorDocuIdentidad) {
@@ -202,14 +225,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!modoEdicion) {
         // Vista Normal
+
+        //obtener el nombre del parentesco y tipo de documento usando su ID
+        let parentesco = '';
+        let tipoDocID = '';
+
+        parentescos.forEach(p => {
+          if (p.id === b.parentesco) {
+            parentesco = p.nombre;
+          }
+        });
+
+        tiposDocumento.forEach(t => {
+          if (t.id === b.nDoc) {
+            tipoDocID = t.nombre;
+          }
+        });
+
         col.innerHTML = `
           ${botonesLateralesHTML}
           <div class="card shadow-sm p-3 border-0 h-100">
             <h5 class="text-secondary fw-bold mb-3">Beneficiario ${index + 1}</h5>
-            <p class="mb-1"><strong>Tipo Doc:</strong> ${b.nDoc}</p>
+            <p class="mb-1"><strong>Tipo Doc:</strong> ${tipoDocID}</p>
             <p class="mb-1"><strong>Documento:</strong> ${b.doc || 'N/A'}</p>
             <p class="mb-1"><strong>Nombre:</strong> ${b.nombre}</p>
-            <p class="mb-1"><strong>Parentesco:</strong> ${b.parentesco}</p>
+            <p class="mb-1"><strong>Parentesco:</strong> ${parentesco}</p>
             <p class="mb-1"><strong>Fecha Nacimiento:</strong> ${b.fechaNacimiento}</p>
             <p class="mb-1"><strong>Teléfono 1:</strong> ${b.telefono1}</p>
             <p class="mb-1"><strong>Teléfono 2:</strong> ${b.telefono2}</p>
@@ -227,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Construir opciones de Tipos de Documento usando su ID como value
         let opcionesTiposDoc = tiposDocumento.map(t => {
           let idTipo = t.id !== undefined ? t.id : t; 
-          let nombreTipo = t.nombre || t.descripcion || t;
+          let nombreTipo = t.nombre;
           let seleccionado = (String(b.nDoc) === String(idTipo)) ? 'selected' : '';
           return `<option value="${idTipo}" ${seleccionado}>${nombreTipo}</option>`;
         }).join('');
@@ -239,6 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
           let seleccionado = (String(b.parentesco) === String(idParentesco)) ? 'selected' : '';
           return `<option value="${idParentesco}" ${seleccionado}>${nombreParentesco}</option>`;
         }).join('');
+
         col.innerHTML = `
           ${botonesLateralesHTML}
           <div class="card shadow-sm p-3 border-primary h-100 position-relative">
@@ -367,8 +408,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderBeneficiarios();
   };
 
-// Variable global para almacenar el estado original al entrar a edición
-
   // Botón para alternar modo edición y validar al guardar
   btnToggleEdit.addEventListener('click', async () => {
     if (!modoEdicion) {
@@ -407,13 +446,33 @@ document.addEventListener('DOMContentLoaded', () => {
       // revisar si es original, revisa primero si ya existe, despues compara si hay cambios
       beneficiarios.forEach(actual => {
         let original = beneficiariosOriginales.find(orig => orig.doc === actual.doc );
+        
+        let parentescoID = 0;
+        let tipoDocID = 0;
 
         if (!original) {
+
+          console.log('Nuevo Beneficiario:', actual);
+
+          parentescos.forEach(p => {
+            if (p.id === actual.parentesco) {
+              parentescoID = p.id;
+            }
+          });
+
+          console.log('parentescoID:', parentescoID);
+
+          tiposDocumento.forEach(t => {
+            if (t.nombre === actual.nDoc) {
+              tipoDocID = t.id;
+            }
+          });
+
           nuevosBeneficiarios.push({
             nombreBeneficiario: actual.nombre,
-            tipoDoc: actual.nDoc,
+            tipoDoc: tipoDocID,
             valorDoc: actual.doc,
-            parentesco: actual.parentesco,
+            parentesco: parentescoID,
             fechaNacimiento: actual.fechaNacimiento,
             telefono1: actual.telefono1,
             telefono2: actual.telefono2,
@@ -486,14 +545,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
       for (let i = 0; i < beneficiariosEditados.length; i++) {
         try {
+          let response = '';
           if (beneficiariosEditados[i].old.valorDoc !== beneficiariosEditados[i].new.valorDoc) {
-            const response = await fetch('/api/ahorro/editar_beneficiario_DocuDiferente', {
+            response = await fetch('/api/ahorro/editar_beneficiario_DocuDiferente', {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ beneficiario: beneficiariosEditados[i], usuario: usuarioActual })
             });
           } else {
-            const response = await fetch('/api/ahorro/editar_beneficiario_DocuIgual', {
+            console.log('Editando beneficiario con documento igual:', beneficiariosEditados[i]);
+            response = await fetch('/api/ahorro/editar_beneficiario_DocuIgual', {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ beneficiario: beneficiariosEditados[i], usuario: usuarioActual })
