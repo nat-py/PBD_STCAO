@@ -56,4 +56,22 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error('Error al recibir cuentas:', error);
     }
   }
+
+  // salir
+  const salirBtn = document.getElementById('salir');
+  salirBtn.addEventListener('click', () => {
+    window.location.href = '../login/login.html';
+    
+    fetch('/api/lista_cuentas/salir', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ usuario: usuarioActual })
+    });
+
+  });
+
+
+
 });

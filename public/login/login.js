@@ -9,8 +9,6 @@
     if (!form.checkValidity()) {
       event.preventDefault()
       event.stopPropagation()
-      form.classList.add('was-validated')
-      errorGeneral.classList.add('d-none')
       return;
     }
 
@@ -39,7 +37,9 @@
           window.location.href = `/lista_cuentas/listaCuentas.html?usuario=${usuario}`;
         }
       } else {
+        errorGeneral.classList.remove('d-none');
         alert('Usuario o contraseña incorrectos');
+
       }
       
     } catch (error) {
@@ -47,6 +47,5 @@
       errorGeneral.classList.remove('d-none');
     }
 
-    form.classList.add('was-validated')
   }, false)
 })()
