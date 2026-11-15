@@ -30,14 +30,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-
-
   function validarYProcesarArchivo(file) {
     if (file.type === "text/xml" || file.name.endsWith(".xml")) {
       fileInfo.innerText = `Archivo: ${file.name}, listo para ser procesado`;
       validarCatalogoYNoCatalogo(file);
     } else {
-      alert("Por favor, seleccione únicamente un archivo en formato XML.");
+      // Reemplazo de alert por Bootstrap alert
+      mostrarAlertaBootstrap("Por favor, seleccione únicamente un archivo en formato XML.", "danger");
       fileInput.value = "";
     }
   }
@@ -58,20 +57,54 @@ document.addEventListener("DOMContentLoaded", () => {
           });
           const resultado = await respuesta.json();
           if (!respuesta.ok) {
-              alert(resultado.message);
+              // Reemplazo de alert por Bootstrap alert
+              mostrarAlertaBootstrap(resultado.message, "danger");
               return;
           }
           
-          alert("Archivo procesado correctamente.");
+          // Reemplazo de alert por Bootstrap alert (éxito)
+          mostrarAlertaBootstrap("Archivo procesado correctamente.", "success");
 
-          // mandar a login
-          window.location.href = "/login/login.html";
+          // Mandar a login tras un breve momento para que se alcance a ver la alerta
+          setTimeout(() => {
+              window.location.href = "/login/login.html";
+          }, 1500);
 
       } catch (error) {
           console.error("Error:", error);
+          mostrarAlertaBootstrap("Ocurrió un error al procesar la solicitud.", "danger");
       }
     };
     reader.readAsText(file);
   }
 
 });
+
+// Función auxiliar para mostrar alertas flotantes de Bootstrap en la esquina inferior derecha
+function mostrarAlertaBootstrap(mensaje, tipo = "success") {
+  let alertContainer = document.getElementById("bootstrap-alert-container");
+  if (!alertContainer) {
+    alertContainer = document.createElement("div");
+    alertContainer.id = "bootstrap-alert-container";
+    alertContainer.style.cssText = "position: fixed; bottom: 20px; right: 20px; z-index: 1080; min-width: 300px;";
+    document.body.appendChild(alertContainer);
+  }
+
+  const alertDiv = document.createElement("div");
+  alertDiv.className = `alert alert-${tipo} alert-dismissible fade show shadow-lg`;
+  alertDiv.innerHTML = `
+    <div class="d-flex align-items-center">
+      <i class="bi ${tipo === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'} fs-5 me-2"></i>
+      <div>${mensaje}</div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  `;
+
+  alertContainer.appendChild(alertDiv);
+
+  // Auto-cerrar la alerta después de 4 segundos
+  setTimeout(() => {
+    alertDiv.classList.remove("show");
+    setTimeout(() => alertDiv.remove(), 300);
+  }, 4000);
+}

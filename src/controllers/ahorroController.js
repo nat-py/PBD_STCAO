@@ -61,7 +61,7 @@ async function tablaTipoDocuIdentidadActivo(req, res) {
 async function registrarSalir(req, res) {
   try {
     const { usuario} = req.body;
-    bitacoraService.registrarBitacora('Logout', usuario, req.ip);
+    bitacoraService.registrarBitacora('logout', usuario, req.ip);
     res.status(200).json({ message: 'Bitácora de estados de cuenta obtenida correctamente', success: true });
   } catch (error) {
     console.error('Error al registrar en la bitácora:', error);
@@ -71,7 +71,7 @@ async function registrarSalir(req, res) {
 async function registrarEstado(req, res) {
   try {
     const { usuario } = req.body;
-    bitacoraService.registrarBitacora('Consultar estado de cuenta', usuario, req.ip);
+    bitacoraService.registrarBitacora('consultaEstadoCuenta', usuario, req.ip);
     res.status(200).json({ message: 'Bitácora de estados de cuenta obtenida correctamente', success: true });
   } catch (error) {
     console.error('Error al obtener la bitácora de estados de cuenta:', error);
@@ -87,7 +87,7 @@ async function insertarBeneficiario(req, res) {
     const result = await ahorroService.insertarBeneficiario(beneficiario.cuentaAsociada, beneficiario.valorDoc, beneficiario.parentesco, beneficiario.porcentaje);
 
     console.log('Resultado de la inserción del beneficiario:', result);
-    bitacoraService.registrarBitacora('Insertar beneficiario', usuario, req.ip);
+    bitacoraService.registrarBitacora('insertarBeneficiario', usuario, req.ip);
     res.status(200).json({ message: 'Beneficiario insertado correctamente', success: true });
   } catch (error) {
     console.error('Error al insertar el beneficiario:', error);

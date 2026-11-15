@@ -1,3 +1,82 @@
 [
-  
+  {
+    "id": 1,
+    "fechaHora": "2026-10-15 21:25:13",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "lsoto",
+    "detalles": null
+  },
+  {
+    "id": 2,
+    "fechaHora": "2026-10-15 21:26:03",
+    "ip": "::1",
+    "operacion": "consultaEstadoCuenta",
+    "usuario": "lsoto",
+    "detalles": null
+  },
+  {
+    "id": 3,
+    "fechaHora": "2026-11-12 08:04:29",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "fquiros",
+    "detalles": null
+  },
+  {
+    "id": 4,
+    "fechaHora": "2026-11-12 08:07:55",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "fquiros",
+    "detalles": null
+  },
+  {
+    "id": 5,
+    "fechaHora": "2026-11-12 08:17:42",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "fquiros",
+    "detalles": null
+  },
+  {
+    "id": 6,
+    "fechaHora": "2026-11-12 08:23:04",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "fquiros",
+    "detalles": null
+  },
+  {
+    "id": 7,
+    "fechaHora": "2026-11-12 08:23:42",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "fquiros",
+    "detalles": null
+  },
+  {
+    "id": 8,
+    "fechaHora": "2026-11-12 08:28:09",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "fquiros",
+    "detalles": null
+  },
+  {
+    "id": 9,
+    "fechaHora": "2026-11-12 08:28:49",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "lsoto",
+    "detalles": null
+  },
+  {
+    "id": 10,
+    "fechaHora": "2026-11-14 21:56:03",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "fquiros",
+    "detalles": null
+  }
 ]

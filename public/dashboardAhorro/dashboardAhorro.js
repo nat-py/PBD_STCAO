@@ -47,10 +47,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const dataTiposDoc = await tiposDocumentoResponse.json();
 
       if (dataParentescos.success) {
-        parentescos = dataParentescos.parentescos; // Ajusta según la propiedad que devuelva tu BD (ej. descripcion o nombre)
+        parentescos = dataParentescos.parentescos; 
       }
       if (dataTiposDoc.success) {
-        tiposDocumento = dataTiposDoc.tiposDocumento; // Ajusta según la propiedad que devuelva tu BD
+        tiposDocumento = dataTiposDoc.tiposDocumento; 
       }
 
     } catch (error) {
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
   //seguimiento de estado de cuenta
   async function registrarEstado() {
     try {
-      const response = await fetch('/api/ahorro/registrar_estado', {
+      await fetch('/api/ahorro/registrar_estado', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ usuario: usuarioActual})
@@ -184,14 +184,17 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const data = await response.json();
       if (data.success) {
-        alert('Beneficiario eliminado correctamente.');
+        mostrarAlertaBootstrap('Beneficiario eliminado correctamente.', 'success');
         recibirBeneficiariosAPI();
+        return true;
       } else {
-        alert('Error al eliminar beneficiario: ' + (data.error || 'Error desconocido'));
+        mostrarAlertaBootstrap('Error al eliminar beneficiario: ' + (data.error || 'Error desconocido'), 'danger');
+        return false;
       }
     } catch (error) {
       console.error('Error al eliminar beneficiario:', error);
-      alert('Error al eliminar beneficiario. Por favor, inténtelo de nuevo.');
+      mostrarAlertaBootstrap('Error al eliminar beneficiario. Por favor, inténtelo de nuevo.', 'danger');
+      return false;
     }
   }
 
@@ -224,9 +227,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (!modoEdicion) {
-        // Vista Normal
-
-        //obtener el nombre del parentesco y tipo de documento usando su ID
         let parentesco = '';
         let tipoDocID = '';
 
@@ -261,10 +261,8 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         `;
       } else {
-        // Vista Editable con Selects dinámicos para Tipos de Documento y Parentescos
         const esUnico = beneficiarios.length === 1;
 
-        // Construir opciones de Tipos de Documento usando su ID como value
         let opcionesTiposDoc = tiposDocumento.map(t => {
           let idTipo = t.id !== undefined ? t.id : t; 
           let nombreTipo = t.nombre;
@@ -272,7 +270,6 @@ document.addEventListener('DOMContentLoaded', () => {
           return `<option value="${idTipo}" ${seleccionado}>${nombreTipo}</option>`;
         }).join('');
 
-        // Construir opciones de Parentescos usando su ID como value
         let opcionesParentescos = parentescos.map(p => {
           let idParentesco = p.id !== undefined ? p.id : p;
           let nombreParentesco = p.nombre || p.descripcion || p;
@@ -395,7 +392,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Ajuste final para asegurar que la suma dé 100 exacto tras el redondeo entero
     let sumaActual = beneficiarios.reduce((acc, b) => acc + b.porcentaje, 0);
     if (sumaActual !== 100) {
       let diferenciaTotal = 100 - sumaActual;
@@ -411,8 +407,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Botón para alternar modo edición y validar al guardar
   btnToggleEdit.addEventListener('click', async () => {
     if (!modoEdicion) {
-      // estado anterior 
-      
       modoEdicion = true;
       btnToggleEdit.textContent = 'Guardar Cambios';
       btnToggleEdit.className = 'btn btn-success text-white';
@@ -420,30 +414,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } else {
 
-      // no salir si hay campos vacíos
       for (let i = 0; i < beneficiarios.length; i++) {
         let b = beneficiarios[i];
         if (!b.nDoc || !b.doc || !b.nombre || !b.parentesco || !b.fechaNacimiento || !b.telefono1 || !b.email) {
-          alert(`Por favor, complete todos los campos obligatorios del Beneficiario ${i + 1} antes de guardar.`);
+          mostrarAlertaBootstrap(`Por favor, complete todos los campos obligatorios del Beneficiario ${i + 1} antes de guardar.`, 'danger');
           return; 
         }
       }
 
-      // validación de porcentajes (Exactamente 100%)
       let sumaTotal = beneficiarios.reduce((acc, b) => acc + b.porcentaje, 0);
       if (sumaTotal < 100) {
-        alert(`La suma de los porcentajes es ${sumaTotal}%. Debe sumar exactamente 100% para poder guardar.`);
+        mostrarAlertaBootstrap(`La suma de los porcentajes es ${sumaTotal}%. Debe sumar exactamente 100% para poder guardar.`, 'danger');
         return; 
       }
       if (sumaTotal > 100) {
-        alert(`La suma de los porcentajes supera el 100% (${sumaTotal}%). Por favor, ajústelo.`);
+        mostrarAlertaBootstrap(`La suma de los porcentajes supera el 100% (${sumaTotal}%). Por favor, ajústelo.`, 'danger');
         return;
       }
 
       let nuevosBeneficiarios = [];
       let beneficiariosEditados = [];
       
-      // revisar si es original, revisa primero si ya existe, despues compara si hay cambios
       beneficiarios.forEach(actual => {
         let original = beneficiariosOriginales.find(orig => orig.doc === actual.doc );
         
@@ -451,7 +442,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let tipoDocID = 0;
 
         if (!original) {
-
           parentescos.forEach(p => {
             if (p.id === actual.parentesco) {
               parentescoID = p.id;
@@ -519,8 +509,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
-
-      // aqui a backend
       for (let i = 0; i < nuevosBeneficiarios.length; i++) {
         try {
           const response = await fetch('/api/ahorro/insertar_beneficiario', {
@@ -530,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
           });
           const data = await response.json();
           if (!data.success) {
-            alert(`Error al insertar beneficiario: ${data.error || 'Error desconocido'}`);
+            mostrarAlertaBootstrap(`Error al insertar beneficiario: ${data.error || 'Error desconocido'}`, 'danger');
           }
         } catch (error) {
           console.error('Error al insertar beneficiario:', error);
@@ -555,14 +543,14 @@ document.addEventListener('DOMContentLoaded', () => {
           }
           const data = await response.json();
           if (!data.success) {
-            alert(`Error al editar beneficiario: ${data.error || 'Error desconocido'}`);
+            mostrarAlertaBootstrap(`Error al editar beneficiario: ${data.error || 'Error desconocido'}`, 'danger');
           }
         } catch (error) {
           console.error('Error al editar beneficiario:', error);
         }
       }
 
-      alert('¡Cambios validados y procesados con éxito!');
+      mostrarAlertaBootstrap('¡Cambios validados y procesados con éxito!', 'success');
 
       modoEdicion = false;
       btnToggleEdit.textContent = 'Editar Beneficiarios';
@@ -572,20 +560,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Funciones globales auxiliares
   window.agregarBeneficiario = function(index) {
     if (beneficiarios.length >= 3) return;
     
-    // 1. Forzar que la pantalla pase a Modo Edición automáticamente
     modoEdicion = true;
     btnToggleEdit.textContent = 'Guardar Cambios';
     btnToggleEdit.className = 'btn btn-success text-white';
 
-    // 2. Repartir porcentajes equitativamente de forma entera
     let nuevoPorcentaje = Math.floor(100 / (beneficiarios.length + 1));
     beneficiarios.forEach(b => b.porcentaje = nuevoPorcentaje);
 
-    // 3. Crear el objeto con TODOS los campos en blanco
     const nuevo = {
       id: Date.now(),
       nDoc: tiposDocumento.length > 0 ? (tiposDocumento[0].nombre || tiposDocumento[0]) : '',
@@ -596,7 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
       telefono1: '',
       telefono2: '',
       email: '',
-      porcentaje: 100 - (nuevoPorcentaje * beneficiarios.length) // El sobrante para redondear a 100
+      porcentaje: 100 - (nuevoPorcentaje * beneficiarios.length) 
     };
     
     beneficiarios.splice(index, 0, nuevo);
@@ -605,7 +589,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.eliminarBeneficiario = function(index) {
     if (beneficiarios.length <= 1) {
-      alert('Debe haber al menos un beneficiario.');
+      mostrarAlertaBootstrap('Debe haber al menos un beneficiario.', 'warning');
       return;
     }
 
@@ -619,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           let resto = Math.round(100 / beneficiarios.length);
           beneficiarios.forEach(b => b.porcentaje = resto);
-          beneficiarios[0].porcentaje += (100 - (resto * beneficiarios.length)); // Ajuste entero de residuo
+          beneficiarios[0].porcentaje += (100 - (resto * beneficiarios.length)); 
         }
         
         renderBeneficiarios();
@@ -627,7 +611,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-    // salir
   const salirBtn = document.getElementById('salir');
   salirBtn.addEventListener('click', () => {
     window.location.href = '../login/login.html';
@@ -646,3 +629,32 @@ document.addEventListener('DOMContentLoaded', () => {
     beneficiarios[index][campo] = valor;
   };
 });
+
+// Función auxiliar para mostrar alertas flotantes de Bootstrap en la esquina inferior derecha
+function mostrarAlertaBootstrap(mensaje, tipo = "success") {
+  let alertContainer = document.getElementById("bootstrap-alert-container");
+  if (!alertContainer) {
+    alertContainer = document.createElement("div");
+    alertContainer.id = "bootstrap-alert-container";
+    alertContainer.style.cssText = "position: fixed; bottom: 20px; right: 20px; z-index: 1080; min-width: 300px;";
+    document.body.appendChild(alertContainer);
+  }
+
+  const alertDiv = document.createElement("div");
+  alertDiv.className = `alert alert-${tipo} alert-dismissible fade show shadow-lg`;
+  alertDiv.innerHTML = `
+    <div class="d-flex align-items-center">
+      <i class="bi ${tipo === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'} fs-5 me-2"></i>
+      <div>${mensaje}</div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  `;
+
+  alertContainer.appendChild(alertDiv);
+
+  // Auto-cerrar la alerta después de 4 segundos
+  setTimeout(() => {
+    alertDiv.classList.remove("show");
+    setTimeout(() => alertDiv.remove(), 300);
+  }, 4000);
+}

@@ -154,3 +154,100 @@
 .drop-zone:hover, .drop-zone.dragover {
   background-color: rgba(159, 122, 234, 0.1);
 }
+
+
+/* --- ESTILOS DE CONFIGURACIÓN DE CATÁLOGOS --- */
+.catalog-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.catalog-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.catalog-label-display {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.5rem 0.8rem;
+  background-color: #f8fafc;
+  border: 1px solid #ced4da;
+  border-radius: 0.375rem;
+  font-size: 0.95rem;
+  color: #334155;
+}
+
+.catalog-input-edit input {
+  width: 100%;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.95rem;
+  color: #334155;
+  background-color: #ffffff;
+  border: 1px solid #9F7AEA;
+  border-radius: 0.375rem;
+  outline: none;
+}
+.catalog-input-edit input:focus {
+  border-color: #6B46C1;
+  box-shadow: 0 0 0 0.2rem rgba(107, 70, 193, 0.15);
+}
+
+/* Botón Menos (-) tipo píldora rojiza del boceto */
+.btn-remove-catalog {
+  background-color: #fee2e2;
+  border: 1px solid #f87171;
+  color: #dc2626;
+  border-radius: 50rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.btn-remove-catalog:hover {
+  background-color: #dc2626;
+  color: #ffffff;
+}
+
+/* Botón Agregar Elemento estilo boceto (píldora lila con borde) */
+.catalog-row-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  background-color: #faf5ff;
+  border: 2px dashed #9F7AEA;
+  border-radius: 50rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #6B46C1;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  margin-top: 0.4rem;
+}
+.catalog-row-add:hover {
+  background-color: #6B46C1;
+  color: #ffffff;
+  border-color: #6B46C1;
+}
+
+/* Acordeón personalizado para Cuentas de Ahorro */
+.accordion-button:not(.collapsed) {
+  background-color: #faf5ff;
+  color: #6B46C1;
+  font-weight: bold;
+}
+.accordion-button:focus {
+  box-shadow: none;
+  border-color: #9F7AEA;
+}
