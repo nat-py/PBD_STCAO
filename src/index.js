@@ -43,7 +43,7 @@ app.get('/api/admin/bitacora', (req, res) => {
 
 // 4. Rutas de la API (Endpoints de datos JSON)
 app.use('/api/login', loginRoutes);
-/* app.use('/api/admin', adminRoutes); */
+app.use('/api/admin', adminRoutes);
 app.use('/api/ahorro', ahorroRoutes); 
 app.use('/api/carga', cargarRoutes);
 app.use('/api/lista_cuentas', listaCuentasRoutes);

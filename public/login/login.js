@@ -37,7 +37,7 @@
         console.log('resultado:', resultado);
         setTimeout(() => {
           if (resultado.isAdmin) {
-            window.location.href = '/dashboardAdmin/dashboardAdmin.html';
+            window.location.href = `/dashboardAdmin/dashboardAdmin.html?usuario=${usuario}`;
           } else {
             window.location.href = `/lista_cuentas/listaCuentas.html?usuario=${usuario}`;
           }

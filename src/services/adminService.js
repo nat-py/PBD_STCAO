@@ -207,7 +207,7 @@ async function personaAsociadaUsuario(usuario)
     .execute('dbo.sp_PersonaAsociadaUsuario'); //llamar al SP que devuelve persona
   
   const outFlagExiste = result.output.outFlagExisteUsuario
-  return outFlagExisteUsuario; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+  return outFlagExiste; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
 
 async function top8_EstadoCuenta_AsociadoCuenta(numCuenta) 
@@ -239,6 +239,96 @@ async function beneficiariosAsociadosCuenta(numCuenta)
   
   return result.recordset; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
+
+/*------------------------------- Services CRUD Tipo Documento Identidad -------------------------------*/
+
+async function modificarTipoDocuIdentidad(id, nombre) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inID', sql.VarChar(4), id)
+    .input('inNombre', sql.VarChar(32), nombre)
+    .output('outFlagError', sql.BIT)
+    .execute('dbo.sp_UpdateTipoDocuIdentidad'); //llamar al SP que devuelve el beneficiario
+  
+  const outFlagError = result.output.outFlagError
+  return outFlagError; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
+
+async function eliminarTipoDocuIdentidad(id) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inIDTipoDocuIdentidad', sql.VarChar(4), id)
+    .output('outFlagError', sql.BIT)
+    .execute('dbo.sp_EliminarTipoDocuIdentidad'); //llamar al SP que devuelve el beneficiario
+  
+  const outFlagError = result.output.outFlagError
+  const personas = result.recordset;
+  console.log('Personas (tipo docu):', personas);
+  return { outFlagError, personas }; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
+
+/*------------------------------- Services CRUD Tipo Moneda -------------------------------*/
+
+async function modificarTipoMoneda(id, nombre, simbolo) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inID', sql.VarChar(4), id)
+    .input('inNombre', sql.VarChar(32), nombre)
+    .input('inSimbolo', sql.VarChar(4), simbolo)
+    .output('outFlagError', sql.BIT)
+    .execute('dbo.sp_UpdateTipoMoneda'); //llamar al SP que devuelve el beneficiario
+  
+  const outFlagError = result.output.outFlagError
+  return outFlagError; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
+
+async function eliminarTipoMoneda(id) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inIDTipoMoneda', sql.VarChar(4), id)
+    .output('outFlagError', sql.BIT)
+    .execute('dbo.sp_EliminarTipoMoneda'); //llamar al SP que devuelve el beneficiario
+  
+  const outFlagError = result.output.outFlagError
+  const tiposCuenta = result.recordset;
+  console.log('Tipos de cuenta (tipo moneda):', tiposCuenta);
+  return { outFlagError, tiposCuenta }; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
+
+/*------------------------------- Services CRUD Parentesco -------------------------------*/
+
+async function modificarParentesco(id, nombre) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inID', sql.VarChar(4), id)
+    .input('inNombre', sql.VarChar(32), nombre)
+    .output('outFlagError', sql.BIT)
+    .execute('dbo.sp_UpdateParentesco'); //llamar al SP que devuelve el beneficiario
+  
+  const outFlagError = result.output.outFlagError
+  return outFlagError; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
+
+async function eliminarParentesco(id) 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inIDParentesco', sql.VarChar(4), id)
+    .output('outFlagError', sql.BIT)
+    .execute('dbo.sp_EliminarParentesco'); //llamar al SP que devuelve el beneficiario
+  
+  const outFlagError = result.output.outFlagError
+  const beneficiarios = result.recordset;
+  console.log('Beneficiarios (parentesco):', beneficiarios);
+  return { outFlagError, beneficiarios }; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+}
+
+/*------------------------------- Services CRUD Beneficiario -------------------------------*/
 
 async function retornarBeneficiario(numCuenta, valorDocuIdentidad) 
 {
@@ -428,3 +518,44 @@ async function tablaUsuariosVerActivo()
   
   return result.recordset;
 }
+
+module.exports = { 
+  insertarTipoDocuIdentidad,
+  insertarTipoMoneda,
+  insertarParentesco,
+  insertarTipoCuentaAhorro,
+  insertarTipoOperacion,
+  insertarPersona,
+  insertarCuentaAhorro,
+  insertarBeneficiario,
+  insertarEstadoCuenta,
+  insertarUsuario,
+  insertarUsuarioVer,
+  existeUsuario,
+  personaAsociadaUsuario,
+  top8_EstadoCuenta_AsociadoCuenta,
+  innerJoin_ListarCuentas,
+  beneficiariosAsociadosCuenta,
+  modificarTipoDocuIdentidad,
+  eliminarTipoDocuIdentidad,
+  modificarTipoMoneda,
+  eliminarTipoMoneda,
+  modificarParentesco,
+  eliminarParentesco,
+  retornarBeneficiario,
+  eliminarBeneficiario,
+  editarBeneficiarioDocuDiferente,
+  editarBeneficiarioDocuIgual,
+  existenTablasCatalogo,
+  tablaTipoDocuIdentidadActivo,
+  tablaTipoMonedaActivo,
+  tablaParentescoActivo,
+  tablaTipoCuentaAhorroActivo,
+  tablaTipoOperacionActivo,
+  tablaPersonaActiva,
+  tablaCuentaAhorroActivo,
+  tablaBeneficiarioActivo,
+  tablaEstadoCuentaActivo,
+  tablaUsuarioActivo,
+  tablaUsuariosVerActivo
+};

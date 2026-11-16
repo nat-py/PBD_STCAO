@@ -1,3 +1,7 @@
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+const usuarioActual = urlParams.get('usuario');
+
 document.addEventListener("DOMContentLoaded", () => {
   // 1. NAVEGACIÓN ENTRE PANTALLAS (TABS SCREEN-TO-SCREEN)
   const navLinks = document.querySelectorAll("#adminTabs .nav-link");
@@ -305,96 +309,243 @@ window.tiposCuentasData = [
 let modoEdicionCatalogos = false;
 const btnEditCatalogos = document.getElementById("btn-edit-catalogos");
 
-// Intentar cargar desde catalogos.xml (opcional si ya tienes los datos locales arriba)
-fetch("catalogos.xml")
-  .then(response => response.text())
-  .then(xmlStr => {
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(xmlStr, "text/xml");
+// Cargar catálogos desde la base de datos
+Promise.all([
+  fetch("/api/admin/tablaTipoDocuIdentidadActivo").then(response => {
+    if (!response.ok) throw new Error("Error al obtener tipos de documento");
+    return response.json();
+  }),
 
-    let tempDocs = [];
-    xmlDoc.querySelectorAll("Tipo_Doc > TipoDocuIdentidad").forEach(el => {
-      tempDocs.push({ id: el.getAttribute("Id"), nombre: el.getAttribute("Nombre") });
-    });
-    if (tempDocs.length > 0) window.tiposDocData = tempDocs;
+  fetch("/api/admin/tablaTipoMonedaActivo").then(response => {
+    if (!response.ok) throw new Error("Error al obtener tipos de moneda");
+    return response.json();
+  }),
 
-    let tempMonedas = [];
-    xmlDoc.querySelectorAll("Tipo_Moneda > TipoMoneda").forEach(el => {
-      tempMonedas.push({ id: el.getAttribute("Id"), nombre: el.getAttribute("Nombre"), simbolo: el.getAttribute("Simbolo") });
-    });
-    if (tempMonedas.length > 0) window.tiposMonedaData = tempMonedas;
+  fetch("/api/admin/tablaParentescoActivo").then(response => {
+    if (!response.ok) throw new Error("Error al obtener parentescos");
+    return response.json();
+  }),
 
-    let tempParentescos = [];
-    xmlDoc.querySelectorAll("Parentezcos > Parentezco").forEach(el => {
-      tempParentescos.push({ id: el.getAttribute("Id"), nombre: el.getAttribute("Nombre") });
-    });
-    if (tempParentescos.length > 0) window.parentezcosData = tempParentescos;
-
-    let tempCuentas = [];
-    xmlDoc.querySelectorAll("Tipo_Cuenta_Ahorros > TipoCuentaAhorro").forEach(el => {
-      tempCuentas.push({
-        id: el.getAttribute("Id"),
-        nombre: el.getAttribute("Nombre"),
-        idTipoMoneda: el.getAttribute("IdTipoMoneda") || "1",
-        saldoMinimo: el.getAttribute("SaldoMinimo") || "0.00",
-        multaSaldoMin: el.getAttribute("MultaSaldoMin") || "0.00",
-        cargoAnual: el.getAttribute("CargoAnual") || "0",
-        numRetirosHumano: el.getAttribute("NumRetirosHumano") || "0",
-        numRetirosAutomatico: el.getAttribute("NumRetirosAutomatico") || "0",
-        comisionHumano: el.getAttribute("comisionHumano") || "0",
-        comisionAutomatico: el.getAttribute("comisionAutomatico") || "0",
-        interes: el.getAttribute("interes") || "0"
-      });
-    });
-    if (tempCuentas.length > 0) window.tiposCuentasData = tempCuentas;
-
-    renderAllCatalogos();
+  fetch("/api/admin/tablaTipoCuentaAhorroActivo").then(response => {
+    if (!response.ok) throw new Error("Error al obtener tipos de cuenta");
+    return response.json();
   })
-  .catch(err => {
-    console.log("Usando datos locales por defecto para catálogos.");
-    renderAllCatalogos();
-  });
+])
+.then(([documentos, monedas, parentescos, cuentas]) => {
+
+  window.tiposDocData = documentos.tiposDocumento;
+  window.tiposMonedaData = monedas.tiposMoneda;
+  window.parentezcosData = parentescos.parentescos;
+  window.tiposCuentasData = cuentas.tiposCuentas;
+
+  renderAllCatalogos();
+})
+.catch(error => {
+  console.error("Error al cargar los catálogos desde la base de datos:", error);
+  renderAllCatalogos();
+});
 
 function renderAllCatalogos() {
-  renderSimpleList("container-tipo-doc", window.tiposDocData, "tiposDocData");
-  renderSimpleList("container-tipo-moneda", window.tiposMonedaData, "tiposMonedaData");
-  renderSimpleList("container-parentezcos", window.parentezcosData, "parentezcosData");
+  renderAccordionCatalogo(
+    "accordionTipoDoc",
+    "container-btn-add-tipo-doc",
+    window.tiposDocData,
+    "tiposDocData",
+    "documento"
+  );
+
+  renderAccordionCatalogo(
+    "accordionTipoMoneda",
+    "container-btn-add-moneda",
+    window.tiposMonedaData,
+    "tiposMonedaData",
+    "moneda"
+  );
+
+  renderAccordionCatalogo(
+    "accordionParentescos",
+    "container-btn-add-parentesco",
+    window.parentezcosData,
+    "parentezcosData",
+    "parentesco"
+  );
+
   renderAccordionCuentas();
 }
 
-// Renderizador para listas simples
-function renderSimpleList(containerId, lista, nombreVariable) {
+// Renderizador para tipo docu, tipo moneda y parentesco
+function renderAccordionCatalogo(containerId, containerBtnAddId, lista, nombreVariable, tipoCatalogo) {
   const container = document.getElementById(containerId);
+  const containerBtnAdd = document.getElementById(containerBtnAddId);
+
   if (!container) return;
+
   container.innerHTML = "";
+  if (containerBtnAdd) containerBtnAdd.innerHTML = "";
+
+  if (modoEdicionCatalogos && containerBtnAdd) {
+    let textoAgregar = "";
+    let iconoAgregar = "";
+
+    if (tipoCatalogo === "documento") {
+      textoAgregar = "Agregar Documento";
+      iconoAgregar = "bi-card-heading";
+    } else if (tipoCatalogo === "moneda") {
+      textoAgregar = "Agregar Moneda";
+      iconoAgregar = "bi-currency-exchange";
+    } else if (tipoCatalogo === "parentesco") {
+      textoAgregar = "Agregar Parentesco";
+      iconoAgregar = "bi-people";
+    }
+
+    containerBtnAdd.innerHTML = `
+      <button class="btn btn-sm btn-outline-primary fw-bold"
+              onclick="agregarItemCatalogo('${nombreVariable}', '${tipoCatalogo}')">
+        <i class="bi ${iconoAgregar} me-1"></i> ${textoAgregar}
+      </button>
+    `;
+  }
 
   lista.forEach((item, index) => {
-    const row = document.createElement("div");
-    row.className = "catalog-row mb-2";
+    const accordionId = `${tipoCatalogo}Collapse${index}`;
+
+    const itemDiv = document.createElement("div");
+    itemDiv.className = "accordion-item border mb-2 rounded shadow-sm overflow-hidden";
+
+    let headerContent = "";
 
     if (modoEdicionCatalogos) {
-      row.innerHTML = `
-        <button type="button" class="btn-remove-catalog" title="Eliminar" onclick="eliminarItemSimple('${nombreVariable}', ${index})">
-          <i class="bi bi-dash-lg"></i>
-        </button>
-        <div class="catalog-input-edit w-100">
-          <input type="text" value="${item.nombre}" onchange="actualizarItemSimple('${nombreVariable}', ${index}, 'nombre', this.value)">
+      headerContent = `
+        <div class="d-flex align-items-center gap-2 w-100 pe-3">
+          <button type="button"
+                  class="btn-remove-catalog"
+                  title="Eliminar"
+                  onclick="eliminarItemCatalogo('${nombreVariable}', ${index})">
+            <i class="bi bi-dash-lg"></i>
+          </button>
+
+          <input type="text"
+                 class="form-control form-control-sm fw-bold"
+                 value="${item.nombre}"
+                 onchange="actualizarItemCatalogo('${nombreVariable}', ${index}, 'nombre', this.value)"
+                 onclick="event.stopPropagation()">
+
+          <button class="accordion-button collapsed p-2 bg-transparent shadow-none"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#${accordionId}"
+                  aria-expanded="false"
+                  style="width: 40px;">
+          </button>
         </div>
       `;
     } else {
-      row.innerHTML = `<div class="catalog-label-display"><span>${item.nombre}</span></div>`;
+      headerContent = `
+        <button class="accordion-button collapsed fw-bold text-primary"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#${accordionId}"
+                aria-expanded="false">
+          <i class="bi ${tipoCatalogo === "documento" ? "bi-card-heading" :
+                         tipoCatalogo === "moneda" ? "bi-currency-exchange" :
+                         "bi-people"} me-2"></i>
+          ${item.nombre}
+        </button>
+      `;
     }
-    container.appendChild(row);
-  });
 
-  if (modoEdicionCatalogos) {
-    const btnAdd = document.createElement("div");
-    btnAdd.className = "catalog-row-add";
-    btnAdd.innerHTML = `<i class="bi bi-plus-lg"></i> <span>Agregar elemento</span>`;
-    btnAdd.addEventListener("click", () => agregarItemSimple(nombreVariable));
-    container.appendChild(btnAdd);
-  }
-}
+    let campos = "";
+
+    if (tipoCatalogo === "documento") {
+      campos = `
+        <div class="col-md-12">
+          <label class="form-label small fw-bold text-muted">ID:</label>
+          ${
+            modoEdicionCatalogos
+              ? `<input type="text"
+                        class="form-control form-control-sm"
+                        value="${item.id}"
+                        onchange="actualizarItemCatalogo('${nombreVariable}', ${index}, 'id', this.value)">`
+              : `<p class="form-control-plaintext form-control-sm border bg-white px-2 rounded">
+                  ${item.id}
+                 </p>`
+          }
+        </div>
+      `;
+    }
+
+    if (tipoCatalogo === "moneda") {
+      campos = `
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">ID:</label>
+          ${
+            modoEdicionCatalogos
+              ? `<input type="text"
+                        class="form-control form-control-sm"
+                        value="${item.id}"
+                        onchange="actualizarItemCatalogo('${nombreVariable}', ${index}, 'id', this.value)">`
+              : `<p class="form-control-plaintext form-control-sm border bg-white px-2 rounded">
+                  ${item.id}
+                 </p>`
+          }
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Símbolo:</label>
+          ${
+            modoEdicionCatalogos
+              ? `<input type="text"
+                        class="form-control form-control-sm"
+                        value="${item.simbolo}"
+                        onchange="actualizarItemCatalogo('${nombreVariable}', ${index}, 'simbolo', this.value)">`
+              : `<p class="form-control-plaintext form-control-sm border bg-white px-2 rounded">
+                  ${item.simbolo}
+                 </p>`
+          }
+        </div>
+      `;
+    }
+
+    if (tipoCatalogo === "parentesco") {
+      campos = `
+        <div class="col-md-12">
+          <label class="form-label small fw-bold text-muted">ID:</label>
+          ${
+            modoEdicionCatalogos
+              ? `<input type="text"
+                        class="form-control form-control-sm"
+                        value="${item.id}"
+                        onchange="actualizarItemCatalogo('${nombreVariable}', ${index}, 'id', this.value)">`
+              : `<p class="form-control-plaintext form-control-sm border bg-white px-2 rounded">
+                  ${item.id}
+                 </p>`
+          }
+        </div>
+      `;
+    }
+
+    itemDiv.innerHTML = `
+      <h2 class="accordion-header" id="heading-${tipoCatalogo}-${index}">
+        ${headerContent}
+      </h2>
+
+      <div id="${accordionId}"
+           class="accordion-collapse collapse"
+           aria-labelledby="heading-${tipoCatalogo}-${index}"
+           data-bs-parent="#${containerId}">
+
+        <div class="accordion-body bg-light">
+          <div class="row g-3">
+            ${campos}
+          </div>
+        </div>
+
+      </div>
+    `;
+
+    container.appendChild(itemDiv);
+  });
+};
 
 // Renderizador para Cuentas de Ahorro en Acordeón
 function renderAccordionCuentas() {
@@ -481,19 +632,209 @@ function renderAccordionCuentas() {
 }
 
 // Funciones Globales expuestas en window para manipulación correcta de los eventos onclick
-window.actualizarItemSimple = function(nombreVar, index, campo, valor) {
+window.actualizarItemCatalogo = function(nombreVar, index, campo, valor) {
   window[nombreVar][index][campo] = valor.trim();
 };
 
-window.eliminarItemSimple = function(nombreVar, index) {
-  window[nombreVar].splice(index, 1);
-  renderAllCatalogos();
+window.eliminarItemCatalogo = async function(nombreVar, index) {
+
+  const item = window[nombreVar][index];
+
+  let url = "";
+  let nombreCatalogo = "";
+  let nombreDependencias = "";
+  let datosDependencias = [];
+
+  if (nombreVar === "tiposDocData") {
+    url = "/api/admin/eliminarTipoDocuIdentidad";
+    nombreCatalogo = "tipo de documento de identidad";
+    nombreDependencias = "personas";
+  } 
+  else if (nombreVar === "tiposMonedaData") {
+    url = "/api/admin/eliminarTipoMoneda";
+    nombreCatalogo = "tipo de moneda";
+    nombreDependencias = "tiposCuenta";
+  } 
+  else if (nombreVar === "parentezcosData") {
+    url = "/api/admin/eliminarParentesco";
+    nombreCatalogo = "parentesco";
+    nombreDependencias = "beneficiarios";
+  }
+
+  try {
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        usuario: usuarioActual,
+        [nombreVar === "tiposDocData"
+          ? "tipoDocuIdentidad"
+          : nombreVar === "tiposMonedaData"
+          ? "tipoMoneda"
+          : "parentesco"]: item
+      })
+    });
+
+    const resultado = await response.json();
+
+    if (!response.ok || !resultado.success) {
+      throw new Error(
+        resultado.message || `No se pudo eliminar el ${nombreCatalogo}`
+      );
+    }
+
+    datosDependencias = resultado[nombreDependencias] || [];
+
+    // Eliminarlo del arreglo local solamente después
+    // de que el backend confirme la eliminación.
+    window[nombreVar].splice(index, 1);
+
+    renderAllCatalogos();
+
+    mostrarResultadoEliminacion(
+      nombreCatalogo,
+      item,
+      datosDependencias
+    );
+
+  } catch (error) {
+
+    console.error(`Error al eliminar ${nombreCatalogo}:`, error);
+
+    mostrarAlertaBootstrap(
+      `No se pudo eliminar el ${nombreCatalogo}.`,
+      "danger"
+    );
+  }
 };
 
-window.agregarItemSimple = function(nombreVar) {
+function formatearNombreColumna(nombre) {
+
+  return nombre
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, letra => letra.toUpperCase());
+};
+
+function mostrarResultadoEliminacion(nombreCatalogo, item, dependencias) {
+
+  const modalElement = document.getElementById("modalEliminarCatalogo");
+  const titulo = document.getElementById("modalEliminarCatalogoTitulo");
+  const contenido = document.getElementById("modalEliminarCatalogoContenido");
+
+  titulo.textContent = "Eliminación realizada correctamente";
+
+  let html = `
+    <div class="text-center mb-4">
+      <i class="bi bi-check-circle-fill text-success display-5"></i>
+
+      <h5 class="fw-bold mt-3">
+        ${nombreCatalogo.charAt(0).toUpperCase() + nombreCatalogo.slice(1)}
+        eliminado correctamente
+      </h5>
+
+      <p class="text-muted mb-0">
+        El elemento <strong>${item.nombre}</strong> fue eliminado correctamente.
+      </p>
+    </div>
+  `;
+
+  if (dependencias.length === 0) {
+
+    html += `
+      <div class="alert alert-light border text-center mb-0">
+        <i class="bi bi-info-circle me-2"></i>
+        Este elemento no estaba siendo utilizado por ningún registro.
+      </div>
+    `;
+
+  } else {
+
+    html += `
+      <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        Este elemento estaba siendo utilizado por
+        <strong>${dependencias.length}</strong>
+        registro${dependencias.length === 1 ? "" : "s"}.
+      </div>
+
+      <h6 class="fw-bold text-muted mb-2">
+        Registros relacionados:
+      </h6>
+
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+    `;
+
+    const columnas = Object.keys(dependencias[0]);
+
+    columnas.forEach(columna => {
+      html += `
+        <th>${formatearNombreColumna(columna)}</th>
+      `;
+    });
+
+    html += `
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    dependencias.forEach(dependencia => {
+
+      html += `<tr>`;
+
+      columnas.forEach(columna => {
+        html += `
+          <td>${dependencia[columna] ?? ""}</td>
+        `;
+      });
+
+      html += `</tr>`;
+    });
+
+    html += `
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  contenido.innerHTML = html;
+
+  const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+  modal.show();
+};
+
+window.agregarItemCatalogo = function(nombreVar, tipoCatalogo) {
   const lista = window[nombreVar];
-  const nuevoId = lista.length > 0 ? Math.max(...lista.map(x => parseInt(x.id) || 0)) + 1 : 1;
-  lista.push({ id: nuevoId.toString(), nombre: "Nuevo Elemento" });
+
+  const nuevoId = lista.length > 0
+    ? Math.max(...lista.map(x => parseInt(x.id) || 0)) + 1
+    : 1;
+
+  if (tipoCatalogo === "moneda") {
+    lista.push({
+      id: nuevoId.toString(),
+      nombre: "Nueva Moneda",
+      simbolo: "$"
+    });
+  } else if (tipoCatalogo === "documento") {
+    lista.push({
+      id: nuevoId.toString(),
+      nombre: "Nuevo Documento"
+    });
+  } else if (tipoCatalogo === "parentesco") {
+    lista.push({
+      id: nuevoId.toString(),
+      nombre: "Nuevo Parentesco"
+    });
+  }
+
   renderAllCatalogos();
 };
 
@@ -527,29 +868,132 @@ window.agregarCuentaAhorro = function() {
 
 // Botón Principal de Editar / Guardar Cambios
 if (btnEditCatalogos) {
-  btnEditCatalogos.addEventListener("click", () => {
+  btnEditCatalogos.addEventListener("click", async () => {
     if (!modoEdicionCatalogos) {
       modoEdicionCatalogos = true;
       btnEditCatalogos.innerHTML = `<i class="bi bi-check-lg me-1"></i> Guardar Cambios`;
       btnEditCatalogos.className = "btn btn-success text-white";
-    } else {
-      modoEdicionCatalogos = false;
-      btnEditCatalogos.innerHTML = `<i class="bi bi-pencil me-1"></i> Editar Catálogos`;
-      btnEditCatalogos.className = "btn btn-secondary text-white";
-      
-      console.log("Catálogos guardados:", {
-        tiposDoc: window.tiposDocData,
-        tiposMoneda: window.tiposMonedaData,
-        parentezcos: window.parentezcosData,
-        tiposCuentas: window.tiposCuentasData
-      });
-      mostrarAlertaBootstrap("¡Todos los catálogos se han guardado con éxito!", "success");
+
+      renderAllCatalogos();
+} else {
+
+      try {
+        for (const tipoDocuIdentidad of window.tiposDocData) {
+
+          try {
+
+            const response = await fetch("/api/admin/editarTipoDocuIdentidad", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                usuario: usuarioActual,
+                tipoDocuIdentidad: tipoDocuIdentidad
+              })
+            });
+
+            const resultado = await response.json();
+
+            if (!response.ok || !resultado.success) {
+              throw new Error(
+                resultado.message || "No se pudo guardar un tipo de documento de identidad"
+              );
+            }
+
+          } catch (error) {
+
+            console.error("ERROR dentro del guardado:", error);
+
+            throw error;
+          }
+        }
+
+        for (const tipoMoneda of window.tiposMonedaData) {
+
+          try {
+
+            const response = await fetch("/api/admin/editarTipoMoneda", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                usuario: usuarioActual,
+                tipoMoneda: tipoMoneda
+              })
+            });
+
+            const resultado = await response.json();
+
+            if (!response.ok || !resultado.success) {
+              throw new Error(
+                resultado.message || "No se pudo guardar un tipo de moneda"
+              );
+            }
+
+          } catch (error) {
+
+            console.error("ERROR dentro del guardado:", error);
+
+            throw error;
+          }
+        }
+
+        for (const parentesco of window.parentezcosData) {
+
+          try {
+
+            const response = await fetch("/api/admin/editarParentesco", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                usuario: usuarioActual,
+                parentesco: parentesco
+              })
+            });
+
+            const resultado = await response.json();
+
+            if (!response.ok || !resultado.success) {
+              throw new Error(
+                resultado.message || "No se pudo guardar un parentesco"
+              );
+            }
+
+          } catch (error) {
+
+            console.error("ERROR dentro del guardado:", error);
+
+            throw error;
+          }
+        }
+
+        modoEdicionCatalogos = false;
+        btnEditCatalogos.innerHTML = `<i class="bi bi-pencil me-1"></i> Editar Catálogos`;
+        btnEditCatalogos.className = "btn btn-secondary text-white";
+
+        mostrarAlertaBootstrap(
+          "¡Los cambios se han guardado con éxito!",
+          "success"
+        );
+
+        renderAllCatalogos();
+
+      } catch (error) {
+
+        console.error("Error al guardar los cambios:", error);
+
+        mostrarAlertaBootstrap(
+          "No se pudieron guardar los cambios.",
+          "danger"
+        );
+      }
     }
-    renderAllCatalogos();
   });
 }
-
-
 
 // alerta boostrap
 
