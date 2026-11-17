@@ -1,6 +1,57 @@
 const adminService = require('../services/adminService');
 const bitacoraService = require('../services/bitacora');
 
+async function insertarTipoDocuIdentidad(req, res) {
+  const { usuario, tipoDocuIdentidad } = req.body;
+  try {
+    const result = await adminService.insertarTipoDocuIdentidad(tipoDocuIdentidad.id, 
+                                                                tipoDocuIdentidad.nombre);
+
+    if (result === true) {
+        return res.status(400).json({message: 'No se pudo ingresar el tipo de documento de identidad',success: false});
+    }
+    bitacoraService.registrarBitacora('Ingresar tipo de documento de identidad', usuario, req.ip, tipoDocuIdentidad);
+    res.status(200).json({ message: 'Tipo de documento de identidad ingresado correctamente', success: true });
+  } catch (error) {
+    console.error('Error al ingresar el tipo de documento de identidad:', error);
+    res.status(500).json({ error: 'Error al ingresar el tipo de documento de identidad' });
+  }
+}
+
+async function insertarTipoMoneda(req, res) {
+  const { usuario, tipoMoneda } = req.body;
+  try {
+    const result = await adminService.insertarTipoMoneda(tipoMoneda.id, 
+                                                        tipoMoneda.nombre, 
+                                                        tipoMoneda.simbolo);
+    if (result === true) {
+        return res.status(400).json({message: 'No se pudo ingresar el tipo de moneda',success: false});
+    }
+    bitacoraService.registrarBitacora('Ingresar tipo de moneda', usuario, req.ip, tipoMoneda);
+    res.status(200).json({ message: 'Tipo de moneda ingresado correctamente', success: true });
+  } catch (error) {
+    console.error('Error al ingresar el tipo de moneda:', error);
+    res.status(500).json({ error: 'Error al ingresar el tipo de moneda' });
+  }
+}
+
+async function insertarParentesco(req, res) {
+  const { usuario, parentesco } = req.body;
+  try {
+    const result = await adminService.insertarParentesco(parentesco.id, 
+                                                        parentesco.nombre);
+                                                        
+    if (result === true) {
+        return res.status(400).json({message: 'No se pudo ingresar el parentesco',success: false});
+    }
+    bitacoraService.registrarBitacora('Ingresar parentesco', usuario, req.ip, parentesco);
+    res.status(200).json({ message: 'Parentesco ingresado correctamente', success: true });
+  } catch (error) {
+    console.error('Error al ingresar parentesco:', error);
+    res.status(500).json({ error: 'Error al ingresar parentesco' });
+  }
+}
+
 async function editarTipoDocuIdentidad(req, res) {
   const { usuario, tipoDocuIdentidad } = req.body;
   try {
@@ -56,7 +107,6 @@ async function eliminarTipoDocuIdentidad(req, res) {
   const { usuario, tipoDocuIdentidad } = req.body;
   try {
     const result = await adminService.eliminarTipoDocuIdentidad(tipoDocuIdentidad.id);
-    console.log('Personas recibidas:', result.personas);
     if (result.outFlagError === true) {
         return res.status(400).json({message: 'No se pudo eliminar el tipo de documento de identidad',success: false});
     }
@@ -72,7 +122,6 @@ async function eliminarTipoMoneda(req, res) {
   const { usuario, tipoMoneda } = req.body;
   try {
     const result = await adminService.eliminarTipoMoneda(tipoMoneda.id);
-    console.log('Tipos de Cuenta recibidos:', result.tiposCuenta);
     if (result.outFlagError === true) {
         return res.status(400).json({message: 'No se pudo eliminar el tipo de moneda', success: false});
     }
@@ -88,7 +137,6 @@ async function eliminarParentesco(req, res) {
   const { usuario, parentesco } = req.body;
   try {
     const result = await adminService.eliminarParentesco(parentesco.id);
-    console.log('Beneficiarios recibidos:', result.beneficiarios);
     if (result.outFlagError === true) {
         return res.status(400).json({message: 'No se pudo eliminar el parentesco', success: false});
     }
@@ -97,6 +145,57 @@ async function eliminarParentesco(req, res) {
   } catch (error) {
     console.error('Error al eliminar el parentesco:', error);
     res.status(500).json({ error: 'Error al eliminar el parentesco' });
+  }
+}
+
+async function tablaTipoDocuIdentidad(req, res) {
+  try {
+    const tiposDocumento = await adminService.tablaTipoDocuIdentidad();
+    
+    res.status(200).json({
+      message: 'Tipos de documento listados correctamente',
+      tiposDocumento: tiposDocumento,
+      success: true
+    });
+  } catch (error) {
+    console.error('Error al obtener los tipos de documento:', error);
+    res.status(500).json({
+      error: 'Error al obtener los tipos de documento'
+    });
+  }
+}
+
+async function tablaTipoMoneda(req, res) {
+  try {
+    const tiposMoneda = await adminService.tablaTipoMoneda();
+
+    res.status(200).json({
+      message: 'Tipos de moneda listados correctamente',
+      tiposMoneda: tiposMoneda,
+      success: true
+    });
+  } catch (error) {
+    console.error('Error al obtener los tipos de moneda:', error);
+    res.status(500).json({
+      error: 'Error al obtener los tipos de moneda'
+    });
+  }
+}
+
+async function tablaParentesco(req, res) {
+  try {
+    const parentescos = await adminService.tablaParentesco();
+
+    res.status(200).json({
+      message: 'Parentescos listados correctamente',
+      parentescos: parentescos,
+      success: true
+    });
+  } catch (error) {
+    console.error('Error al obtener los parentescos:', error);
+    res.status(500).json({
+      error: 'Error al obtener los parentescos'
+    });
   }
 }
 
@@ -182,15 +281,20 @@ async function registrarSalir(req, res) {
 
 
 module.exports = {
-    editarTipoDocuIdentidad,
-    editarTipoMoneda,
-    editarParentesco,
-    eliminarTipoDocuIdentidad,
-    eliminarTipoMoneda,
-    eliminarParentesco,
-    tablaTipoDocuIdentidadActivo,
-    tablaTipoMonedaActivo,
-    tablaParentescoActivo,
-    tablaTipoCuentaAhorroActivo,
-    registrarSalir
+  insertarTipoDocuIdentidad,
+  insertarTipoMoneda,
+  insertarParentesco,
+  editarTipoDocuIdentidad,
+  editarTipoMoneda,
+  editarParentesco,
+  eliminarTipoDocuIdentidad,
+  eliminarTipoMoneda,
+  eliminarParentesco,
+  tablaTipoDocuIdentidad,
+  tablaTipoMoneda,
+  tablaParentesco,
+  tablaTipoDocuIdentidadActivo,
+  tablaTipoMonedaActivo,
+  tablaParentescoActivo,
+  tablaTipoCuentaAhorroActivo
 };
