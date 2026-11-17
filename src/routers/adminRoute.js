@@ -15,4 +15,6 @@ router.get('/tablaTipoMonedaActivo', adminController.tablaTipoMonedaActivo);
 router.get('/tablaParentescoActivo', adminController.tablaParentescoActivo);
 router.get('/tablaTipoCuentaAhorroActivo', adminController.tablaTipoCuentaAhorroActivo);
 
+router.post('/salir', adminController.registrarSalir);
+
 module.exports = router;

@@ -3,6 +3,21 @@ const urlParams = new URLSearchParams(queryString);
 const usuarioActual = urlParams.get('usuario');
 
 document.addEventListener("DOMContentLoaded", () => {
+
+  const salirBtn = document.getElementById('salir');
+  salirBtn.addEventListener('click', () => {
+    window.location.href = '../login/login.html';
+    
+    fetch('/api/admin/salir', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ usuario: usuarioActual })
+    });
+
+  });
+
   // 1. NAVEGACIÓN ENTRE PANTALLAS (TABS SCREEN-TO-SCREEN)
   const navLinks = document.querySelectorAll("#adminTabs .nav-link");
   const screens = document.querySelectorAll(".admin-screen");
@@ -49,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const tr = document.createElement("tr");
       tr.className = "clickable-row";
       tr.innerHTML = `
-        <td class="fw-semibold">${item.fechaHora}</td>0
+        <td class="fw-semibold">${item.fechaHora}</td>
         <td>${item.ip}</td>
         <td><span class="badge bg-secondary">${item.operacion}</span></td>
         <td>${item.usuario}</td>
@@ -78,16 +93,73 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   function aplicarFiltroBitacora(tipo, valor) {
-    let filtrados = [...bitacorasData];
-    const ahora = new Date(); // Simulado a 2026
-
-    if (tipo === "dia") {
-      filtrados = filtrados.filter(item => item.fyh.startsWith("2026-10-01"));
-    } else if (tipo === "especifica" && valor) {
-      filtrados = filtrados.filter(item => item.fyh.startsWith(valor));
+    if (tipo === "todo") {
+      renderBitacoras(bitacorasData);
+      return;
     }
-    // Lógica adicional para hora, semana, mes según formato requerido
+
+    const ahora = new Date();
+    const inicioDelDia = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+    const inicioDeLaSemana = new Date(inicioDelDia);
+    const diaDeLaSemana = inicioDeLaSemana.getDay() || 7;
+    inicioDeLaSemana.setDate(inicioDeLaSemana.getDate() - diaDeLaSemana + 1);
+
+    const filtrados = bitacorasData.filter(item => {
+      const fechaRegistro = convertirFechaBitacora(item.fechaHora);
+      if (!fechaRegistro) {
+        return false;
+      }
+
+      if (tipo === "especifica" && valor) {
+        return item.fechaHora.startsWith(valor);
+      }
+
+      if (tipo === "hora") {
+        return fechaRegistro >= new Date(ahora.getTime() - 60 * 60 * 1000)
+          && fechaRegistro <= ahora;
+      }
+      if (tipo === "dia") {
+        return fechaRegistro >= inicioDelDia && fechaRegistro <= ahora;
+      }
+      if (tipo === "semana") {
+        return fechaRegistro >= inicioDeLaSemana && fechaRegistro <= ahora;
+      }
+      if (tipo === "mes") {
+        return fechaRegistro.getFullYear() === ahora.getFullYear()
+          && fechaRegistro.getMonth() === ahora.getMonth();
+      }
+      if (tipo === "año") {
+        return fechaRegistro.getFullYear() === ahora.getFullYear();
+      }
+
+      return true;
+    });
+
     renderBitacoras(filtrados);
+  }
+
+  function convertirFechaBitacora(fechaHora) {
+    if (typeof fechaHora !== "string") {
+      return null;
+    }
+
+    const partes = fechaHora.match(
+      /^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})(?::(\d{2}))?$/
+    );
+    if (!partes) {
+      return null;
+    }
+
+    const fecha = new Date(
+      Number(partes[1]),
+      Number(partes[2]) - 1,
+      Number(partes[3]),
+      Number(partes[4]),
+      Number(partes[5]),
+      Number(partes[6] || 0)
+    );
+
+    return Number.isNaN(fecha.getTime()) ? null : fecha;
   }
 
   // Mostrar Modal según tipo de operación
@@ -109,7 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <h5 class="fw-bold mt-2 text-uppercase">${item.operacion}</h5>
         </div>
         <div class="row g-3 text-center">
-          <div class="col-6"><div class="p-2 border rounded bg-white"><strong>Fecha y Hora:</strong><br>${item.fyh}</div></div>
+          <div class="col-6"><div class="p-2 border rounded bg-white"><strong>Fecha y Hora:</strong><br>${item.fechaHora}</div></div>
           <div class="col-6"><div class="p-2 border rounded bg-white"><strong>IP:</strong><br>${item.ip}</div></div>
           <div class="col-6"><div class="p-2 border rounded bg-white"><strong>Usuario:</strong><br>${item.usuario}</div></div>
           <div class="col-6"><div class="p-2 border rounded bg-white"><strong>Operación:</strong><br>${item.operacion}</div></div>
@@ -257,55 +329,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // configuraciones 
 
-// ==========================================
 // 6. GESTIÓN DE CONFIGURACIONES DE CATÁLOGOS
-// ==========================================
-
-// Definimos los catálogos en el ámbito global para que las funciones onclick los encuentren sin problema
-window.tiposDocData = [
-  { id: "1", nombre: "Cedula Nacional" },
-  { id: "2", nombre: "Cedula Residente" },
-  { id: "3", nombre: "Pasaporte" },
-  { id: "4", nombre: "Cedula Juridica" },
-  { id: "5", nombre: "Permiso de Trabajo" },
-  { id: "6", nombre: "Cedula Extranjera" }
-];
-
-window.tiposMonedaData = [
-  { id: "1", nombre: "Colones", simbolo: "₡" },
-  { id: "2", nombre: "Dolares", simbolo: "$" },
-  { id: "3", nombre: "Euros", simbolo: "€" }
-];
-
-window.parentezcosData = [
-  { id: "1", nombre: "Padre" },
-  { id: "2", nombre: "Madre" },
-  { id: "3", nombre: "Hijo" },
-  { id: "4", nombre: "Hija" },
-  { id: "5", nombre: "Hermano" },
-  { id: "6", nombre: "Hermana" },
-  { id: "7", nombre: "amigo" },
-  { id: "8", nombre: "amiga" }
-];
-
-window.tiposCuentasData = [
-  {
-    id: "1", nombre: "Proletario", idTipoMoneda: "1", saldoMinimo: "25000.00",
-    multaSaldoMin: "3000.00", cargoAnual: "5000", numRetirosHumano: "5",
-    numRetirosAutomatico: "8", comisionHumano: "300", comisionAutomatico: "300", interes: "10"
-  },
-  {
-    id: "2", nombre: "Profesional", idTipoMoneda: "1", saldoMinimo: "50000.00",
-    multaSaldoMin: "3000.00", cargoAnual: "15000", numRetirosHumano: "5",
-    numRetirosAutomatico: "8", comisionHumano: "500", comisionAutomatico: "500", interes: "15"
-  },
-  {
-    id: "3", nombre: "Exclusivo", idTipoMoneda: "1", saldoMinimo: "100000.00",
-    multaSaldoMin: "3000.00", cargoAnual: "30000", numRetirosHumano: "5",
-    numRetirosAutomatico: "8", comisionHumano: "1000", comisionAutomatico: "1000", interes: "20"
-  }
-];
-
 let modoEdicionCatalogos = false;
 const btnEditCatalogos = document.getElementById("btn-edit-catalogos");
 
@@ -595,8 +619,16 @@ function renderAccordionCuentas() {
         <div class="accordion-body bg-light">
           <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label small fw-bold text-muted">Moneda (ID):</label>
-              ${modoEdicionCatalogos ? `<input type="text" class="form-control form-control-sm" value="${cuenta.idTipoMoneda}" onchange="actualizarCuentaProp(${index}, 'idTipoMoneda', this.value)">` : `<p class="form-control-plaintext form-control-sm border bg-white px-2 rounded">${cuenta.idTipoMoneda}</p>`}
+              <label class="form-label small fw-bold text-muted">Moneda:</label>
+              ${modoEdicionCatalogos ? `
+                <select class="form-select form-select-sm" onchange="actualizarCuentaProp(${index}, 'idTipoMoneda', this.value)">
+                  ${window.tiposMonedaData.map(moneda => `
+                    <option value="${moneda.id}" ${String(moneda.id) === String(cuenta.idTipoMoneda) ? "selected" : ""}>
+                      ${moneda.nombre}
+                    </option>
+                  `).join("")}
+                </select>
+              ` : `<p class="form-control-plaintext form-control-sm border bg-white px-2 rounded">${obtenerNombreMoneda(cuenta.idTipoMoneda)}</p>`}
             </div>
             <div class="col-md-6">
               <label class="form-label small fw-bold text-muted">Cargo Anual:</label>
@@ -629,6 +661,13 @@ function renderAccordionCuentas() {
     `;
     container.appendChild(itemDiv);
   });
+}
+
+function obtenerNombreMoneda(idMoneda) {
+  const moneda = window.tiposMonedaData.find(
+    item => String(item.id) === String(idMoneda)
+  );
+  return moneda ? moneda.nombre : idMoneda;
 }
 
 // Funciones Globales expuestas en window para manipulación correcta de los eventos onclick

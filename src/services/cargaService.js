@@ -233,7 +233,7 @@ async function xmlBD(jsonData) {
     const datosBD = await procesarXmlString(jsonData);
 
 
-/*      if (datosBD?.Tipo_Doc) {
+/*     if (datosBD?.Tipo_Doc) {
       for (const item of datosBD.Tipo_Doc) {
         if (await insertarTipoDocuIdentidad(item.Id, item.Nombre) !== 0) {
           console.error(`Error al insertar TipoDocuIdentidad con ID: ${item.Id}`);

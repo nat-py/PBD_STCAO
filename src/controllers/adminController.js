@@ -168,6 +168,19 @@ async function tablaTipoCuentaAhorroActivo(req, res) {
   }
 }
 
+async function registrarSalir(req, res) {
+  try {
+    const { usuario} = req.body;
+    bitacoraService.registrarBitacora('logout', usuario, req.ip);
+    res.status(200).json({ message: 'Bitácora de estados de cuenta obtenida correctamente', success: true });
+  } catch (error) {
+    console.error('Error al registrar en la bitácora:', error);
+  }
+}
+
+
+
+
 module.exports = {
     editarTipoDocuIdentidad,
     editarTipoMoneda,
@@ -178,5 +191,6 @@ module.exports = {
     tablaTipoDocuIdentidadActivo,
     tablaTipoMonedaActivo,
     tablaParentescoActivo,
-    tablaTipoCuentaAhorroActivo
+    tablaTipoCuentaAhorroActivo,
+    registrarSalir
 };
