@@ -262,6 +262,8 @@ document.addEventListener("DOMContentLoaded", () => {
 // ==========================================
 
 // Definimos los catálogos en el ámbito global para que las funciones onclick los encuentren sin problema
+window.tiposDocTodosData = [];
+
 window.tiposDocData = [
   { id: "1", nombre: "Cedula Nacional" },
   { id: "2", nombre: "Cedula Residente" },
@@ -271,11 +273,15 @@ window.tiposDocData = [
   { id: "6", nombre: "Cedula Extranjera" }
 ];
 
+window.tiposMonedaTodosData = [];
+
 window.tiposMonedaData = [
   { id: "1", nombre: "Colones", simbolo: "₡" },
   { id: "2", nombre: "Dolares", simbolo: "$" },
   { id: "3", nombre: "Euros", simbolo: "€" }
 ];
+
+window.parentezcosTodosData = [];
 
 window.parentezcosData = [
   { id: "1", nombre: "Padre" },
@@ -316,26 +322,47 @@ Promise.all([
     return response.json();
   }),
 
+  fetch("/api/admin/tablaTipoDocuIdentidad").then(response => {
+  if (!response.ok) throw new Error("Error al obtener todos los tipos de documento");
+  return response.json();
+}),
+
   fetch("/api/admin/tablaTipoMonedaActivo").then(response => {
     if (!response.ok) throw new Error("Error al obtener tipos de moneda");
     return response.json();
   }),
+
+  fetch("/api/admin/tablaTipoMoneda").then(response => {
+  if (!response.ok) throw new Error("Error al obtener todos los tipos de moneda");
+  return response.json();
+}),
 
   fetch("/api/admin/tablaParentescoActivo").then(response => {
     if (!response.ok) throw new Error("Error al obtener parentescos");
     return response.json();
   }),
 
+  fetch("/api/admin/tablaParentesco").then(response => {
+  if (!response.ok) throw new Error("Error al obtener todos los parentescos");
+  return response.json();
+}),
+
   fetch("/api/admin/tablaTipoCuentaAhorroActivo").then(response => {
     if (!response.ok) throw new Error("Error al obtener tipos de cuenta");
     return response.json();
   })
 ])
-.then(([documentos, monedas, parentescos, cuentas]) => {
+.then(([documentos, documentosTodos, monedas, monedasTodos, parentescos, parentescosTodos, cuentas]) => {
 
   window.tiposDocData = documentos.tiposDocumento;
+  window.tiposDocTodosData = documentosTodos.tiposDocumento;
+
   window.tiposMonedaData = monedas.tiposMoneda;
+  window.tiposMonedaTodosData = monedasTodos.tiposMoneda;
+
   window.parentezcosData = parentescos.parentescos;
+  window.parentezcosTodosData = parentescosTodos.parentescos;
+
   window.tiposCuentasData = cuentas.tiposCuentas;
 
   renderAllCatalogos();
@@ -633,7 +660,11 @@ function renderAccordionCuentas() {
 
 // Funciones Globales expuestas en window para manipulación correcta de los eventos onclick
 window.actualizarItemCatalogo = function(nombreVar, index, campo, valor) {
-  window[nombreVar][index][campo] = valor.trim();
+  const item = window[nombreVar][index];
+  item[campo] = valor.trim();
+  if (!item._nuevo) {
+    item._modificado = true;
+  }
 };
 
 window.eliminarItemCatalogo = async function(nombreVar, index) {
@@ -813,27 +844,68 @@ function mostrarResultadoEliminacion(nombreCatalogo, item, dependencias) {
 window.agregarItemCatalogo = function(nombreVar, tipoCatalogo) {
   const lista = window[nombreVar];
 
-  const nuevoId = lista.length > 0
-    ? Math.max(...lista.map(x => parseInt(x.id) || 0)) + 1
-    : 1;
+  let nuevoId;
+
+  if (tipoCatalogo === "documento") {
+    const idsExistentes = window.tiposDocTodosData.map(x => parseInt(x.id) || 0);
+
+    nuevoId = idsExistentes.length > 0
+      ? Math.max(...idsExistentes) + 1
+      : 1;
+  } else if (tipoCatalogo === "moneda") {
+    const idsExistentes = window.tiposMonedaTodosData.map(x => parseInt(x.id) || 0);
+
+    nuevoId = idsExistentes.length > 0
+      ? Math.max(...idsExistentes) + 1
+      : 1;
+  } else if (tipoCatalogo === "parentesco") {
+      const idsExistentes = window.parentezcosTodosData.map(x => parseInt(x.id) || 0);
+
+      nuevoId = idsExistentes.length > 0
+        ? Math.max(...idsExistentes) + 1
+        : 1;
+  } else {
+    nuevoId = lista.length > 0
+      ? Math.max(...lista.map(x => parseInt(x.id) || 0)) + 1
+      : 1;
+  }
 
   if (tipoCatalogo === "moneda") {
-    lista.push({
-      id: nuevoId.toString(),
-      nombre: "Nueva Moneda",
-      simbolo: "$"
-    });
-  } else if (tipoCatalogo === "documento") {
-    lista.push({
-      id: nuevoId.toString(),
-      nombre: "Nuevo Documento"
-    });
-  } else if (tipoCatalogo === "parentesco") {
-    lista.push({
-      id: nuevoId.toString(),
-      nombre: "Nuevo Parentesco"
-    });
-  }
+  lista.push({
+    id: nuevoId.toString(),
+    nombre: "Nueva Moneda",
+    simbolo: "$",
+    _nuevo: true
+  });
+
+  window.tiposMonedaTodosData.push({
+    id: nuevoId.toString(),
+    nombre: "Nueva Moneda",
+    simbolo: "$"
+  });
+} else if (tipoCatalogo === "documento") {
+  lista.push({
+    id: nuevoId.toString(),
+    nombre: "Nuevo Documento",
+    _nuevo: true
+  });
+
+  window.tiposDocTodosData.push({
+  id: nuevoId.toString(),
+  nombre: "Nuevo Documento"
+  });
+} else if (tipoCatalogo === "parentesco") {
+  lista.push({
+    id: nuevoId.toString(),
+    nombre: "Nuevo Parentesco",
+    _nuevo: true
+  });
+
+  window.parentezcosTodosData.push({
+    id: nuevoId.toString(),
+    nombre: "Nuevo Parentesco"
+  });
+}
 
   renderAllCatalogos();
 };
@@ -880,18 +952,37 @@ if (btnEditCatalogos) {
       try {
         for (const tipoDocuIdentidad of window.tiposDocData) {
 
-          try {
+          if (!tipoDocuIdentidad._nuevo && !tipoDocuIdentidad._modificado) {
+            continue;
+          }
 
-            const response = await fetch("/api/admin/editarTipoDocuIdentidad", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
-                usuario: usuarioActual,
-                tipoDocuIdentidad: tipoDocuIdentidad
-              })
-            });
+          try {
+            let response;
+            if (tipoDocuIdentidad._nuevo) {
+              response = await fetch("/api/admin/insertarTipoDocuIdentidad", {
+                method: "POST",
+                headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({
+                  usuario: usuarioActual,
+                  tipoDocuIdentidad: {
+                    id: tipoDocuIdentidad.id,
+                    nombre: tipoDocuIdentidad.nombre
+                  }
+                })
+              });
+            } else {
+              response = await fetch("/api/admin/editarTipoDocuIdentidad", {
+                method: "POST",
+                headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({
+                  usuario: usuarioActual,
+                  tipoDocuIdentidad: {
+                    id: tipoDocuIdentidad.id,
+                    nombre: tipoDocuIdentidad.nombre
+                  }
+                })
+              });
+            }
 
             const resultado = await response.json();
 
@@ -901,28 +992,56 @@ if (btnEditCatalogos) {
               );
             }
 
+            if (tipoDocuIdentidad._nuevo) {
+              delete tipoDocuIdentidad._nuevo;
+            }
+
+            if (tipoDocuIdentidad._modificado) {
+              delete tipoDocuIdentidad._modificado;
+            }
+
           } catch (error) {
-
             console.error("ERROR dentro del guardado:", error);
-
             throw error;
           }
         }
 
         for (const tipoMoneda of window.tiposMonedaData) {
 
-          try {
+          if (!tipoMoneda._nuevo && !tipoMoneda._modificado) {
+            continue;
+          }
 
-            const response = await fetch("/api/admin/editarTipoMoneda", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
-                usuario: usuarioActual,
-                tipoMoneda: tipoMoneda
-              })
-            });
+          try {
+            let response;
+
+            if (tipoMoneda._nuevo) {
+              response = await fetch("/api/admin/insertarTipoMoneda", {
+                method: "POST",
+                headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({
+                  usuario: usuarioActual,
+                  tipoMoneda: {
+                    id: tipoMoneda.id,
+                    nombre: tipoMoneda.nombre,
+                    simbolo: tipoMoneda.simbolo
+                  }
+                })
+              });
+            } else {
+              response = await fetch("/api/admin/editarTipoMoneda", {
+                method: "POST",
+                headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({
+                  usuario: usuarioActual,
+                  tipoMoneda: {
+                    id: tipoMoneda.id,
+                    nombre: tipoMoneda.nombre,
+                    simbolo: tipoMoneda.simbolo
+                  }
+                })
+              });
+            }
 
             const resultado = await response.json();
 
@@ -931,29 +1050,55 @@ if (btnEditCatalogos) {
                 resultado.message || "No se pudo guardar un tipo de moneda"
               );
             }
+            
+            if (tipoMoneda._nuevo) {
+              delete tipoMoneda._nuevo;
+            }
+
+            if (tipoMoneda._modificado) {
+              delete tipoMoneda._modificado;
+            }
 
           } catch (error) {
-
             console.error("ERROR dentro del guardado:", error);
-
             throw error;
           }
         }
 
         for (const parentesco of window.parentezcosData) {
+      
+          if (!parentesco._nuevo && !parentesco._modificado) {
+            continue;
+          }
 
           try {
+            let response;
 
-            const response = await fetch("/api/admin/editarParentesco", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
-                usuario: usuarioActual,
-                parentesco: parentesco
-              })
-            });
+            if (parentesco._nuevo) {
+              response = await fetch("/api/admin/insertarParentesco", {
+                method: "POST",
+                headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({
+                  usuario: usuarioActual,
+                  parentesco: {
+                    id: parentesco.id,
+                    nombre: parentesco.nombre
+                  }
+                })
+              });
+            } else {
+              response = await fetch("/api/admin/editarParentesco", {
+                method: "POST",
+                headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({
+                  usuario: usuarioActual,
+                  parentesco: {
+                    id: parentesco.id,
+                    nombre: parentesco.nombre
+                  }
+                })
+              });
+            }
 
             const resultado = await response.json();
 
@@ -962,11 +1107,17 @@ if (btnEditCatalogos) {
                 resultado.message || "No se pudo guardar un parentesco"
               );
             }
+            
+            if (parentesco._nuevo) {
+              delete parentesco._nuevo;
+            }
+
+            if (parentesco._modificado) {
+              delete parentesco._modificado;
+            }
 
           } catch (error) {
-
             console.error("ERROR dentro del guardado:", error);
-
             throw error;
           }
         }

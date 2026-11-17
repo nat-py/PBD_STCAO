@@ -6,7 +6,7 @@ async function insertarTipoDocuIdentidad(id, nombre)
   const result = await pool.request()
     .input('inID', sql.VarChar(4), id)
     .input('inNombre', sql.VarChar(32), nombre)
-    .output('outFlagExiste', sql.BIT)
+    .output('outFlagError', sql.BIT)
     .execute('dbo.sp_InsertTipoDocuIdentidad'); //llamar al SP que inserta docu
   
   const outFlagError = result.output.outFlagError
@@ -20,7 +20,7 @@ async function insertarTipoMoneda(id, nombre, simbolo)
     .input('inID', sql.VarChar(4), id)
     .input('inNombre', sql.VarChar(32), nombre)
     .input('inSimbolo', sql.VarChar(4), simbolo)
-    .output('outFlagExiste', sql.BIT)
+    .output('outFlagError', sql.BIT)
     .execute('dbo.sp_InsertTipoMoneda'); //llamar al SP que inserta tipo moneda
   
   const outFlagError = result.output.outFlagError
@@ -33,7 +33,7 @@ async function insertarParentesco(id, nombre)
   const result = await pool.request()
     .input('inID', sql.VarChar(4), id)
     .input('inNombre', sql.VarChar(32), nombre)
-    .output('outFlagExiste', sql.BIT)
+    .output('outFlagError', sql.BIT)
     .execute('dbo.sp_InsertParentesco'); //llamar al SP que inserta parentesco
   
   const outFlagError = result.output.outFlagError
@@ -56,7 +56,7 @@ async function insertarTipoCuentaAhorro(id, nombre, idTipoMoneda, saldoMinimo, m
     .input('inComisionHumano', sql.VarChar(5), comisionHumano)
     .input('inComisionAutomatico', sql.VarChar(5), comisionAutomatico)
     .input('inInteres', sql.VarChar(2), interes)
-    .output('outFlagExiste', sql.BIT)
+    .output('outFlagError', sql.BIT)
     .execute('dbo.sp_InsertTipoCuentaAhorros'); //llamar al SP que inserta tipo cuenta
   
   const outFlagError = result.output.outFlagError
@@ -69,7 +69,7 @@ async function insertarTipoOperacion(id, nombre)
   const result = await pool.request()
     .input('inID', sql.VarChar(4), id)
     .input('inNombre', sql.VarChar(50), nombre)
-    .output('outFlagExiste', sql.BIT)
+    .output('outFlagError', sql.BIT)
     .execute('dbo.sp_InsertTipoOperacion'); //llamar al SP que inserta tipo operacion
   
   const outFlagError = result.output.outFlagExiste
@@ -87,7 +87,7 @@ async function insertarPersona(tipoDocuIdentidad, nombre, valorDocuIdentidad, fe
     .input('inEmail', sql.VarChar(50), email)
     .input('inTelefono1', sql.VarChar(16), telefono1)
     .input('inTelefono2', sql.VarChar(16), telefono2)
-    .output('outFlagExiste', sql.BIT)
+    .output('outFlagError', sql.BIT)
     .execute('dbo.sp_InsertPersona'); //llamar al SP que inserta persona
   
   const outFlagError = result.output.outFlagError
@@ -124,7 +124,7 @@ async function insertarBeneficiario(numCuenta, valorDocuIdentidad, idParentesco,
     .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
     .input('inIDParentesco', sql.VarChar(4), idParentesco)
     .input('inPorcentaje', sql.INT, porcentaje)
-    .output('outFlagExiste', sql.BIT)
+    .output('outFlagError', sql.BIT)
     .execute('dbo.sp_InsertBeneficiario'); //llamar al SP que inserta beneficiario
   
   const outFlagError = result.output.outFlagError
@@ -148,7 +148,7 @@ cantidadSinpeSalientes)
     .input('inCantidadDepositos', sql.INT, cantidadDepositos)
     .input('inCantidadSinpeEntrantes', sql.INT, cantidadSinpeEntrantes)
     .input('inCantidadSinpeSalientes', sql.INT, cantidadSinpeSalientes)
-    .output('outFlagExiste', sql.BIT)
+    .output('outFlagError', sql.BIT)
     .execute('dbo.sp_InsertEstadoCuenta'); //llamar al SP que inserta estado cuenta
   
   const outFlagError = result.output.outFlagError
@@ -163,7 +163,7 @@ async function insertarUsuario(usuario, contrasena, esAdmin, valorDocuIdentidad)
     .input('inPassword', sql.VarChar(20), contrasena)
     .input('esAdmin', sql.BIT, esAdmin)
     .input('valorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
-    .output('outFlagExiste', sql.BIT)
+    .output('outFlagError', sql.BIT)
     .execute('dbo.sp_InsertUsuario'); //llamar al SP que inserta usuario
   
   const outFlagError = result.output.outFlagError
@@ -176,7 +176,7 @@ async function insertarUsuarioVer(usuario, numCuenta)
   const result = await pool.request()
     .input('inUser', sql.VarChar(20), usuario)
     .input('inNumCuenta', sql.VarChar(10), numCuenta)
-    .output('outFlagExiste', sql.BIT)
+    .output('outFlagError', sql.BIT)
     .execute('dbo.sp_InsertUsuarioVer'); //llamar al SP que inserta usuarios ver
   
   const outFlagError = result.output.outFlagError
@@ -265,7 +265,6 @@ async function eliminarTipoDocuIdentidad(id)
   
   const outFlagError = result.output.outFlagError
   const personas = result.recordset;
-  console.log('Personas (tipo docu):', personas);
   return { outFlagError, personas }; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
 
@@ -295,7 +294,6 @@ async function eliminarTipoMoneda(id)
   
   const outFlagError = result.output.outFlagError
   const tiposCuenta = result.recordset;
-  console.log('Tipos de cuenta (tipo moneda):', tiposCuenta);
   return { outFlagError, tiposCuenta }; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
 
@@ -324,7 +322,6 @@ async function eliminarParentesco(id)
   
   const outFlagError = result.output.outFlagError
   const beneficiarios = result.recordset;
-  console.log('Beneficiarios (parentesco):', beneficiarios);
   return { outFlagError, beneficiarios }; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
 
@@ -418,7 +415,36 @@ async function existenTablasCatalogo()
   return outFlagError; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
 
-/*------------------------------- Services Select Tablas Activas -------------------------------*/
+/*------------------------------- Services Select Tablas (Toda) -------------------------------*/
+
+async function tablaTipoDocuIdentidad() 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .execute('dbo.sp_TablaDocumentoIdentidad');
+  
+  return result.recordset;
+}
+
+async function tablaTipoMoneda() 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .execute('dbo.sp_TablaTipoMoneda');
+  
+  return result.recordset;
+}
+
+async function tablaParentesco() 
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .execute('dbo.sp_TablaParentesco');
+  
+  return result.recordset;
+}
+
+/*------------------------------- Services Select Tablas (Activas) -------------------------------*/
 
 async function tablaTipoDocuIdentidadActivo() 
 {
@@ -547,6 +573,9 @@ module.exports = {
   editarBeneficiarioDocuDiferente,
   editarBeneficiarioDocuIgual,
   existenTablasCatalogo,
+  tablaTipoDocuIdentidad,
+  tablaTipoMoneda,
+  tablaParentesco,
   tablaTipoDocuIdentidadActivo,
   tablaTipoMonedaActivo,
   tablaParentescoActivo,
