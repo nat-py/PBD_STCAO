@@ -9,7 +9,7 @@ const bitacoraPath = path.join(__dirname, '../../bitacora.json');
  * @param {string} operacion - Nombre de la acción (ej. 'login', 'insertarBeneficiario', 'modificarBeneficiario', 'consultaEstadoCuenta', 'logout')
  * @param {string} usuario - Nombre del usuario que realiza la acción
  * @param {string} ip - Dirección IP del cliente
- * @param {object|null} detalles - Objeto con los detalles de la operación (ej. { old: ..., new: ... }) o null si no aplica
+ * @param {object|null} detalles - Datos nuevos o cambios de la operación
  */ 
 function registrarBitacora(operacion, usuario, ip, detalles = null) {
   try {
@@ -20,15 +20,15 @@ function registrarBitacora(operacion, usuario, ip, detalles = null) {
     }
 
     // Generar formato de fecha y hora: "YYYY-MM-DD HH:mm:ss"
-    const fechaHora = new Date().toLocaleString('sv-SE');
+    const fyh = new Date().toLocaleString('sv-SE');
 
     const nuevoRegistro = {
       id: bitacoras.length > 0 ? bitacoras[bitacoras.length - 1].id + 1 : 1,
-      fechaHora: fechaHora,
+      fyh: fyh,
       ip: ip || '127.0.0.1',
       operacion: operacion,
       usuario: usuario || 'sistema',
-      detalles: detalles
+      detalles: normalizarDetalles(operacion, detalles)
     };
 
     bitacoras.push(nuevoRegistro);
@@ -36,6 +36,25 @@ function registrarBitacora(operacion, usuario, ip, detalles = null) {
   } catch (error) {
     console.error('Error al guardar en la bitácora:', error);
   }
+}
+
+function normalizarDetalles(operacion, detalles) {
+  const operacionesSimples = ['login', 'logout', 'consultaEstadoCuenta'];
+  if (operacionesSimples.includes(operacion)) {
+    return null;
+  }
+
+  if (detalles && Object.prototype.hasOwnProperty.call(detalles, 'anterior')) {
+    return {
+      anterior: detalles.anterior,
+      nuevo: detalles.nuevo ?? null
+    };
+  }
+
+  return {
+    anterior: null,
+    nuevo: detalles
+  };
 }
 
 module.exports = { registrarBitacora };

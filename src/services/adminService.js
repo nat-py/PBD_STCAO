@@ -55,12 +55,46 @@ async function insertarTipoCuentaAhorro(id, nombre, idTipoMoneda, saldoMinimo, m
     .input('inNumRetirosAutomatico', sql.INT, numRetirosAutomatico)
     .input('inComisionHumano', sql.VarChar(5), comisionHumano)
     .input('inComisionAutomatico', sql.VarChar(5), comisionAutomatico)
-    .input('inInteres', sql.VarChar(2), interes)
+    .input('inInteres', sql.VarChar(5), interes)
     .output('outFlagError', sql.BIT)
-    .execute('dbo.sp_InsertTipoCuentaAhorros'); //llamar al SP que inserta tipo cuenta
+    .execute('dbo.sp_InsertTipoCuentaAhorro'); //llamar al SP que inserta tipo cuenta
   
   const outFlagError = result.output.outFlagError
   return outFlagError;
+}
+
+async function modificarTipoCuentaAhorro(id, nombre, idTipoMoneda, saldoMinimo, multaSaldoMinimo, cargoAnual,
+  numRetirosHumano, numRetirosAutomatico, comisionHumano, comisionAutomatico, interes) {
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inID', sql.VarChar(4), id)
+    .input('inNombre', sql.VarChar(32), nombre)
+    .input('inIDTipoMoneda', sql.VarChar(4), idTipoMoneda)
+    .input('inSaldoMinimo', sql.MONEY, saldoMinimo)
+    .input('inMultaSaldoMinimo', sql.MONEY, multaSaldoMinimo)
+    .input('inCargoAnual', sql.VarChar(12), cargoAnual)
+    .input('inNumRetirosHumano', sql.INT, numRetirosHumano)
+    .input('inNumRetirosAutomatico', sql.INT, numRetirosAutomatico)
+    .input('inComisionHumano', sql.VarChar(5), comisionHumano)
+    .input('inComisionAutomatico', sql.VarChar(5), comisionAutomatico)
+    .input('inInteres', sql.VarChar(5), interes)
+    .output('outFlagError', sql.BIT)
+    .execute('dbo.sp_UpdateTipoCuentaAhorro');
+
+  return result.output.outFlagError;
+}
+
+async function eliminarTipoCuentaAhorro(id) {
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inIDTipoCuentaAhorro', sql.VarChar(4), id)
+    .output('outFlagError', sql.BIT)
+    .execute('dbo.sp_EliminarTipoCuentaAhorro');
+
+  return {
+    outFlagError: result.output.outFlagError,
+    cuentas: result.recordset
+  };
 }
 
 async function insertarTipoOperacion(id, nombre) 
@@ -478,8 +512,30 @@ async function tablaTipoCuentaAhorroActivo()
   const pool = await poolPromise;
   const result = await pool.request()
     .execute('dbo.sp_TablaTipoCuentaAhorroActivo');
-  
-  return result.recordset;
+
+  const tiposCuentas = result.recordset;
+  const tieneComisionAutomatica = tiposCuentas.some(
+    cuenta => cuenta.comisionAutomatico !== undefined
+  );
+
+  if (tieneComisionAutomatica) {
+    return tiposCuentas;
+  }
+
+  const comisiones = await pool.request().query(`
+    SELECT id, comisionAutomatico
+    FROM dbo.TipoCuentaAhorro
+    WHERE estado = 1
+  `);
+
+  const comisionesPorId = new Map(
+    comisiones.recordset.map(cuenta => [String(cuenta.id), cuenta.comisionAutomatico])
+  );
+
+  return tiposCuentas.map(cuenta => ({
+    ...cuenta,
+    comisionAutomatico: comisionesPorId.get(String(cuenta.id)) ?? null
+  }));
 }
 
 async function tablaTipoOperacionActivo() 
@@ -550,6 +606,8 @@ module.exports = {
   insertarTipoMoneda,
   insertarParentesco,
   insertarTipoCuentaAhorro,
+  modificarTipoCuentaAhorro,
+  eliminarTipoCuentaAhorro,
   insertarTipoOperacion,
   insertarPersona,
   insertarCuentaAhorro,

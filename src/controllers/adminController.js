@@ -44,6 +44,7 @@ async function insertarParentesco(req, res) {
     if (result === true) {
         return res.status(400).json({message: 'No se pudo ingresar el parentesco',success: false});
     }
+
     bitacoraService.registrarBitacora('Ingresar parentesco', usuario, req.ip, parentesco);
     res.status(200).json({ message: 'Parentesco ingresado correctamente', success: true });
   } catch (error) {
@@ -52,8 +53,33 @@ async function insertarParentesco(req, res) {
   }
 }
 
+async function insertarTipoCuentaAhorro(req, res) {
+  const { usuario, tipoCuenta } = req.body;
+  try {
+    const result = await adminService.insertarTipoCuentaAhorro(
+      tipoCuenta.id, tipoCuenta.nombre, tipoCuenta.idTipoMoneda,
+      tipoCuenta.saldoMinimo, tipoCuenta.multaSaldoMinimo, tipoCuenta.cargoAnual,
+      tipoCuenta.numRetirosHumano, tipoCuenta.numRetirosAutomatico,
+      tipoCuenta.comisionHumano, tipoCuenta.comisionAutomatico, tipoCuenta.interes
+    );
+
+    if (result === true) {
+      return res.status(400).json({
+        message: 'No se pudo ingresar el tipo de cuenta de ahorro',
+        success: false
+      });
+    }
+
+    bitacoraService.registrarBitacora('Ingresar tipo de cuenta de ahorro', usuario, req.ip, tipoCuenta);
+    res.status(200).json({ message: 'Tipo de cuenta de ahorro ingresado correctamente', success: true });
+  } catch (error) {
+    console.error('Error al ingresar el tipo de cuenta de ahorro:', error);
+    res.status(500).json({ error: 'Error al ingresar el tipo de cuenta de ahorro' });
+  }
+}
+
 async function editarTipoDocuIdentidad(req, res) {
-  const { usuario, tipoDocuIdentidad } = req.body;
+  const { usuario, tipoDocuIdentidad, anterior } = req.body;
   try {
     const result = await adminService.modificarTipoDocuIdentidad(tipoDocuIdentidad.id, 
                                                                 tipoDocuIdentidad.nombre);
@@ -61,7 +87,10 @@ async function editarTipoDocuIdentidad(req, res) {
     if (result === true) {
         return res.status(400).json({message: 'No se pudo editar el tipo de documento de identidad',success: false});
     }
-    bitacoraService.registrarBitacora('Actualizar tipo de documento de identidad', usuario, req.ip, tipoDocuIdentidad);
+    bitacoraService.registrarBitacora('Actualizar tipo de documento de identidad', usuario, req.ip, {
+      anterior: anterior || null,
+      nuevo: tipoDocuIdentidad
+    });
     res.status(200).json({ message: 'Tipo de documento de identidad editado correctamente', success: true });
   } catch (error) {
     console.error('Error al editar el tipo de documento de identidad:', error);
@@ -70,7 +99,7 @@ async function editarTipoDocuIdentidad(req, res) {
 }
 
 async function editarTipoMoneda(req, res) {
-  const { usuario, tipoMoneda } = req.body;
+  const { usuario, tipoMoneda, anterior } = req.body;
   try {
     const result = await adminService.modificarTipoMoneda(tipoMoneda.id, 
                                                         tipoMoneda.nombre, 
@@ -78,7 +107,10 @@ async function editarTipoMoneda(req, res) {
     if (result === true) {
         return res.status(400).json({message: 'No se pudo editar el tipo de moneda',success: false});
     }
-    bitacoraService.registrarBitacora('Actualizar tipo de moneda', usuario, req.ip, tipoMoneda);
+    bitacoraService.registrarBitacora('Actualizar tipo de moneda', usuario, req.ip, {
+      anterior: anterior || null,
+      nuevo: tipoMoneda
+    });
     res.status(200).json({ message: 'Tipo de moneda editado correctamente', success: true });
   } catch (error) {
     console.error('Error al editar el tipo de moneda:', error);
@@ -87,7 +119,7 @@ async function editarTipoMoneda(req, res) {
 }
 
 async function editarParentesco(req, res) {
-  const { usuario, parentesco } = req.body;
+  const { usuario, parentesco, anterior } = req.body;
   try {
     const result = await adminService.modificarParentesco(parentesco.id, 
                                                         parentesco.nombre);
@@ -95,11 +127,43 @@ async function editarParentesco(req, res) {
     if (result === true) {
         return res.status(400).json({message: 'No se pudo editar el parentesco',success: false});
     }
-    bitacoraService.registrarBitacora('Actualizar parentesco', usuario, req.ip, parentesco);
+
+    bitacoraService.registrarBitacora('Actualizar parentesco', usuario, req.ip, {
+      anterior: anterior || null,
+      nuevo: parentesco
+    });
     res.status(200).json({ message: 'Parentesco editado correctamente', success: true });
   } catch (error) {
     console.error('Error al editar parentesco:', error);
     res.status(500).json({ error: 'Error al editar parentesco' });
+  }
+}
+
+async function editarTipoCuentaAhorro(req, res) {
+  const { usuario, tipoCuenta, anterior } = req.body;
+  try {
+    const result = await adminService.modificarTipoCuentaAhorro(
+      tipoCuenta.id, tipoCuenta.nombre, tipoCuenta.idTipoMoneda,
+      tipoCuenta.saldoMinimo, tipoCuenta.multaSaldoMinimo, tipoCuenta.cargoAnual,
+      tipoCuenta.numRetirosHumano, tipoCuenta.numRetirosAutomatico,
+      tipoCuenta.comisionHumano, tipoCuenta.comisionAutomatico, tipoCuenta.interes
+    );
+
+    if (result === true) {
+      return res.status(400).json({
+        message: 'No se pudo editar el tipo de cuenta de ahorro',
+        success: false
+      });
+    }
+
+    bitacoraService.registrarBitacora('Actualizar tipo de cuenta de ahorro', usuario, req.ip, {
+      anterior: anterior || null,
+      nuevo: tipoCuenta
+    });
+    res.status(200).json({ message: 'Tipo de cuenta de ahorro editado correctamente', success: true });
+  } catch (error) {
+    console.error('Error al editar el tipo de cuenta de ahorro:', error);
+    res.status(500).json({ error: 'Error al editar el tipo de cuenta de ahorro' });
   }
 }
 
@@ -110,7 +174,10 @@ async function eliminarTipoDocuIdentidad(req, res) {
     if (result.outFlagError === true) {
         return res.status(400).json({message: 'No se pudo eliminar el tipo de documento de identidad',success: false});
     }
-    bitacoraService.registrarBitacora('Eliminar tipo de documento de identidad', usuario, req.ip, tipoDocuIdentidad);
+    bitacoraService.registrarBitacora('Eliminar tipo de documento de identidad', usuario, req.ip, {
+      anterior: tipoDocuIdentidad,
+      nuevo: null
+    });
     res.status(200).json({ message: 'Tipo de documento de identidad eliminado correctamente', success: true, personas: result.personas });
   } catch (error) {
     console.error('Error al eliminar el tipo de documento de identidad:', error);
@@ -125,7 +192,10 @@ async function eliminarTipoMoneda(req, res) {
     if (result.outFlagError === true) {
         return res.status(400).json({message: 'No se pudo eliminar el tipo de moneda', success: false});
     }
-    bitacoraService.registrarBitacora('Eliminar tipo de moneda', usuario, req.ip, tipoMoneda);
+    bitacoraService.registrarBitacora('Eliminar tipo de moneda', usuario, req.ip, {
+      anterior: tipoMoneda,
+      nuevo: null
+    });
     res.status(200).json({ message: 'Tipo de moneda eliminado correctamente', success: true, tiposCuenta: result.tiposCuenta });
   } catch (error) {
     console.error('Error al eliminar el tipo de moneda:', error);
@@ -140,11 +210,42 @@ async function eliminarParentesco(req, res) {
     if (result.outFlagError === true) {
         return res.status(400).json({message: 'No se pudo eliminar el parentesco', success: false});
     }
-    bitacoraService.registrarBitacora('Eliminar parentesco', usuario, req.ip, parentesco);
+
+    bitacoraService.registrarBitacora('Eliminar parentesco', usuario, req.ip, {
+      anterior: parentesco,
+      nuevo: null
+    });
     res.status(200).json({ message: 'Parentesco eliminado correctamente', success: true, beneficiarios: result.beneficiarios });
   } catch (error) {
     console.error('Error al eliminar el parentesco:', error);
     res.status(500).json({ error: 'Error al eliminar el parentesco' });
+  }
+}
+
+async function eliminarTipoCuentaAhorro(req, res) {
+  const { usuario, tipoCuenta } = req.body;
+  try {
+    const result = await adminService.eliminarTipoCuentaAhorro(tipoCuenta.id);
+
+    if (result.outFlagError === true) {
+      return res.status(400).json({
+        message: 'No se pudo eliminar el tipo de cuenta de ahorro',
+        success: false
+      });
+    }
+
+    bitacoraService.registrarBitacora('Eliminar tipo de cuenta de ahorro', usuario, req.ip, {
+      anterior: tipoCuenta,
+      nuevo: null
+    });
+    res.status(200).json({
+      message: 'Tipo de cuenta de ahorro eliminado correctamente',
+      success: true,
+      cuentas: result.cuentas
+    });
+  } catch (error) {
+    console.error('Error al eliminar el tipo de cuenta de ahorro:', error);
+    res.status(500).json({ error: 'Error al eliminar el tipo de cuenta de ahorro' });
   }
 }
 
@@ -267,6 +368,23 @@ async function tablaTipoCuentaAhorroActivo(req, res) {
   }
 }
 
+async function tablaCuentaAhorroActivo(req, res) {
+  try {
+    const cuentas = await adminService.tablaCuentaAhorroActivo();
+
+    res.status(200).json({
+      message: 'Cuentas de ahorro listadas correctamente',
+      cuentas: cuentas,
+      success: true
+    });
+  } catch (error) {
+    console.error('Error al obtener las cuentas de ahorro activas:', error);
+    res.status(500).json({
+      error: 'Error al obtener las cuentas de ahorro activas'
+    });
+  }
+}
+
 async function registrarSalir(req, res) {
   try {
     const { usuario} = req.body;
@@ -284,17 +402,22 @@ module.exports = {
   insertarTipoDocuIdentidad,
   insertarTipoMoneda,
   insertarParentesco,
+  insertarTipoCuentaAhorro,
   editarTipoDocuIdentidad,
   editarTipoMoneda,
   editarParentesco,
+  editarTipoCuentaAhorro,
   eliminarTipoDocuIdentidad,
   eliminarTipoMoneda,
   eliminarParentesco,
+  eliminarTipoCuentaAhorro,
   tablaTipoDocuIdentidad,
   tablaTipoMoneda,
   tablaParentesco,
   tablaTipoDocuIdentidadActivo,
   tablaTipoMonedaActivo,
   tablaParentescoActivo,
-  tablaTipoCuentaAhorroActivo
+  tablaTipoCuentaAhorroActivo,
+  tablaCuentaAhorroActivo,
+  registrarSalir
 };

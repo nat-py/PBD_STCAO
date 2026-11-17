@@ -31,6 +31,9 @@ document.addEventListener("DOMContentLoaded", () => {
       link.classList.add("active");
       const targetId = link.getAttribute("data-target");
       document.getElementById(targetId).classList.add("active");
+      if (targetId === "screen-bitacoras") {
+        cargarBitacoras();
+      }
     });
   });
 
@@ -45,13 +48,22 @@ document.addEventListener("DOMContentLoaded", () => {
   const tablaBitacorasBody = document.getElementById("tabla-bitacoras-body");
   const modalBitacora = new bootstrap.Modal(document.getElementById("modalBitacoraDetalle"));
 
-  fetch('/api/admin/bitacora')
-    .then(response => response.json())
-    .then(data => {
-      bitacorasData = data;
-      renderBitacoras(bitacorasData);
-    })
-    .catch(err => console.error("Error cargando bitácoras:", err));
+  function cargarBitacoras() {
+    fetch('/api/admin/bitacora')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("No se pudo recargar la bitácora");
+        }
+        return response.json();
+      })
+      .then(data => {
+        bitacorasData = data;
+        renderBitacoras(bitacorasData);
+      })
+      .catch(err => console.error("Error cargando bitácoras:", err));
+  }
+
+  cargarBitacoras();
 
   function renderBitacoras(data) {
     tablaBitacorasBody.innerHTML = "";
@@ -64,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const tr = document.createElement("tr");
       tr.className = "clickable-row";
       tr.innerHTML = `
-        <td class="fw-semibold">${item.fechaHora}</td>
+        <td class="fw-semibold">${item.fyh}</td>
         <td>${item.ip}</td>
         <td><span class="badge bg-secondary">${item.operacion}</span></td>
         <td>${item.usuario}</td>
@@ -105,13 +117,13 @@ document.addEventListener("DOMContentLoaded", () => {
     inicioDeLaSemana.setDate(inicioDeLaSemana.getDate() - diaDeLaSemana + 1);
 
     const filtrados = bitacorasData.filter(item => {
-      const fechaRegistro = convertirFechaBitacora(item.fechaHora);
+      const fechaRegistro = convertirFechaBitacora(item.fyh);
       if (!fechaRegistro) {
         return false;
       }
 
       if (tipo === "especifica" && valor) {
-        return item.fechaHora.startsWith(valor);
+        return item.fyh.startsWith(valor);
       }
 
       if (tipo === "hora") {
@@ -138,12 +150,12 @@ document.addEventListener("DOMContentLoaded", () => {
     renderBitacoras(filtrados);
   }
 
-  function convertirFechaBitacora(fechaHora) {
-    if (typeof fechaHora !== "string") {
+  function convertirFechaBitacora(fechaTexto) {
+    if (typeof fechaTexto !== "string") {
       return null;
     }
 
-    const partes = fechaHora.match(
+    const partes = fechaTexto.match(
       /^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})(?::(\d{2}))?$/
     );
     if (!partes) {
@@ -181,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <h5 class="fw-bold mt-2 text-uppercase">${item.operacion}</h5>
         </div>
         <div class="row g-3 text-center">
-          <div class="col-6"><div class="p-2 border rounded bg-white"><strong>Fecha y Hora:</strong><br>${item.fechaHora}</div></div>
+          <div class="col-6"><div class="p-2 border rounded bg-white"><strong>Fecha y Hora:</strong><br>${item.fyh}</div></div>
           <div class="col-6"><div class="p-2 border rounded bg-white"><strong>IP:</strong><br>${item.ip}</div></div>
           <div class="col-6"><div class="p-2 border rounded bg-white"><strong>Usuario:</strong><br>${item.usuario}</div></div>
           <div class="col-6"><div class="p-2 border rounded bg-white"><strong>Operación:</strong><br>${item.operacion}</div></div>
@@ -200,16 +212,16 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="col-3"><div class="p-1 border rounded bg-white small"><strong>Usuario:</strong><br>${item.usuario}</div></div>
           <div class="col-3"><div class="p-1 border rounded bg-white small"><strong>Op:</strong><br>${item.operacion}</div></div>
         </div>
-        <h6 class="fw-bold text-muted mb-2">Cambios Registrados (Old vs New):</h6>
+        <h6 class="fw-bold text-muted mb-2">Cambios Registrados:</h6>
         <div class="diff-scroll-container">
           <div class="row">
             <div class="col-6 border-end">
-              <span class="badge bg-danger mb-2">Anterior (Old)</span>
-              <pre class="small text-muted bg-white p-2 rounded">${JSON.stringify(item.detalles?.old || {}, null, 2)}</pre>
+              <span class="badge bg-danger mb-2">Anterior</span>
+              <pre class="small text-muted bg-white p-2 rounded">${JSON.stringify(item.detalles?.anterior || {}, null, 2)}</pre>
             </div>
             <div class="col-6">
-              <span class="badge bg-success mb-2">Nuevo (New)</span>
-              <pre class="small text-muted bg-white p-2 rounded">${JSON.stringify(item.detalles?.new || {}, null, 2)}</pre>
+              <span class="badge bg-success mb-2">Nuevo</span>
+              <pre class="small text-muted bg-white p-2 rounded">${JSON.stringify(item.detalles?.nuevo || {}, null, 2)}</pre>
             </div>
           </div>
         </div>
@@ -223,10 +235,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const inputBusquedaCuentas = document.getElementById("inputBusquedaCuentas");
   let cuentasData = [];
 
-  fetch("cuentas.json")
-    .then(response => response.json())
+  fetch("/api/admin/tablaCuentaAhorroActivo")
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Error al obtener las cuentas de ahorro activas");
+      }
+      return response.json();
+    })
     .then(data => {
-      cuentasData = data;
+      cuentasData = data.cuentas;
       renderCuentas(cuentasData);
     })
     .catch(err => console.error("Error cargando cuentas:", err));
@@ -234,7 +251,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderCuentas(data) {
     tablaCuentasBody.innerHTML = "";
     if (data.length === 0) {
-      tablaCuentasBody.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-3">No se encontraron cuentas</td></tr>`;
+      tablaCuentasBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">No se encontraron cuentas</td></tr>`;
       return;
     }
 
@@ -242,13 +259,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const tr = document.createElement("tr");
       tr.className = "clickable-row";
       tr.innerHTML = `
-        <td class="fw-bold">${item.id}</td>
-        <td>${item.dueno}</td>
-        <td><span class="badge bg-primary">${item.cuentasObjetivo}</span></td>
+        <td>${item.valorDocuIdentidad}</td>
+        <td class="fw-bold">${item.numCuenta}</td>
+        <td><span class="badge bg-primary">${item.idTipoCuenta}</span></td>
+        <td>${item.fechaCreacion}</td>
+        <td>${item.saldo}</td>
       `;
       // Al hacer clic redirige a dashboardAhorro
       tr.addEventListener("click", () => {
-        window.location.href = "../dashboardAhorro/dashboardAhorro.html";
+        const parametros = new URLSearchParams({
+          usuario: usuarioActual || "",
+          numCuenta: item.numCuenta
+        });
+        window.location.href = `../dashboardAhorro/dashboardAhorro.html?${parametros.toString()}`;
       });
       tablaCuentasBody.appendChild(tr);
     });
@@ -256,8 +279,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   inputBusquedaCuentas.addEventListener("input", (e) => {
     const query = e.target.value.toLowerCase();
-    const filtradas = cuentasData.filter(c => 
-      c.dueno.toLowerCase().includes(query) || c.id.toString().includes(query)
+    const filtradas = cuentasData.filter(c =>
+      [c.valorDocuIdentidad, c.idTipoCuenta, c.numCuenta, c.fechaCreacion, c.saldo]
+        .some(valor => String(valor ?? "").toLowerCase().includes(query))
     );
     renderCuentas(filtradas);
   });
@@ -670,11 +694,19 @@ function renderAccordionCuentas() {
             </div>
             <div class="col-md-6">
               <label class="form-label small fw-bold text-muted">Multa Saldo Mínimo:</label>
-              ${modoEdicionCatalogos ? `<input type="text" class="form-control form-control-sm" value="${cuenta.multaSaldoMin}" onchange="actualizarCuentaProp(${index}, 'multaSaldoMin', this.value)">` : `<p class="form-control-plaintext form-control-sm border bg-white px-2 rounded">${cuenta.multaSaldoMin}</p>`}
+              ${modoEdicionCatalogos ? `<input type="text" class="form-control form-control-sm" value="${obtenerMultaSaldoMinimo(cuenta)}" onchange="actualizarCuentaProp(${index}, 'multaSaldoMinimo', this.value)">` : `<p class="form-control-plaintext form-control-sm border bg-white px-2 rounded">${obtenerMultaSaldoMinimo(cuenta)}</p>`}
             </div>
             <div class="col-md-6">
               <label class="form-label small fw-bold text-muted">Interés (%):</label>
               ${modoEdicionCatalogos ? `<input type="text" class="form-control form-control-sm" value="${cuenta.interes}" onchange="actualizarCuentaProp(${index}, 'interes', this.value)">` : `<p class="form-control-plaintext form-control-sm border bg-white px-2 rounded">${cuenta.interes}%</p>`}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Comisión Humano:</label>
+              ${modoEdicionCatalogos ? `<input type="text" class="form-control form-control-sm" value="${cuenta.comisionHumano}" onchange="actualizarCuentaProp(${index}, 'comisionHumano', this.value)">` : `<p class="form-control-plaintext form-control-sm border bg-white px-2 rounded">${cuenta.comisionHumano}</p>`}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-muted">Comisión Automático:</label>
+              ${modoEdicionCatalogos ? `<input type="text" class="form-control form-control-sm" value="${obtenerComisionAutomatica(cuenta)}" onchange="actualizarCuentaProp(${index}, 'comisionAutomatico', this.value)">` : `<p class="form-control-plaintext form-control-sm border bg-white px-2 rounded">${obtenerComisionAutomatica(cuenta)}</p>`}
             </div>
           </div>
         </div>
@@ -691,9 +723,20 @@ function obtenerNombreMoneda(idMoneda) {
   return moneda ? moneda.nombre : idMoneda;
 }
 
+function obtenerMultaSaldoMinimo(cuenta) {
+  return cuenta.multaSaldoMinimo ?? cuenta.multaSaldoMin ?? "";
+}
+
+function obtenerComisionAutomatica(cuenta) {
+  return cuenta.comisionAutomatico ?? cuenta.comisionAutomatica ?? "";
+}
+
 // Funciones Globales expuestas en window para manipulación correcta de los eventos onclick
 window.actualizarItemCatalogo = function(nombreVar, index, campo, valor) {
   const item = window[nombreVar][index];
+  if (!item._nuevo && !item._anterior) {
+    item._anterior = JSON.parse(JSON.stringify(item));
+  }
   item[campo] = valor.trim();
   if (!item._nuevo) {
     item._modificado = true;
@@ -944,12 +987,44 @@ window.agregarItemCatalogo = function(nombreVar, tipoCatalogo) {
 };
 
 window.actualizarCuentaProp = function(index, propiedad, valor) {
-  window.tiposCuentasData[index][propiedad] = valor.trim();
+  const cuenta = window.tiposCuentasData[index];
+  if (!cuenta._nuevo && !cuenta._anterior) {
+    cuenta._anterior = JSON.parse(JSON.stringify(cuenta));
+  }
+  cuenta[propiedad] = valor.trim();
+  if (!cuenta._nuevo) {
+    cuenta._modificado = true;
+  }
 };
 
-window.eliminarCuentaAhorro = function(index) {
-  window.tiposCuentasData.splice(index, 1);
-  renderAllCatalogos();
+window.eliminarCuentaAhorro = async function(index) {
+  const cuenta = window.tiposCuentasData[index];
+
+  if (cuenta._nuevo) {
+    window.tiposCuentasData.splice(index, 1);
+    renderAllCatalogos();
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/admin/eliminarTipoCuentaAhorro", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ usuario: usuarioActual, tipoCuenta: cuenta })
+    });
+    const resultado = await response.json();
+
+    if (!response.ok || !resultado.success) {
+      throw new Error(resultado.message || "No se pudo eliminar el tipo de cuenta de ahorro");
+    }
+
+    window.tiposCuentasData.splice(index, 1);
+    renderAllCatalogos();
+    mostrarAlertaBootstrap("Tipo de cuenta de ahorro eliminado correctamente", "success");
+  } catch (error) {
+    console.error("Error al eliminar el tipo de cuenta de ahorro:", error);
+    mostrarAlertaBootstrap(error.message, "danger");
+  }
 };
 
 window.agregarCuentaAhorro = function() {
@@ -960,13 +1035,14 @@ window.agregarCuentaAhorro = function() {
     nombre: "Nueva Cuenta",
     idTipoMoneda: "1",
     saldoMinimo: "10000.00",
-    multaSaldoMin: "2000.00",
+    multaSaldoMinimo: "2000.00",
     cargoAnual: "5000",
     numRetirosHumano: "5",
     numRetirosAutomatico: "8",
     comisionHumano: "300",
     comisionAutomatico: "300",
-    interes: "12"
+    interes: "12",
+    _nuevo: true
   });
   renderAllCatalogos();
 };
@@ -1000,7 +1076,8 @@ if (btnEditCatalogos) {
                   tipoDocuIdentidad: {
                     id: tipoDocuIdentidad.id,
                     nombre: tipoDocuIdentidad.nombre
-                  }
+                  },
+                  anterior: tipoDocuIdentidad._anterior || null
                 })
               });
             } else {
@@ -1012,7 +1089,8 @@ if (btnEditCatalogos) {
                   tipoDocuIdentidad: {
                     id: tipoDocuIdentidad.id,
                     nombre: tipoDocuIdentidad.nombre
-                  }
+                  },
+                  anterior: tipoDocuIdentidad._anterior || null
                 })
               });
             }
@@ -1032,6 +1110,7 @@ if (btnEditCatalogos) {
             if (tipoDocuIdentidad._modificado) {
               delete tipoDocuIdentidad._modificado;
             }
+            delete tipoDocuIdentidad._anterior;
 
           } catch (error) {
             console.error("ERROR dentro del guardado:", error);
@@ -1058,7 +1137,8 @@ if (btnEditCatalogos) {
                     id: tipoMoneda.id,
                     nombre: tipoMoneda.nombre,
                     simbolo: tipoMoneda.simbolo
-                  }
+                  },
+                  anterior: tipoMoneda._anterior || null
                 })
               });
             } else {
@@ -1071,7 +1151,8 @@ if (btnEditCatalogos) {
                     id: tipoMoneda.id,
                     nombre: tipoMoneda.nombre,
                     simbolo: tipoMoneda.simbolo
-                  }
+                  },
+                  anterior: tipoMoneda._anterior || null
                 })
               });
             }
@@ -1091,6 +1172,7 @@ if (btnEditCatalogos) {
             if (tipoMoneda._modificado) {
               delete tipoMoneda._modificado;
             }
+            delete tipoMoneda._anterior;
 
           } catch (error) {
             console.error("ERROR dentro del guardado:", error);
@@ -1116,7 +1198,8 @@ if (btnEditCatalogos) {
                   parentesco: {
                     id: parentesco.id,
                     nombre: parentesco.nombre
-                  }
+                  },
+                  anterior: parentesco._anterior || null
                 })
               });
             } else {
@@ -1128,7 +1211,8 @@ if (btnEditCatalogos) {
                   parentesco: {
                     id: parentesco.id,
                     nombre: parentesco.nombre
-                  }
+                  },
+                  anterior: parentesco._anterior || null
                 })
               });
             }
@@ -1148,7 +1232,58 @@ if (btnEditCatalogos) {
             if (parentesco._modificado) {
               delete parentesco._modificado;
             }
+            delete parentesco._anterior;
 
+          } catch (error) {
+            console.error("ERROR dentro del guardado:", error);
+            throw error;
+          }
+        }
+
+        for (const tipoCuenta of window.tiposCuentasData) {
+          if (!tipoCuenta._nuevo && !tipoCuenta._modificado) {
+            continue;
+          }
+
+          const datosTipoCuenta = {
+            id: tipoCuenta.id,
+            nombre: tipoCuenta.nombre,
+            idTipoMoneda: tipoCuenta.idTipoMoneda,
+            saldoMinimo: tipoCuenta.saldoMinimo,
+            multaSaldoMinimo: obtenerMultaSaldoMinimo(tipoCuenta),
+            cargoAnual: tipoCuenta.cargoAnual,
+            numRetirosHumano: tipoCuenta.numRetirosHumano,
+            numRetirosAutomatico: tipoCuenta.numRetirosAutomatico,
+            comisionHumano: tipoCuenta.comisionHumano,
+            comisionAutomatico: tipoCuenta.comisionAutomatico,
+            interes: tipoCuenta.interes
+          };
+
+          try {
+            const endpoint = tipoCuenta._nuevo
+              ? "/api/admin/insertarTipoCuentaAhorro"
+              : "/api/admin/editarTipoCuentaAhorro";
+            const response = await fetch(endpoint, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                usuario: usuarioActual,
+                tipoCuenta: datosTipoCuenta,
+                anterior: tipoCuenta._anterior || null
+              })
+            });
+            const resultado = await response.json();
+
+            if (!response.ok || !resultado.success) {
+              throw new Error(
+                resultado.message || "No se pudo guardar el tipo de cuenta de ahorro"
+              );
+            }
+
+            Object.assign(tipoCuenta, datosTipoCuenta);
+            delete tipoCuenta._nuevo;
+            delete tipoCuenta._modificado;
+            delete tipoCuenta._anterior;
           } catch (error) {
             console.error("ERROR dentro del guardado:", error);
             throw error;

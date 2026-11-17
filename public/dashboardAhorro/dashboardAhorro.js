@@ -480,7 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           if (haCambiado) {
             beneficiariosEditados.push({
-              old: {
+              anterior: {
                 nombreBeneficiario: original.nombre,
                 tipoDoc: original.nDoc,
                 valorDoc: original.doc,
@@ -492,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 porcentaje: original.porcentaje,
                 cuentaAsociada: numCuenta
               },
-              new: {
+              nuevo: {
                 nombreBeneficiario: actual.nombre,
                 tipoDoc: actual.nDoc,
                 valorDoc: actual.doc,
@@ -528,7 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
       for (let i = 0; i < beneficiariosEditados.length; i++) {
         try {
           let response = '';
-          if (beneficiariosEditados[i].old.valorDoc !== beneficiariosEditados[i].new.valorDoc) {
+          if (beneficiariosEditados[i].anterior.valorDoc !== beneficiariosEditados[i].nuevo.valorDoc) {
             response = await fetch('/api/ahorro/editar_beneficiario_DocuDiferente', {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
