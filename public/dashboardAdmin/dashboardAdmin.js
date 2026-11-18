@@ -265,13 +265,9 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${item.fechaCreacion}</td>
         <td>${item.saldo}</td>
       `;
-      // Al hacer clic redirige a dashboardAhorro
+      // Al hacer clic modal y luego dashboard
       tr.addEventListener("click", () => {
-        const parametros = new URLSearchParams({
-          usuario: usuarioActual || "",
-          numCuenta: item.numCuenta
-        });
-        window.location.href = `../dashboardAhorro/dashboardAhorro.html?${parametros.toString()}`;
+              abrirModalCuentaAhorro(item, "cuentas");
       });
       tablaCuentasBody.appendChild(tr);
     });
@@ -285,6 +281,473 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     renderCuentas(filtradas);
   });
+
+// =========================================================================
+  // 3.5 ADMINISTRAR CLIENTES Y MODALES DE CLIENTE / CUENTA
+  // =========================================================================
+  const tablaClientesBody = document.getElementById("tabla-clientes-body");
+  const inputBusquedaClientes = document.getElementById("inputBusquedaClientes");
+
+  const modalDetalleClienteEl = document.getElementById("modalDetalleCliente");
+  const modalDetalleCliente = new bootstrap.Modal(modalDetalleClienteEl);
+  const btnEditCliente = document.getElementById("btn-edit-cliente");
+
+  const modalDetalleCuentaEl = document.getElementById("modalDetalleCuenta");
+  const modalDetalleCuenta = new bootstrap.Modal(modalDetalleCuentaEl);
+  const btnEditCuenta = document.getElementById("btn-edit-cuenta");
+  const btnVerDetalleCuenta = document.getElementById("btn-ver-detalle-cuenta");
+
+  // Estado actual de los modales
+  let clienteSeleccionado = null;
+  let modoEdicionCliente = false;
+
+  let cuentaSeleccionada = null;
+  let modoEdicionCuenta = false;
+  let origenModalCuenta = "cuentas"; // "clientes" o "cuentas"
+
+  // Datos de prueba (reemplazar luego con fetch a tu endpoint de clientes)
+  let clientesData = [
+    {
+      id: "1-1234-5678",
+      nombre: "Paco Pacal",
+      idTipoDocuIdentidad: "1",
+      tipoDocuNombre: "Cédula Nacional",
+      valorDocuIdentidad: "1-1234-5678",
+      fechaNacimiento: "1990-05-14",
+      cuentasAhorro: [
+        {
+          numCuenta: "1700024",
+          idTipoCuenta: "1",
+          tipoCuentaNombre: "Taca Taca",
+          fechaCreacion: "2020-07-12",
+          saldo: "450000.00",
+          valorDocuIdentidad: "1-1234-5678",
+          nombrePropietario: "Paco Pacal"
+        },
+        {
+          numCuenta: "1700089",
+          idTipoCuenta: "2",
+          tipoCuentaNombre: "Ahorro Dólares",
+          fechaCreacion: "2022-03-01",
+          saldo: "1250.00",
+          valorDocuIdentidad: "1-1234-5678",
+          nombrePropietario: "Paco Pacal"
+        }
+      ],
+      cuentasBeneficiario: [
+        {
+          numCuenta: "1800412",
+          parentesco: "Padre / Madre",
+          porcentaje: 50
+        }
+      ]
+    },
+    {
+      id: "2-0987-6543",
+      nombre: "María Fernanda Solís",
+      idTipoDocuIdentidad: "1",
+      tipoDocuNombre: "Cédula Nacional",
+      valorDocuIdentidad: "2-0987-6543",
+      fechaNacimiento: "1988-11-22",
+      cuentasAhorro: [
+        {
+          numCuenta: "1800412",
+          idTipoCuenta: "1",
+          tipoCuentaNombre: "Taca Taca",
+          fechaCreacion: "2021-01-15",
+          saldo: "980000.00",
+          valorDocuIdentidad: "2-0987-6543",
+          nombrePropietario: "María Fernanda Solís"
+        }
+      ],
+      cuentasBeneficiario: []
+    }
+  ];
+
+  // Cargar clientes al entrar en la pestaña
+  navLinks.forEach(link => {
+    link.addEventListener("click", () => {
+      if (link.getAttribute("data-target") === "screen-clientes") {
+        cargarClientes();
+      }
+    });
+  });
+
+  function cargarClientes() {
+    // Cuando tengas el endpoint listo, descomenta esto:
+    /*
+    fetch("/api/admin/clientes")
+      .then(res => res.json())
+      .then(data => {
+        clientesData = data.clientes;
+        renderClientes(clientesData);
+      })
+      .catch(err => console.error("Error cargando clientes:", err));
+    */
+    renderClientes(clientesData);
+  }
+
+  function renderClientes(lista) {
+    if (!tablaClientesBody) return;
+    tablaClientesBody.innerHTML = "";
+
+    if (lista.length === 0) {
+      tablaClientesBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">No se encontraron clientes</td></tr>`;
+      return;
+    }
+
+    lista.forEach(cliente => {
+      const tr = document.createElement("tr");
+      tr.className = "clickable-row";
+      tr.innerHTML = `
+        <td class="fw-semibold">${cliente.valorDocuIdentidad}</td>
+        <td class="fw-bold text-primary">${cliente.nombre}</td>
+        <td class="text-center"><span class="badge bg-primary rounded-pill">${cliente.cuentasAhorro.length}</span></td>
+        <td class="text-center"><span class="badge bg-secondary rounded-pill">${cliente.cuentasBeneficiario.length}</span></td>
+      `;
+      tr.addEventListener("click", () => abrirModalCliente(cliente));
+      tablaClientesBody.appendChild(tr);
+    });
+  }
+
+  if (inputBusquedaClientes) {
+    inputBusquedaClientes.addEventListener("input", (e) => {
+      const q = e.target.value.toLowerCase();
+      const filtrados = clientesData.filter(c =>
+        String(c.valorDocuIdentidad).toLowerCase().includes(q) ||
+        String(c.nombre).toLowerCase().includes(q)
+      );
+      renderClientes(filtrados);
+    });
+  }
+
+  // --- LÓGICA MODAL CLIENTE ---
+  function abrirModalCliente(cliente) {
+    clienteSeleccionado = JSON.parse(JSON.stringify(cliente));
+    modoEdicionCliente = false;
+    actualizarBotonEdicion(btnEditCliente, false);
+    renderContenidoModalCliente();
+    modalDetalleCliente.show();
+  }
+
+  function renderContenidoModalCliente() {
+    const infoContainer = document.getElementById("cliente-info-container");
+    const cuentasContainer = document.getElementById("cliente-cuentas-lista");
+    const benefContainer = document.getElementById("cliente-beneficiario-lista");
+
+    const tiposDoc = window.tiposDocData || [
+      { id: "1", nombre: "Cédula Nacional" },
+      { id: "2", nombre: "DIMEX" },
+      { id: "3", nombre: "Pasaporte" }
+    ];
+
+    // 1. Renderizar cabecera de datos personales
+    if (modoEdicionCliente) {
+      infoContainer.innerHTML = `
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Cliente:</label>
+          <input type="text" id="edit-cliente-nombre" class="form-control form-control-sm fw-bold" value="${clienteSeleccionado.nombre}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Tipo Documento de Identidad:</label>
+          <select id="edit-cliente-tipo-doc" class="form-select form-select-sm">
+            ${tiposDoc.map(td => `
+              <option value="${td.id}" ${String(td.id) === String(clienteSeleccionado.idTipoDocuIdentidad) ? "selected" : ""}>
+                ${td.nombre}
+              </option>
+            `).join("")}
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Documento de Identidad:</label>
+          <input type="text" id="edit-cliente-doc" class="form-control form-control-sm" value="${clienteSeleccionado.valorDocuIdentidad}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Fecha de Nacimiento:</label>
+          <input type="date" id="edit-cliente-fecha" class="form-control form-control-sm" value="${clienteSeleccionado.fechaNacimiento}">
+        </div>
+      `;
+    } else {
+      const docObj = tiposDoc.find(d => String(d.id) === String(clienteSeleccionado.idTipoDocuIdentidad));
+      const nombreTipoDoc = docObj ? docObj.nombre : (clienteSeleccionado.tipoDocuNombre || clienteSeleccionado.idTipoDocuIdentidad);
+
+      infoContainer.innerHTML = `
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted mb-1">Cliente:</label>
+          <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded fw-bold m-0">${clienteSeleccionado.nombre}</p>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted mb-1">Tipo Documento de Identidad:</label>
+          <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded m-0">${nombreTipoDoc}</p>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted mb-1">Documento de Identidad:</label>
+          <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded m-0">${clienteSeleccionado.valorDocuIdentidad}</p>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted mb-1">Fecha de Nacimiento:</label>
+          <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded m-0">${clienteSeleccionado.fechaNacimiento}</p>
+        </div>
+      `;
+    }
+
+    // 2. Renderizar Cuentas de Ahorro (Columna Izquierda)
+    cuentasContainer.innerHTML = "";
+    if (clienteSeleccionado.cuentasAhorro.length === 0) {
+      cuentasContainer.innerHTML = `<p class="text-muted small text-center my-3">Este cliente no posee cuentas de ahorro.</p>`;
+    } else {
+      clienteSeleccionado.cuentasAhorro.forEach(cuenta => {
+        const card = document.createElement("div");
+        card.className = "p-3 border rounded bg-white shadow-sm clickable-row d-flex justify-content-between align-items-center";
+        card.innerHTML = `
+          <div>
+            <div class="fw-bold text-primary">#${cuenta.numCuenta}</div>
+            <span class="badge bg-secondary">${cuenta.tipoCuentaNombre || cuenta.idTipoCuenta}</span>
+          </div>
+          <div class="text-end">
+            <span class="text-muted small d-block">Saldo</span>
+            <span class="fw-bold text-success">${cuenta.saldo}</span>
+          </div>
+        `;
+        // Al clickear abre el modal de Cuenta de Ahorro
+        card.addEventListener("click", () => {
+          const cuentaCompleta = {
+            ...cuenta,
+            valorDocuIdentidad: cuenta.valorDocuIdentidad || clienteSeleccionado.valorDocuIdentidad,
+            nombrePropietario: cuenta.nombrePropietario || clienteSeleccionado.nombre
+          };
+          modalDetalleCliente.hide();
+          abrirModalCuentaAhorro(cuentaCompleta, "clientes");
+        });
+        cuentasContainer.appendChild(card);
+      });
+    }
+
+    // 3. Renderizar Beneficiario (Columna Derecha)
+    benefContainer.innerHTML = "";
+    if (clienteSeleccionado.cuentasBeneficiario.length === 0) {
+      benefContainer.innerHTML = `<p class="text-muted small text-center my-3">No es beneficiario en ninguna cuenta.</p>`;
+    } else {
+      clienteSeleccionado.cuentasBeneficiario.forEach((ben, idx) => {
+        const card = document.createElement("div");
+        card.className = "p-3 border rounded bg-white shadow-sm d-flex justify-content-between align-items-center";
+        card.innerHTML = `
+          <div class="d-flex align-items-center gap-2">
+            ${modoEdicionCliente ? `
+              <button type="button" class="btn-remove-catalog" title="Dar de baja como beneficiario" onclick="eliminarBeneficiarioDeCliente(${idx})">
+                <i class="bi bi-dash-lg"></i>
+              </button>
+            ` : ""}
+            <div>
+              <div class="fw-bold text-dark">Cuenta #${ben.numCuenta}</div>
+              <small class="text-muted">Parentesco: <strong>${ben.parentesco}</strong></small>
+            </div>
+          </div>
+          <div class="text-end">
+            <span class="badge bg-primary fs-6">${ben.porcentaje}%</span>
+          </div>
+        `;
+        benefContainer.appendChild(card);
+      });
+    }
+  }
+
+  // Eliminar beneficiario en modo edición (siguiendo el estilo de catálogos)
+  window.eliminarBeneficiarioDeCliente = function(index) {
+    clienteSeleccionado.cuentasBeneficiario.splice(index, 1);
+    renderContenidoModalCliente();
+  };
+
+  if (btnEditCliente) {
+    btnEditCliente.addEventListener("click", () => {
+      if (!modoEdicionCliente) {
+        modoEdicionCliente = true;
+        actualizarBotonEdicion(btnEditCliente, true);
+        renderContenidoModalCliente();
+      } else {
+        // Capturar valores editados
+        clienteSeleccionado.nombre = document.getElementById("edit-cliente-nombre").value.trim();
+        clienteSeleccionado.idTipoDocuIdentidad = document.getElementById("edit-cliente-tipo-doc").value;
+        clienteSeleccionado.valorDocuIdentidad = document.getElementById("edit-cliente-doc").value.trim();
+        clienteSeleccionado.fechaNacimiento = document.getElementById("edit-cliente-fecha").value;
+
+        // Actualizar en el arreglo local (y aquí llamarías a tu fetch POST de actualización)
+        const idx = clientesData.findIndex(c => c.id === clienteSeleccionado.id);
+        if (idx !== -1) {
+          clientesData[idx] = JSON.parse(JSON.stringify(clienteSeleccionado));
+        }
+
+        modoEdicionCliente = false;
+        actualizarBotonEdicion(btnEditCliente, false);
+        renderContenidoModalCliente();
+        renderClientes(clientesData);
+        mostrarAlertaBootstrap("Datos del cliente actualizados correctamente.", "success");
+      }
+    });
+  }
+
+  // --- LÓGICA MODAL UNIFICADO DE CUENTA DE AHORRO ---
+  function abrirModalCuentaAhorro(cuenta, origen = "cuentas") {
+    cuentaSeleccionada = JSON.parse(JSON.stringify(cuenta));
+    origenModalCuenta = origen;
+    modoEdicionCuenta = false;
+    actualizarBotonEdicion(btnEditCuenta, false);
+
+    document.getElementById("modalCuentaNumeroTitulo").innerText = `Cuenta #${cuentaSeleccionada.numCuenta}`;
+    renderContenidoModalCuenta();
+    modalDetalleCuenta.show();
+  }
+
+  // Si se abrió desde Clientes y se cierra este modal sin ir a dashboardAhorro, vuelve al modal del cliente
+  modalDetalleCuentaEl.addEventListener("hidden.bs.modal", () => {
+    if (origenModalCuenta === "clientes" && clienteSeleccionado && !navegandoADashboardAhorro) {
+      modalDetalleCliente.show();
+    }
+    navegandoADashboardAhorro = false;
+  });
+
+  let navegandoADashboardAhorro = false;
+
+  function renderContenidoModalCuenta() {
+    const container = document.getElementById("cuenta-detalle-container");
+    const tiposCuentas = window.tiposCuentasData || [
+      { id: "1", nombre: "Taca Taca" },
+      { id: "2", nombre: "Ahorro Dólares" }
+    ];
+
+    const tipoCuentaObj = tiposCuentas.find(
+      t => String(t.id) === String(cuentaSeleccionada.idTipoCuenta) || t.nombre === cuentaSeleccionada.idTipoCuenta
+    );
+    const nombreTipoCuenta = tipoCuentaObj ? tipoCuentaObj.nombre : (cuentaSeleccionada.tipoCuentaNombre || cuentaSeleccionada.idTipoCuenta);
+
+    if (modoEdicionCuenta) {
+      container.innerHTML = `
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Número de Cuenta:</label>
+          <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded fw-bold m-0">${cuentaSeleccionada.numCuenta}</p>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Fecha de Creación:</label>
+          <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded m-0">${cuentaSeleccionada.fechaCreacion}</p>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Cédula Propietario:</label>
+          <input type="text" id="edit-cuenta-cedula" class="form-control form-control-sm" value="${cuentaSeleccionada.valorDocuIdentidad || ""}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Nombre Propietario:</label>
+          <input type="text" id="edit-cuenta-propietario" class="form-control form-control-sm" value="${cuentaSeleccionada.nombrePropietario || ""}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Tipo de Cuenta:</label>
+          <select id="edit-cuenta-tipo" class="form-select form-select-sm">
+            ${tiposCuentas.map(tc => `
+              <option value="${tc.id}" ${(String(tc.id) === String(cuentaSeleccionada.idTipoCuenta) || tc.nombre === cuentaSeleccionada.idTipoCuenta) ? "selected" : ""}>
+                ${tc.nombre}
+              </option>
+            `).join("")}
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Saldo:</label>
+          <input type="text" id="edit-cuenta-saldo" class="form-control form-control-sm fw-bold text-success" value="${cuentaSeleccionada.saldo}">
+        </div>
+      `;
+    } else {
+      container.innerHTML = `
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted mb-1">Número de Cuenta:</label>
+          <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded fw-bold m-0">${cuentaSeleccionada.numCuenta}</p>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted mb-1">Fecha de Creación:</label>
+          <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded m-0">${cuentaSeleccionada.fechaCreacion}</p>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted mb-1">Cédula Propietario:</label>
+          <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded m-0">${cuentaSeleccionada.valorDocuIdentidad || "No disponible"}</p>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted mb-1">Nombre Propietario:</label>
+          <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded m-0">${cuentaSeleccionada.nombrePropietario || "No disponible"}</p>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted mb-1">Tipo de Cuenta:</label>
+          <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded m-0">${nombreTipoCuenta}</p>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted mb-1">Saldo:</label>
+          <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded fw-bold text-success m-0">${cuentaSeleccionada.saldo}</p>
+        </div>
+      `;
+    }
+  }
+
+  if (btnEditCuenta) {
+    btnEditCuenta.addEventListener("click", () => {
+      if (!modoEdicionCuenta) {
+        modoEdicionCuenta = true;
+        actualizarBotonEdicion(btnEditCuenta, true);
+        renderContenidoModalCuenta();
+      } else {
+        // Guardar cambios de la cuenta
+        const nuevoTipoId = document.getElementById("edit-cuenta-tipo").value;
+        const tipoObj = (window.tiposCuentasData || []).find(t => String(t.id) === String(nuevoTipoId));
+
+        cuentaSeleccionada.valorDocuIdentidad = document.getElementById("edit-cuenta-cedula").value.trim();
+        cuentaSeleccionada.nombrePropietario = document.getElementById("edit-cuenta-propietario").value.trim();
+        cuentaSeleccionada.idTipoCuenta = nuevoTipoId;
+        cuentaSeleccionada.tipoCuentaNombre = tipoObj ? tipoObj.nombre : nuevoTipoId;
+        cuentaSeleccionada.saldo = document.getElementById("edit-cuenta-saldo").value.trim();
+
+        // Sincronizar con cuentasData (tabla de Adm. Cuentas)
+        const idxTablaCuentas = cuentasData.findIndex(c => c.numCuenta === cuentaSeleccionada.numCuenta);
+        if (idxTablaCuentas !== -1) {
+          cuentasData[idxTablaCuentas] = { ...cuentasData[idxTablaCuentas], ...cuentaSeleccionada };
+          renderCuentas(cuentasData);
+        }
+
+        // Sincronizar con clienteSeleccionado si vino desde clientes
+        if (clienteSeleccionado) {
+          const idxCuentaCliente = clienteSeleccionado.cuentasAhorro.findIndex(c => c.numCuenta === cuentaSeleccionada.numCuenta);
+          if (idxCuentaCliente !== -1) {
+            clienteSeleccionado.cuentasAhorro[idxCuentaCliente] = { ...cuentaSeleccionada };
+          }
+        }
+
+        modoEdicionCuenta = false;
+        actualizarBotonEdicion(btnEditCuenta, false);
+        renderContenidoModalCuenta();
+        mostrarAlertaBootstrap("Cuenta de ahorro actualizada correctamente.", "success");
+      }
+    });
+  }
+
+  // Botón "Ver detalle" -> Redirige a dashboardAhorro con usuario (admin) y numCuenta
+  if (btnVerDetalleCuenta) {
+    btnVerDetalleCuenta.addEventListener("click", () => {
+      navegandoADashboardAhorro = true;
+      const parametros = new URLSearchParams({
+        usuario: usuarioActual || "",
+        numCuenta: cuentaSeleccionada.numCuenta
+      });
+      window.location.href = `../dashboardAhorro/dashboardAhorro.html?${parametros.toString()}`;
+    });
+  }
+
+  function actualizarBotonEdicion(boton, editando) {
+    if (editando) {
+      boton.innerHTML = `<i class="bi bi-check-lg me-1"></i> Guardar`;
+      boton.className = "btn btn-success text-white btn-sm";
+    } else {
+      boton.innerHTML = `<i class="bi bi-pencil me-1"></i> Editar`;
+      boton.className = "btn btn-secondary text-white btn-sm";
+    }
+  }
+
+
+
+
 
   // 4. IMPORTAR XML (DRAG & DROP Y EXPLORADOR)
   const dropZone = document.getElementById("dropZoneXml");

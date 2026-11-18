@@ -126,11 +126,29 @@
         </section>
 
         <!-- 3. ADMINISTRAR CLIENTES -->
-        <section id="screen-clientes" class="admin-screen section-container fondo-b mb-5 text-center py-5">
-          <i class="bi bi-people display-1 text-secondary mb-3"></i>
-          <h3 class="fw-bold text-dark">Administrar Clientes</h3>
-          <p class="text-muted">Sección completa basada en la interfaz de gestión de clientes y cuentas de ahorro.</p>
-          <button class="btn btn-primary px-4 mt-2 btn-proceso-trigger">Ver Detalles / Gestión</button>
+        <section id="screen-clientes" class="admin-screen section-container fondo-b mb-5">
+          <h3 class="mb-4 text-primary fw-bold"><i class="bi bi-people me-2"></i>Administrar Clientes</h3>
+
+          <div class="input-group mb-4 shadow-sm">
+            <input type="text" id="inputBusquedaClientes" class="form-control" placeholder="Buscar por ID o nombre del cliente...">
+            <span class="input-group-text bg-primary text-white"><i class="bi bi-search"></i></span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-hover align-middle bg-white rounded shadow-sm">
+              <thead class="table-light">
+                <tr>
+                  <th>ID / Documento</th>
+                  <th>Nombre</th>
+                  <th class="text-center">Cuentas Asociadas</th>
+                  <th class="text-center">Cuentas como Beneficiario</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-clientes-body">
+                <!-- Se llena dinámicamente con JS -->
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <!-- 4. IMPORTAR / EXPORTAR -->
@@ -345,6 +363,98 @@
           <h3 class="fw-bold text-dark">Pantalla / Acción en Proceso</h3>
           <p class="text-muted">Esta sección o funcionalidad se encuentra actualmente en desarrollo.</p>
           <button type="button" class="btn btn-primary px-4 mt-2" data-bs-dismiss="modal">Aceptar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DETALLE Y EDICIÓN DE CLIENTE -->
+<div class="modal fade" id="modalDetalleCliente" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content p-3">
+      <div class="modal-header border-0 pb-2 d-flex justify-content-between align-items-center">
+        <h4 class="modal-title fw-bold text-primary m-0">
+          <i class="bi bi-person-badge me-2"></i>Detalle de Cliente
+        </h4>
+        <div class="d-flex align-items-center gap-2">
+          <button type="button" id="btn-edit-cliente" class="btn btn-secondary text-white btn-sm">
+            <i class="bi bi-pencil me-1"></i> Editar
+          </button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+      </div>
+
+      <div class="modal-body bg-light rounded p-4">
+        <!-- Datos Personales del Cliente -->
+        <div class="card border-0 shadow-sm p-3 mb-4">
+          <div class="row g-3" id="cliente-info-container">
+            <!-- Se inyecta dinámicamente (Vista o Edición) -->
+          </div>
+        </div>
+
+        <!-- Dos Columnas: Cuentas de Ahorro vs Beneficiario -->
+        <div class="row g-4">
+          <!-- Izquierda: Cuentas de Ahorro -->
+          <div class="col-lg-6">
+            <div class="card border-0 shadow-sm p-3 h-100">
+              <h5 class="text-primary fw-bold mb-3 border-bottom pb-2">
+                <i class="bi bi-piggy-bank me-2"></i>Cuentas de Ahorro
+              </h5>
+              <div id="cliente-cuentas-lista" class="d-flex flex-column gap-2">
+                <!-- Tarjetas clickeables de cuentas -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Derecha: Beneficiario -->
+          <div class="col-lg-6">
+            <div class="card border-0 shadow-sm p-3 h-100">
+              <h5 class="text-primary fw-bold mb-3 border-bottom pb-2">
+                <i class="bi bi-person-check me-2"></i>Beneficiario en Cuentas
+              </h5>
+              <div id="cliente-beneficiario-lista" class="d-flex flex-column gap-2">
+                <!-- Tarjetas de beneficiario (con botón eliminar en modo edición) -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- MODAL DETALLE Y EDICIÓN DE CUENTA DE AHORRO (Compartido: Clientes y Adm. Cuentas) -->
+  <div class="modal fade" id="modalDetalleCuenta" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content p-3">
+        <div class="modal-header border-0 pb-2 d-flex justify-content-between align-items-center">
+          <div>
+            <span class="text-muted small fw-bold text-uppercase d-block">Cuenta de Ahorro</span>
+            <h4 class="modal-title fw-bold text-primary m-0" id="modalCuentaNumeroTitulo">
+              #0000000
+            </h4>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" id="btn-edit-cuenta" class="btn btn-secondary text-white btn-sm">
+              <i class="bi bi-pencil me-1"></i> Editar
+            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+        </div>
+
+        <div class="modal-body bg-light rounded p-4">
+          <div class="card border-0 shadow-sm p-4">
+            <div class="row g-3" id="cuenta-detalle-container">
+              <!-- Se inyecta dinámicamente (Vista o Edición) -->
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer border-0 pt-3 d-flex justify-content-between">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+          <button type="button" id="btn-ver-detalle-cuenta" class="btn btn-primary px-4">
+            <i class="bi bi-box-arrow-up-right me-1"></i> Ver detalle
+          </button>
         </div>
       </div>
     </div>

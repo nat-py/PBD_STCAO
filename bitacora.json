@@ -1,63 +1,63 @@
 [
   {
     "id": 1,
-    "fyh": "2026-10-15 21:25:13",
+    "fyh": "2026-11-17 08:16:56",
     "ip": "::1",
-    "operacion": "login",
-    "usuario": "lsoto",
+    "operacion": "logout",
+    "usuario": "fquiros",
     "detalles": null
   },
   {
     "id": 2,
-    "fyh": "2026-10-15 21:26:03",
+    "fyh": "2026-11-17 08:17:07",
     "ip": "::1",
-    "operacion": "consultaEstadoCuenta",
-    "usuario": "lsoto",
+    "operacion": "login",
+    "usuario": "fquiros",
     "detalles": null
   },
   {
     "id": 3,
-    "fyh": "2026-11-12 08:04:29",
+    "fyh": "2026-11-17 08:17:52",
     "ip": "::1",
-    "operacion": "login",
+    "operacion": "consultaEstadoCuenta",
     "usuario": "fquiros",
     "detalles": null
   },
   {
     "id": 4,
-    "fyh": "2026-11-12 08:07:55",
+    "fyh": "2026-11-17 08:35:05",
     "ip": "::1",
-    "operacion": "login",
+    "operacion": "logout",
     "usuario": "fquiros",
     "detalles": null
   },
   {
     "id": 5,
-    "fyh": "2026-11-12 08:17:42",
+    "fyh": "2026-11-17 08:35:28",
     "ip": "::1",
     "operacion": "login",
-    "usuario": "fquiros",
+    "usuario": "pepito",
     "detalles": null
   },
   {
     "id": 6,
-    "fyh": "2026-11-12 08:23:04",
+    "fyh": "2026-11-17 08:37:00",
     "ip": "::1",
-    "operacion": "login",
-    "usuario": "fquiros",
+    "operacion": "consultaEstadoCuenta",
+    "usuario": "pepito",
     "detalles": null
   },
   {
     "id": 7,
-    "fyh": "2026-11-12 08:23:42",
+    "fyh": "2026-11-17 08:38:14",
     "ip": "::1",
-    "operacion": "login",
-    "usuario": "fquiros",
+    "operacion": "logout",
+    "usuario": "pepito",
     "detalles": null
   },
   {
     "id": 8,
-    "fyh": "2026-11-12 08:28:09",
+    "fyh": "2026-11-17 08:39:27",
     "ip": "::1",
     "operacion": "login",
     "usuario": "fquiros",
@@ -65,23 +65,77 @@
   },
   {
     "id": 9,
-    "fyh": "2026-11-12 08:28:49",
+    "fyh": "2026-11-17 08:43:22",
     "ip": "::1",
-    "operacion": "login",
-    "usuario": "lsoto",
-    "detalles": null
+    "operacion": "Actualizar tipo de cuenta de ahorro",
+    "usuario": "fquiros",
+    "detalles": {
+      "anterior": {
+        "id": "1",
+        "nombre": "Proletario",
+        "idTipoMoneda": "1",
+        "saldoMinimo": 25000,
+        "multaSaldoMinimo": 3000,
+        "cargoAnual": "5000",
+        "numRetirosHumano": 5,
+        "numRetirosAutomatico": 8,
+        "comisionHumano": "300",
+        "interes": "10",
+        "comisionAutomatico": "300"
+      },
+      "nuevo": {
+        "id": "1",
+        "nombre": "Proletario",
+        "idTipoMoneda": "1",
+        "saldoMinimo": 25000,
+        "multaSaldoMinimo": 3000,
+        "cargoAnual": "1000",
+        "numRetirosHumano": 5,
+        "numRetirosAutomatico": 8,
+        "comisionHumano": "300",
+        "comisionAutomatico": "300",
+        "interes": "10"
+      }
+    }
   },
   {
     "id": 10,
-    "fyh": "2026-11-14 21:56:03",
+    "fyh": "2026-11-17 08:43:37",
     "ip": "::1",
-    "operacion": "login",
+    "operacion": "Actualizar tipo de cuenta de ahorro",
     "usuario": "fquiros",
-    "detalles": null
+    "detalles": {
+      "anterior": {
+        "id": "1",
+        "nombre": "Proletario",
+        "idTipoMoneda": "1",
+        "saldoMinimo": 25000,
+        "multaSaldoMinimo": 3000,
+        "cargoAnual": "1000",
+        "numRetirosHumano": 5,
+        "numRetirosAutomatico": 8,
+        "comisionHumano": "300",
+        "interes": "10",
+        "comisionAutomatico": "300"
+      },
+      "nuevo": {
+        "id": "1",
+        "nombre": "Proletario",
+        "idTipoMoneda": "1",
+        "saldoMinimo": 25000,
+        "multaSaldoMinimo": 3000,
+        "cargoAnual": "5000",
+        "numRetirosHumano": 5,
+        "numRetirosAutomatico": 8,
+        "comisionHumano": "300",
+        "comisionAutomatico": "300",
+        "interes": "10"
+      }
+    }
   },
   {
     "id": 11,
-    "fyh": "2026-11-16 16:46:53",
+    "fyh": "2026-11-17 13:14:09",
     "ip": "::1",
     "operacion": "login",
     "usuario": "fquiros",
@@ -89,940 +143,245 @@
   },
   {
     "id": 12,
-    "fyh": "2026-11-16 16:49:20",
+    "fyh": "2026-11-17 13:16:36",
     "ip": "::1",
-    "operacion": "login",
+    "operacion": "consultaEstadoCuenta",
     "usuario": "fquiros",
     "detalles": null
   },
   {
     "id": 13,
-    "fyh": "2026-11-16 16:54:03",
+    "fyh": "2026-11-17 13:18:10",
     "ip": "::1",
-    "operacion": "login",
+    "operacion": "Actualizar beneficiario",
     "usuario": "fquiros",
-    "detalles": null
+    "detalles": {
+      "anterior": {
+        "nombreBeneficiario": "Luis Ramirez Rojas",
+        "tipoDoc": "1",
+        "valorDoc": "751124346",
+        "parentesco": "1",
+        "fechaNacimiento": "1964/09/10",
+        "telefono1": "62824302",
+        "telefono2": "62824302",
+        "email": "luis.ramirez@example.org",
+        "porcentaje": 20,
+        "cuentaAsociada": "11000004"
+      },
+      "nuevo": {
+        "nombreBeneficiario": "Luis Ramirez Rojas",
+        "tipoDoc": "1",
+        "valorDoc": "751124346",
+        "parentesco": "1",
+        "fechaNacimiento": "1964/09/10",
+        "telefono1": "62824302",
+        "telefono2": "62824302",
+        "email": "luis.ramirez@example.org",
+        "porcentaje": 56,
+        "cuentaAsociada": "11000004"
+      }
+    }
   },
   {
     "id": 14,
-    "fyh": "2026-11-16 19:57:08",
+    "fyh": "2026-11-17 13:18:11",
     "ip": "::1",
-    "operacion": "login",
+    "operacion": "Actualizar beneficiario",
     "usuario": "fquiros",
-    "detalles": null
+    "detalles": {
+      "anterior": {
+        "nombreBeneficiario": "Adrian Ramirez Gamboa",
+        "tipoDoc": "1",
+        "valorDoc": "725898335",
+        "parentesco": "5",
+        "fechaNacimiento": "1996/09/21",
+        "telefono1": "62380558",
+        "telefono2": "62380558",
+        "email": "adrian.ramirez@example.com",
+        "porcentaje": 20,
+        "cuentaAsociada": "11000004"
+      },
+      "nuevo": {
+        "nombreBeneficiario": "Adrian Ramirez Gamboa",
+        "tipoDoc": "1",
+        "valorDoc": "725898335",
+        "parentesco": "5",
+        "fechaNacimiento": "1996/09/21",
+        "telefono1": "62380558",
+        "telefono2": "62380558",
+        "email": "adrian.ramirez@example.com",
+        "porcentaje": 18,
+        "cuentaAsociada": "11000004"
+      }
+    }
   },
   {
     "id": 15,
-    "fyh": "2026-11-16 19:57:16",
+    "fyh": "2026-11-17 13:18:11",
     "ip": "::1",
-    "operacion": "logout",
+    "operacion": "Actualizar beneficiario",
     "usuario": "fquiros",
-    "detalles": null
+    "detalles": {
+      "anterior": {
+        "nombreBeneficiario": "Natalia Herrera Arias",
+        "tipoDoc": "3",
+        "valorDoc": "657631828",
+        "parentesco": "8",
+        "fechaNacimiento": "1972/08/12",
+        "telefono1": "72015037",
+        "telefono2": "72015037",
+        "email": "natalia.herrera@example.net",
+        "porcentaje": 60,
+        "cuentaAsociada": "11000004"
+      },
+      "nuevo": {
+        "nombreBeneficiario": "Natalia Herrera Arias",
+        "tipoDoc": "3",
+        "valorDoc": "657631828",
+        "parentesco": "8",
+        "fechaNacimiento": "1972/08/12",
+        "telefono1": "72015037",
+        "telefono2": "72015037",
+        "email": "natalia.herrera@example.net",
+        "porcentaje": 26,
+        "cuentaAsociada": "11000004"
+      }
+    }
   },
   {
     "id": 16,
-    "fyh": "2026-11-16 19:57:30",
+    "fyh": "2026-11-17 13:18:18",
     "ip": "::1",
-    "operacion": "login",
+    "operacion": "logout",
     "usuario": "fquiros",
     "detalles": null
   },
   {
     "id": 17,
-    "fyh": "2026-11-16 20:04:06",
+    "fyh": "2026-11-17 13:18:41",
     "ip": "::1",
-    "operacion": "Actualizar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "1",
-        "nombre": "Cedula Nacional"
-      }
-    }
-  },
-  {
-    "id": 18,
-    "fyh": "2026-11-16 20:04:07",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "2",
-        "nombre": "Cedula Residente"
-      }
-    }
-  },
-  {
-    "id": 19,
-    "fyh": "2026-11-16 20:04:07",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "3",
-        "nombre": "Pasaporte"
-      }
-    }
-  },
-  {
-    "id": 20,
-    "fyh": "2026-11-16 20:04:07",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "4",
-        "nombre": "Cedula Juridica"
-      }
-    }
-  },
-  {
-    "id": 21,
-    "fyh": "2026-11-16 20:04:07",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "5",
-        "nombre": "Permiso de Trabajo"
-      }
-    }
-  },
-  {
-    "id": 22,
-    "fyh": "2026-11-16 20:04:07",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "6",
-        "nombre": "Cedula Extranjera"
-      }
-    }
-  },
-  {
-    "id": 23,
-    "fyh": "2026-11-16 20:04:08",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de moneda",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "1",
-        "nombre": "Colones",
-        "simbolo": "?"
-      }
-    }
-  },
-  {
-    "id": 24,
-    "fyh": "2026-11-16 20:04:08",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de moneda",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "2",
-        "nombre": "Dolares",
-        "simbolo": "$"
-      }
-    }
-  },
-  {
-    "id": 25,
-    "fyh": "2026-11-16 20:04:08",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de moneda",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "3",
-        "nombre": "Euros",
-        "simbolo": "€"
-      }
-    }
-  },
-  {
-    "id": 26,
-    "fyh": "2026-11-16 20:04:08",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "1",
-        "nombre": "Padre"
-      }
-    }
-  },
-  {
-    "id": 27,
-    "fyh": "2026-11-16 20:04:08",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "2",
-        "nombre": "petunia"
-      }
-    }
-  },
-  {
-    "id": 28,
-    "fyh": "2026-11-16 20:04:08",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "3",
-        "nombre": "Hijo"
-      }
-    }
-  },
-  {
-    "id": 29,
-    "fyh": "2026-11-16 20:04:09",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "4",
-        "nombre": "Hija"
-      }
-    }
-  },
-  {
-    "id": 30,
-    "fyh": "2026-11-16 20:04:09",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "5",
-        "nombre": "Hermano"
-      }
-    }
-  },
-  {
-    "id": 31,
-    "fyh": "2026-11-16 20:04:09",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "6",
-        "nombre": "Hermana"
-      }
-    }
-  },
-  {
-    "id": 32,
-    "fyh": "2026-11-16 20:04:09",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "7",
-        "nombre": "amigo"
-      }
-    }
-  },
-  {
-    "id": 33,
-    "fyh": "2026-11-16 20:04:09",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "8",
-        "nombre": "amiga"
-      }
-    }
-  },
-  {
-    "id": 34,
-    "fyh": "2026-11-16 20:07:07",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "1",
-        "nombre": "Cedula Nacional"
-      }
-    }
-  },
-  {
-    "id": 35,
-    "fyh": "2026-11-16 20:07:07",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "2",
-        "nombre": "Cedula Residente"
-      }
-    }
-  },
-  {
-    "id": 36,
-    "fyh": "2026-11-16 20:07:07",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "3",
-        "nombre": "Pasaporte"
-      }
-    }
-  },
-  {
-    "id": 37,
-    "fyh": "2026-11-16 20:07:08",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "4",
-        "nombre": "Cedula Juridica"
-      }
-    }
-  },
-  {
-    "id": 38,
-    "fyh": "2026-11-16 20:07:08",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "5",
-        "nombre": "Permiso de Trabajo"
-      }
-    }
-  },
-  {
-    "id": 39,
-    "fyh": "2026-11-16 20:07:08",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "6",
-        "nombre": "Cedula Extranjera"
-      }
-    }
-  },
-  {
-    "id": 40,
-    "fyh": "2026-11-16 20:07:08",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de moneda",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "1",
-        "nombre": "Colones",
-        "simbolo": "?"
-      }
-    }
-  },
-  {
-    "id": 41,
-    "fyh": "2026-11-16 20:07:08",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de moneda",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "2",
-        "nombre": "Dolares",
-        "simbolo": "$"
-      }
-    }
-  },
-  {
-    "id": 42,
-    "fyh": "2026-11-16 20:07:09",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de moneda",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "3",
-        "nombre": "Euros",
-        "simbolo": "€"
-      }
-    }
-  },
-  {
-    "id": 43,
-    "fyh": "2026-11-16 20:07:09",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "1",
-        "nombre": "Padre"
-      }
-    }
-  },
-  {
-    "id": 44,
-    "fyh": "2026-11-16 20:07:09",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "2",
-        "nombre": "petunia"
-      }
-    }
-  },
-  {
-    "id": 45,
-    "fyh": "2026-11-16 20:07:09",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "3",
-        "nombre": "Hijo"
-      }
-    }
-  },
-  {
-    "id": 46,
-    "fyh": "2026-11-16 20:07:09",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "4",
-        "nombre": "Hija"
-      }
-    }
-  },
-  {
-    "id": 47,
-    "fyh": "2026-11-16 20:07:10",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "5",
-        "nombre": "Hermano"
-      }
-    }
-  },
-  {
-    "id": 48,
-    "fyh": "2026-11-16 20:07:10",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "1",
-        "nombre": "Cedula Nacional"
-      }
-    }
-  },
-  {
-    "id": 49,
-    "fyh": "2026-11-16 20:07:10",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "6",
-        "nombre": "Hermana"
-      }
-    }
-  },
-  {
-    "id": 50,
-    "fyh": "2026-11-16 20:07:10",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "2",
-        "nombre": "Cedula Residente"
-      }
-    }
-  },
-  {
-    "id": 51,
-    "fyh": "2026-11-16 20:07:10",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "7",
-        "nombre": "amigo"
-      }
-    }
-  },
-  {
-    "id": 52,
-    "fyh": "2026-11-16 20:07:10",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "3",
-        "nombre": "Pasaporte"
-      }
-    }
-  },
-  {
-    "id": 53,
-    "fyh": "2026-11-16 20:07:10",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "8",
-        "nombre": "amiga"
-      }
-    }
-  },
-  {
-    "id": 54,
-    "fyh": "2026-11-16 20:07:10",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "4",
-        "nombre": "Cedula Juridica"
-      }
-    }
-  },
-  {
-    "id": 55,
-    "fyh": "2026-11-16 20:07:11",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "5",
-        "nombre": "Permiso de Trabajo"
-      }
-    }
-  },
-  {
-    "id": 56,
-    "fyh": "2026-11-16 20:07:11",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "6",
-        "nombre": "Cedula Extranjera"
-      }
-    }
-  },
-  {
-    "id": 57,
-    "fyh": "2026-11-16 20:07:11",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de moneda",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "1",
-        "nombre": "Colones",
-        "simbolo": "?"
-      }
-    }
-  },
-  {
-    "id": 58,
-    "fyh": "2026-11-16 20:07:11",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de moneda",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "2",
-        "nombre": "Dolares",
-        "simbolo": "$"
-      }
-    }
-  },
-  {
-    "id": 59,
-    "fyh": "2026-11-16 20:07:11",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de moneda",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "3",
-        "nombre": "Euros",
-        "simbolo": "€"
-      }
-    }
-  },
-  {
-    "id": 60,
-    "fyh": "2026-11-16 20:07:11",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "1",
-        "nombre": "Padre"
-      }
-    }
-  },
-  {
-    "id": 61,
-    "fyh": "2026-11-16 20:07:12",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "2",
-        "nombre": "petunia"
-      }
-    }
-  },
-  {
-    "id": 62,
-    "fyh": "2026-11-16 20:07:12",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "3",
-        "nombre": "Hijo"
-      }
-    }
-  },
-  {
-    "id": 63,
-    "fyh": "2026-11-16 20:07:12",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "4",
-        "nombre": "Hija"
-      }
-    }
-  },
-  {
-    "id": 64,
-    "fyh": "2026-11-16 20:07:12",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "5",
-        "nombre": "Hermano"
-      }
-    }
-  },
-  {
-    "id": 65,
-    "fyh": "2026-11-16 20:07:12",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "6",
-        "nombre": "Hermana"
-      }
-    }
-  },
-  {
-    "id": 66,
-    "fyh": "2026-11-16 20:07:13",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "7",
-        "nombre": "amigo"
-      }
-    }
-  },
-  {
-    "id": 67,
-    "fyh": "2026-11-16 20:07:13",
-    "ip": "::1",
-    "operacion": "Actualizar parentesco",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "8",
-        "nombre": "amiga"
-      }
-    }
-  },
-  {
-    "id": 68,
-    "fyh": "2026-11-17 03:00:44",
-    "ip": "::1",
-    "operacion": "Eliminar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "5",
-        "nombre": "cedula"
-      }
-    }
-  },
-  {
-    "id": 69,
-    "fyh": "2026-11-17 03:03:50",
-    "ip": "::1",
-    "operacion": "Ingresar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "22",
-        "nombre": "prueba?"
-      }
-    }
-  },
-  {
-    "id": 70,
-    "fyh": "2026-11-17 03:04:15",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "22",
-        "nombre": "prueba, a lol"
-      }
-    }
-  },
-  {
-    "id": 71,
-    "fyh": "2026-11-17 04:14:24",
-    "ip": "::1",
-    "operacion": "Ingresar tipo de cuenta de ahorro",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "4",
-        "nombre": "Nueva Cuenta",
-        "idTipoMoneda": "1",
-        "saldoMinimo": "145451",
-        "multaSaldoMinimo": "00000",
-        "cargoAnual": "456",
-        "numRetirosHumano": "2",
-        "numRetirosAutomatico": "10",
-        "comisionHumano": "300",
-        "comisionAutomatico": "300",
-        "interes": "45"
-      }
-    }
-  },
-  {
-    "id": 72,
-    "fyh": "2026-11-17 04:14:41",
-    "ip": "::1",
-    "operacion": "Eliminar tipo de cuenta de ahorro",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "3",
-        "nombre": "Exclusivo",
-        "idTipoMoneda": "1",
-        "saldoMinimo": 100000,
-        "multaSaldoMinimo": 3000,
-        "cargoAnual": "30000",
-        "numRetirosHumano": 5,
-        "numRetirosAutomatico": 8,
-        "comisionHumano": "1000",
-        "interes": "20"
-      }
-    }
-  },
-  {
-    "id": 73,
-    "fyh": "2026-11-17 04:14:43",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de cuenta de ahorro",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": null,
-      "nuevo": {
-        "id": "4",
-        "nombre": "pacooooo",
-        "idTipoMoneda": "1",
-        "saldoMinimo": 145451,
-        "multaSaldoMinimo": 0,
-        "cargoAnual": "456",
-        "numRetirosHumano": 2,
-        "numRetirosAutomatico": 10,
-        "comisionHumano": "300",
-        "interes": "45"
-      }
-    }
-  },
-  {
-    "id": 74,
-    "fyh": "2026-11-17 04:36:58",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de documento de identidad",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": {
-        "id": "22",
-        "nombre": "prueba, a lol"
-      },
-      "nuevo": {
-        "id": "22",
-        "nombre": "prueba, funca?"
-      }
-    }
-  },
-  {
-    "id": 75,
-    "fyh": "2026-11-17 04:36:58",
-    "ip": "::1",
-    "operacion": "Actualizar tipo de cuenta de ahorro",
-    "usuario": "fquiros",
-    "detalles": {
-      "anterior": {
-        "id": "4",
-        "nombre": "pacooooo",
-        "idTipoMoneda": "1",
-        "saldoMinimo": 145451,
-        "multaSaldoMinimo": 0,
-        "cargoAnual": "456",
-        "numRetirosHumano": 2,
-        "numRetirosAutomatico": 10,
-        "comisionHumano": "300",
-        "interes": "45"
-      },
-      "nuevo": {
-        "id": "4",
-        "nombre": "pacooooo del mazo",
-        "idTipoMoneda": "1",
-        "saldoMinimo": 145451,
-        "multaSaldoMinimo": 0,
-        "cargoAnual": "456",
-        "numRetirosHumano": 2,
-        "numRetirosAutomatico": 10,
-        "comisionHumano": "300",
-        "interes": "45"
-      }
-    }
-  },
-  {
-    "id": 76,
-    "fyh": "2026-11-17 04:44:32",
-    "ip": "::1",
-    "operacion": "logout",
-    "usuario": "fquiros",
+    "operacion": "login",
+    "usuario": "pepito",
     "detalles": null
   },
   {
-    "id": 77,
-    "fyh": "2026-11-17 04:44:54",
+    "id": 18,
+    "fyh": "2026-11-17 13:23:25",
+    "ip": "::1",
+    "operacion": "logout",
+    "usuario": "pepito",
+    "detalles": null
+  },
+  {
+    "id": 19,
+    "fyh": "2026-11-17 13:23:48",
     "ip": "::1",
     "operacion": "login",
-    "usuario": "fquiros",
+    "usuario": "lsoto",
+    "detalles": null
+  },
+  {
+    "id": 20,
+    "fyh": "2026-11-17 13:24:27",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "jaguero",
+    "detalles": null
+  },
+  {
+    "id": 21,
+    "fyh": "2026-11-17 13:38:25",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "jaguero",
+    "detalles": null
+  },
+  {
+    "id": 22,
+    "fyh": "2026-11-17 13:44:54",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "jaguero",
+    "detalles": null
+  },
+  {
+    "id": 23,
+    "fyh": "2026-11-17 21:55:39",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "pepito",
+    "detalles": null
+  },
+  {
+    "id": 24,
+    "fyh": "2026-11-17 21:56:32",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "pepito",
+    "detalles": null
+  },
+  {
+    "id": 25,
+    "fyh": "2026-11-17 21:59:22",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "pepito",
+    "detalles": null
+  },
+  {
+    "id": 26,
+    "fyh": "2026-11-17 22:00:17",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "jaguero",
+    "detalles": null
+  },
+  {
+    "id": 27,
+    "fyh": "2026-11-17 22:00:52",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "hvillalobos",
+    "detalles": null
+  },
+  {
+    "id": 28,
+    "fyh": "2026-11-17 22:03:56",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "hvillalobos",
+    "detalles": null
+  },
+  {
+    "id": 29,
+    "fyh": "2026-11-17 22:04:11",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "hvillalobos",
+    "detalles": null
+  },
+  {
+    "id": 30,
+    "fyh": "2026-11-17 22:21:42",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "paquito",
+    "detalles": null
+  },
+  {
+    "id": 31,
+    "fyh": "2026-11-17 22:24:13",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "pepito",
+    "detalles": null
+  },
+  {
+    "id": 32,
+    "fyh": "2026-11-17 22:24:36",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "jaguero",
     "detalles": null
   }
 ]
