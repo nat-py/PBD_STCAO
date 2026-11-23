@@ -20,16 +20,36 @@ async function beneficiariosAsociadosCuenta(numCuenta)
   return result.recordset; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
 
-async function eliminarBeneficiario(valorDocuIdentidad) 
-{
+async function personaAsociadaUsuario(usuario) {
+
+  
   const pool = await poolPromise;
   const result = await pool.request()
+    .input('inUser', sql.VarChar(20), usuario)
+    .output('outFlagExisteUsuario', sql.BIT)
+    .output('outFlagDatosInaccesibles', sql.BIT)
+    .execute('dbo.sp_PersonaAsociadaUsuario');
+
+  return {
+    persona: result.recordset[0] || null,
+    outFlagExisteUsuario: result.output.outFlagExisteUsuario,
+    outFlagDatosInaccesibles: result.output.outFlagDatosInaccesibles
+  };
+}
+
+async function eliminarBeneficiario(idUsuarioOrUsuario, ip, numCuenta, valorDocuIdentidad)
+{
+  const pool = await poolPromise;
+  const idUsuario = await resolverIdUsuario(pool, idUsuarioOrUsuario);
+  const result = await pool.request()
+    .input('inIdUsuario', sql.Int, idUsuario)
+    .input('inIP', sql.VarChar(45), ip)
+    .input('inNumCuenta', sql.VarChar(10), numCuenta)
     .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
     .output('outFlagError', sql.BIT)
-    .execute('dbo.sp_EliminarBeneficiario'); //llamar al SP que elimina beneficiario
+    .execute('dbo.sp_EliminarBeneficiario');
 
-  const outFlagError = result.output.outFlagError
-  return outFlagError; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+  return result.output.outFlagError;
 }
 
 async function tablaParentescoActivo() 
@@ -50,28 +70,62 @@ async function tablaTipoDocuIdentidadActivo()
   return result.recordset;
 }
 
-async function insertarBeneficiario(numCuenta, valorDocuIdentidad, idParentesco, porcentaje) 
+async function insertarBeneficiario(idUsuarioOrUsuario, ip, numCuenta, valorDocuIdentidad, idParentesco, porcentaje)
 {
-
-  console.log('insertarBeneficiario called with:', { numCuenta, valorDocuIdentidad, idParentesco, porcentaje });
-
   const pool = await poolPromise;
+  let idUsuario = Number(idUsuarioOrUsuario);
+
+  if (!Number.isInteger(idUsuario)) {
+    const usuarioResult = await pool.request()
+      .input('inUser', sql.VarChar(20), idUsuarioOrUsuario)
+      .query('SELECT TOP (1) id FROM dbo.Usuario WHERE usuario = @inUser');
+
+    idUsuario = usuarioResult.recordset[0]?.id;
+  }
+
+  if (!Number.isInteger(Number(idUsuario))) {
+    throw new Error('Usuario no encontrado');
+  }
+
   const result = await pool.request()
+    .input('inIdUsuario', sql.Int, Number(idUsuario))
+    .input('inIP', sql.VarChar(45), ip)
     .input('inNumCuenta', sql.VarChar(10), numCuenta)
     .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
     .input('inIDParentesco', sql.VarChar(4), idParentesco)
     .input('inPorcentaje', sql.INT, porcentaje)
-    .output('outFlagError', sql.INT)
-    .execute('dbo.sp_InsertBeneficiario');
-  
+    .output('outFlagError', sql.BIT)
+    .execute('dbo.sp_InsertBeneficiarioBitacora');
+
   return result.output.outFlagError;
 }
 
-async function editarBeneficiarioDocuDiferente(valorDocuIdentidadPasado, valorDocuIdentidadNuevo, nombreBeneficiario, nombreParentesco,
-  porcentaje, fechaNacimiento, nombreTipoDocuIdentidad, email, telefono1, telefono2, numCuenta) 
+async function resolverIdUsuario(pool, idUsuarioOrUsuario) {
+  let idUsuario = Number(idUsuarioOrUsuario);
+
+  if (!Number.isInteger(idUsuario)) {
+    const usuarioResult = await pool.request()
+      .input('inUser', sql.VarChar(20), idUsuarioOrUsuario)
+      .query('SELECT TOP (1) id FROM dbo.Usuario WHERE usuario = @inUser');
+
+    idUsuario = usuarioResult.recordset[0]?.id;
+  }
+
+  if (!Number.isInteger(Number(idUsuario))) {
+    throw new Error('Usuario no encontrado');
+  }
+
+  return Number(idUsuario);
+}
+
+async function editarBeneficiarioDocuDiferente(idUsuarioOrUsuario, ip, valorDocuIdentidadPasado, valorDocuIdentidadNuevo, nombreBeneficiario, nombreParentesco,
+  porcentaje, fechaNacimiento, nombreTipoDocuIdentidad, email, telefono1, telefono2, numCuenta)
 {
   const pool = await poolPromise;
+  const idUsuario = await resolverIdUsuario(pool, idUsuarioOrUsuario);
   const result = await pool.request()
+    .input('inIdUsuario', sql.Int, idUsuario)
+    .input('inIP', sql.VarChar(45), ip)
     .input('inValorDocuIdentidadPasado', sql.VarChar(32), valorDocuIdentidadPasado)
     .input('inValorDocuIdentidadNuevo', sql.VarChar(32), valorDocuIdentidadNuevo)
     .input('inNombreBeneficiario', sql.VarChar(64), nombreBeneficiario)
@@ -92,15 +146,24 @@ async function editarBeneficiarioDocuDiferente(valorDocuIdentidadPasado, valorDo
     
     .execute('dbo.sp_EditarBeneficiarioDocuDiferente'); //llamar al SP que edita beneficiario
 
-  const outFlagError = result.output.outFlagError
-  return outFlagError; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
+  return {
+    outFlagExistePersona: result.output.outFlagExistePersona,
+    outFlagDocuIdentidadRepetido: result.output.outFlagDocuIdentidadRepetido,
+    outFlagExisteBeneficiario: result.output.outFlagExisteBeneficiario,
+    outFlagExisteParentesco: result.output.outFlagExisteParentesco,
+    outFlagExisteTipoDocuIdentidad: result.output.outFlagExisteTipoDocuIdentidad,
+    outFlagError: result.output.outFlagError
+  };
 }
 
-async function editarBeneficiarioDocuIgual(valorDocuIdentidad, nombreBeneficiario, nombreParentesco,
-  porcentaje, fechaNacimiento, nombreTipoDocuIdentidad, email, telefono1, telefono2, numCuenta) 
+async function editarBeneficiarioDocuIgual(idUsuarioOrUsuario, ip, valorDocuIdentidad, nombreBeneficiario, nombreParentesco,
+  porcentaje, fechaNacimiento, nombreTipoDocuIdentidad, email, telefono1, telefono2, numCuenta)
 {
   const pool = await poolPromise;
+  const idUsuario = await resolverIdUsuario(pool, idUsuarioOrUsuario);
   const result = await pool.request()
+    .input('inIdUsuario', sql.Int, idUsuario)
+    .input('inIP', sql.VarChar(45), ip)
     .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
     .input('inNombreBeneficiario', sql.VarChar(64), nombreBeneficiario)
     .input('inIDParentesco', sql.VarChar(4), nombreParentesco)
@@ -138,14 +201,24 @@ async function editarBeneficiarioDocuIgual(valorDocuIdentidad, nombreBeneficiari
   }; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
 
+async function buscarPersonaPorCedula(valorDocuIdentidad) {
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inValorDocuIdentidad', sql.VarChar(32), valorDocuIdentidad)
+    .execute('dbo.sp_BuscarPersonaPorCedula');
+
+  return result.recordset[0] || null;
+}
 
 module.exports = { 
   top8_EstadoCuenta_AsociadoCuenta, 
   beneficiariosAsociadosCuenta, 
+  personaAsociadaUsuario,
   eliminarBeneficiario, 
   tablaParentescoActivo, 
   tablaTipoDocuIdentidadActivo,
   insertarBeneficiario,
   editarBeneficiarioDocuDiferente,
-  editarBeneficiarioDocuIgual
+  editarBeneficiarioDocuIgual,
+  buscarPersonaPorCedula
 };

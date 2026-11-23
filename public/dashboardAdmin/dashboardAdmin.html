@@ -43,7 +43,7 @@
             <a class="nav-link" href="#" data-target="screen-cuentas"><i class="bi bi-credit-card me-2"></i>Adm. Cuentas</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#" data-target="screen-clientes"><i class="bi bi-people me-2"></i>Adm. Clientes</a>
+            <a class="nav-link" href="#" data-target="screen-clientes"><i class="bi bi-people me-2"></i>Adm. Personas</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="#" data-target="screen-import-export"><i class="bi bi-arrow-left-right me-2"></i>Import / Export</a>
@@ -112,6 +112,7 @@
               <thead class="table-light">
                 <tr>
                   <th>Documento del dueño</th>
+                  <th>Propietario</th>
                   <th>Número de cuenta</th>
                   <th>Tipo de cuenta</th>
                   <th>Fecha de creación</th>
@@ -127,7 +128,7 @@
 
         <!-- 3. ADMINISTRAR CLIENTES -->
         <section id="screen-clientes" class="admin-screen section-container fondo-b mb-5">
-          <h3 class="mb-4 text-primary fw-bold"><i class="bi bi-people me-2"></i>Administrar Clientes</h3>
+          <h3 class="mb-4 text-primary fw-bold"><i class="bi bi-people me-2"></i>Administrar Personas</h3>
 
           <div class="input-group mb-4 shadow-sm">
             <input type="text" id="inputBusquedaClientes" class="form-control" placeholder="Buscar por ID o nombre del cliente...">
@@ -380,6 +381,9 @@
           <button type="button" id="btn-edit-cliente" class="btn btn-secondary text-white btn-sm">
             <i class="bi bi-pencil me-1"></i> Editar
           </button>
+          <button type="button" id="btn-eliminar-cliente" class="btn btn-danger btn-sm">
+            <i class="bi bi-trash me-1"></i> Eliminar
+          </button>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
       </div>
@@ -438,6 +442,9 @@
             <button type="button" id="btn-edit-cuenta" class="btn btn-secondary text-white btn-sm">
               <i class="bi bi-pencil me-1"></i> Editar
             </button>
+            <button type="button" id="btn-eliminar-cuenta" class="btn btn-danger btn-sm">
+              <i class="bi bi-trash me-1"></i> Eliminar
+            </button>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
         </div>
@@ -470,6 +477,7 @@
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../bootstrapDialogs.js"></script>
   <script src="dashboardAdmin.js"></script>
 </body>
 </html>

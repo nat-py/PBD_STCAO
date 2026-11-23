@@ -3,26 +3,84 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Carga Inicial de datos - STCAO</title>
+  <title>Lista de Cuentas - STCAO</title>
   <link rel="stylesheet" href="../style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    .cuentas-split-layout {
+      display: flex;
+      gap: 1.5rem;
+      align-items: flex-start;
+    }
+
+    @media (min-width: 992px) {
+      .cuentas-split-layout {
+        flex-wrap: nowrap;
+      }
+    }
+
+    @media (max-width: 991.98px) {
+      .cuentas-split-layout {
+        flex-wrap: wrap;
+      }
+    }
+
+    .col-tabla-animada {
+      flex: 1 1 100%;
+      min-width: 0;
+      transition: flex-basis 0.42s cubic-bezier(0.25, 0.8, 0.25, 1),
+                  max-width 0.42s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    @media (min-width: 992px) {
+      .cuentas-split-layout.panel-abierto .col-tabla-animada {
+        flex: 0 0 calc(48% - 0.75rem);
+        max-width: calc(48% - 0.75rem);
+      }
+    }
+
+    .col-panel-animada {
+      flex: 0 0 calc(52% - 0.75rem);
+      max-width: calc(52% - 0.75rem);
+      min-width: 0;
+      opacity: 0;
+      transform: translateX(22px);
+      transition: opacity 0.35s ease,
+                  transform 0.42s cubic-bezier(0.25, 0.8, 0.25, 1);
+      pointer-events: none;
+    }
+
+    @media (max-width: 991.98px) {
+      .col-panel-animada {
+        flex: 1 1 100%;
+        max-width: 100%;
+        transform: translateY(14px);
+      }
+    }
+
+    .col-panel-animada.visible {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+  </style>
 </head>
 <body class="bg-light">
 
   <!-- HEADER SUPERIOR -->
   <header class="navbar navbar-expand-lg shadow-sm px-4 mb-4 fixed-top con-fondo" style="z-index: 1030;">
-    <div class="container-fluid d-flex justify-content-between align-items-center" >
+    <div class="container-fluid d-flex justify-content-between align-items-center">
       <!-- Izquierda: Icono y Nombre -->
       <div class="d-flex align-items-center gap-3" style="color: #F7FAFC;">
         <i class="bi bi-bank2 display-4"></i>
-        <span class="fw-bold fs-5" >STCAO</span>
+        <span class="fw-bold fs-5">STCAO</span>
       </div>
 
       <!-- Derecha: Usuario y Salir -->
       <div class="d-flex align-items-center gap-3">
         <div class="d-flex align-items-center gap-2" style="color: #F7FAFC;">
           <i class="bi bi-person-circle"></i>
-          <span class="fw-semibold " id="usuarioHeader">Usuario</span>
+          <span class="fw-semibold" id="usuarioHeader">Usuario</span>
         </div>
 
         <a class="btn btn-outline-b d-flex align-items-center gap-1" id="salir">
@@ -33,29 +91,147 @@
     </div>
   </header>
 
-  <div style="margin-top: 120px; max-width: 1200px;" class="mx-auto">
-    <section id="seccion-estados" class="section-container fondo-b m-5" >
-      <h2 id="bienvenida" class="mb-4 text-primary fw-bold"><i class="bi bi-file-earmark-text me-2"></i>Cuentas asociadas al usuario </h2>
-      <div class="table-responsive">
-        <table class="table table-hover align-middle bg-white rounded shadow-sm">
-          <thead class="table-light">
-            <tr>
-              <th>#</th>
-              <th>Número de Cuenta</th>
-              <th>Tipo de Cuenta</th>
-              <th>Dueño</th>
-              <th>Saldo</th>
-            </tr>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
+  <!-- CONTENIDO PRINCIPAL -->
+  <div class="container-fluid px-4" style="margin-top: 110px; padding-bottom: 90px; max-width: 1440px;">
+    <div class="cuentas-split-layout" id="contenedorPrincipalCuentas">
+
+      <!-- COLUMNA IZQUIERDA: TABLA DE CUENTAS -->
+      <div id="colTablaCuentas" class="col-tabla-animada">
+        <section id="seccion-estados" class="section-container fondo-b">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+            <h2 id="bienvenida" class="text-primary fw-bold m-0">
+              <i class="bi bi-file-earmark-text me-2"></i>Cuentas asociadas al usuario
+            </h2>
+
+            <button type="button" id="btnToggleNuevaCuenta" class="btn btn-primary d-flex align-items-center gap-1">
+              <i class="bi bi-plus-circle"></i>
+              <span>Agregar Cuenta Nueva</span>
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-hover align-middle bg-white rounded shadow-sm mb-0" id="tablaCuentas">
+              <thead class="table-light">
+                <tr id="encabezadoTablaCuentas">
+                  <!-- Se renderiza dinámicamente según modo normal o comprimido -->
+                </tr>
+              </thead>
+              <tbody id="cuerpoTablaCuentas">
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
-    </section>
+
+      <!-- COLUMNA DERECHA: PANEL CREAR NUEVA CUENTA -->
+      <div id="colPanelNuevaCuenta" class="col-panel-animada d-none">
+        <section class="section-container fondo-b">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="text-primary fw-bold m-0">
+              <i class="bi bi-wallet2 me-2"></i>Crear Nueva Cuenta
+            </h4>
+            <button type="button" class="btn-close" id="btnCerrarPanelCuenta" aria-label="Cerrar"></button>
+          </div>
+
+          <form id="formNuevaCuenta" novalidate>
+            <div class="row g-3">
+              <!-- Campos principales -->
+              <div class="col-md-6">
+                <label for="tipoCuenta" class="form-label small fw-bold">Tipo de Cuenta</label>
+                <select class="form-select form-select-sm" id="tipoCuenta" name="tipoCuenta" required>
+                  <option value="">Seleccione un tipo...</option>
+                </select>
+              </div>
+
+              <div class="col-md-6">
+                <label for="docPropietario" class="form-label small fw-bold">Doc. de Identidad del Propietario</label>
+                <input type="text" class="form-control form-control-sm" id="docPropietario" name="docPropietario" placeholder="Ej: 112345678" required>
+              </div>
+
+              <div class="col-md-6">
+                <label for="nombrePropietarioInfo" class="form-label small fw-semibold text-muted">Nombre del Propietario</label>
+                <input type="text" class="form-control form-control-sm bg-light" id="nombrePropietarioInfo" name="nombrePropietario" readonly>
+              </div>
+
+              <div class="col-md-6">
+                <label for="saldoInicial" class="form-label small fw-bold">Saldo Inicial</label>
+                <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="saldoInicial" name="saldo" placeholder="0.00" required>
+              </div>
+
+              <!-- Separador de campos informativos -->
+              <div class="col-12 mt-3">
+                <hr class="my-1">
+                <span class="small fw-bold text-muted text-uppercase">
+                  <i class="bi bi-info-circle me-1"></i>Parámetros Informativos del Tipo de Cuenta
+                </span>
+              </div>
+
+              <div class="col-md-6">
+                <label for="infoSaldoMinimo" class="form-label small fw-semibold text-muted">Saldo Mínimo</label>
+                <input type="text" class="form-control form-control-sm bg-light" id="infoSaldoMinimo" name="saldoMinimo" readonly>
+              </div>
+
+              <div class="col-md-6">
+                <label for="infoMultaSaldoMinimo" class="form-label small fw-semibold text-muted">Multa Saldo Mínimo</label>
+                <input type="text" class="form-control form-control-sm bg-light" id="infoMultaSaldoMinimo" name="multaSaldoMinimo" readonly>
+              </div>
+
+              <div class="col-md-6">
+                <label for="infoCargoMensual" class="form-label small fw-semibold text-muted">Cargo Mensual</label>
+                <input type="text" class="form-control form-control-sm bg-light" id="infoCargoMensual" name="cargoMensual" readonly>
+              </div>
+
+              <div class="col-md-6">
+                <label for="infoNumRetirosHumano" class="form-label small fw-semibold text-muted">Num. Retiros Cajero Humano</label>
+                <input type="text" class="form-control form-control-sm bg-light" id="infoNumRetirosHumano" name="numRetirosCajeroHumano" readonly>
+              </div>
+
+              <div class="col-md-6">
+                <label for="infoNumRetirosAuto" class="form-label small fw-semibold text-muted">Num. Retiros Cajero Automático</label>
+                <input type="text" class="form-control form-control-sm bg-light" id="infoNumRetirosAuto" name="numRetirosCajeroAutomatico" readonly>
+              </div>
+
+              <div class="col-md-6">
+                <label for="infoComisionHumano" class="form-label small fw-semibold text-muted">Comisión Cajero Humano</label>
+                <input type="text" class="form-control form-control-sm bg-light" id="infoComisionHumano" name="comisionCajeroHumano" readonly>
+              </div>
+
+              <div class="col-md-6">
+                <label for="infoComisionAuto" class="form-label small fw-semibold text-muted">Comisión Cajero Automático</label>
+                <input type="text" class="form-control form-control-sm bg-light" id="infoComisionAuto" name="comisionCajeroAutomatico" readonly>
+              </div>
+
+              <div class="col-md-6">
+                <label for="infoMontoMaxSinpe" class="form-label small fw-semibold text-muted">Monto Máx. SINPE Diario</label>
+                <input type="text" class="form-control form-control-sm bg-light" id="infoMontoMaxSinpe" name="montoMaxSinpeDiario" readonly>
+              </div>
+
+              <div class="col-md-6">
+                <label for="infoComisionSinpe" class="form-label small fw-semibold text-muted">Comisión SINPE</label>
+                <input type="text" class="form-control form-control-sm bg-light" id="infoComisionSinpe" name="comisionSinpe" readonly>
+              </div>
+
+              <div class="col-md-6">
+                <label for="infoTasaInteres" class="form-label small fw-semibold text-muted">Tasa Interés Anual (%)</label>
+                <input type="text" class="form-control form-control-sm bg-light" id="infoTasaInteres" name="tasaInteresAnual" readonly>
+              </div>
+
+              <!-- Botón de Crear -->
+              <div class="col-12 mt-4 d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm px-3" id="btnCancelarNuevaCuenta">Cancelar</button>
+                <button type="submit" class="btn btn-primary px-4 fw-bold" id="btnCrearCuenta">
+                  <i class="bi bi-check-lg me-1"></i>Crear
+                </button>
+              </div>
+            </div>
+          </form>
+        </section>
+      </div>
+
+    </div>
   </div>
 
-
-    <!-- FOOTER -->
+  <!-- FOOTER -->
   <footer class="bg-white text-center py-3 mt-5 shadow-sm border-top" style="position: fixed; bottom: 0; width: 100%; z-index: 1030;">
     <div class="container">
       <p class="mb-1 text-muted fw-semibold" style="color: var(--bs-primary) !important;">STCAO - Proyecto Bases de Datos</p>
@@ -64,7 +240,7 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Script local -->
+  <script src="../bootstrapDialogs.js"></script>
   <script src="listaCuentas.js"></script>
-  </body>
+</body>
 </html>

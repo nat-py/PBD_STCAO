@@ -385,17 +385,368 @@ async function tablaCuentaAhorroActivo(req, res) {
   }
 }
 
-async function registrarSalir(req, res) {
+async function administrarPersonas(req, res) {
   try {
-    const { usuario} = req.body;
-    bitacoraService.registrarBitacora('logout', usuario, req.ip);
-    res.status(200).json({ message: 'Bitácora de estados de cuenta obtenida correctamente', success: true });
+    const personas = await adminService.administrarPersonas();
+    return res.status(200).json({
+      message: 'Personas listadas correctamente',
+      personas,
+      success: true
+    });
   } catch (error) {
-    console.error('Error al registrar en la bitácora:', error);
+    console.error('Error al obtener las personas:', error);
+    return res.status(500).json({
+      error: 'Error al obtener las personas',
+      success: false
+    });
   }
 }
 
+async function editarCuentaAhorro(req, res) {
+  const { usuario, cuenta, anterior } = req.body;
 
+  try {
+    if (!cuenta || !cuenta.numCuenta || !cuenta.valorDocuIdentidad ||
+        !cuenta.idTipoCuenta || !cuenta.fechaCreacion) {
+      return res.status(400).json({
+        message: 'Faltan datos obligatorios de la cuenta',
+        success: false
+      });
+    }
+
+    const numCuentaActual = anterior?.numCuenta || cuenta.anteriorNumCuenta;
+    if (!numCuentaActual) {
+      return res.status(400).json({
+        message: 'No se pudo identificar la cuenta actual',
+        success: false
+      });
+    }
+
+    const saldo = Number(cuenta.saldo);
+    if (!Number.isFinite(saldo)) {
+      return res.status(400).json({
+        message: 'El saldo debe ser un numero valido',
+        success: false
+      });
+    }
+
+    const result = await adminService.editarCuentaAhorro(
+      usuario,
+      req.ip,
+      numCuentaActual,
+      cuenta.numCuenta,
+      cuenta.valorDocuIdentidad,
+      cuenta.idTipoCuenta,
+      cuenta.fechaCreacion,
+      saldo
+    );
+
+    if (!result.outFlagExisteCuenta) {
+      return res.status(404).json({
+        message: 'La cuenta de ahorro no existe',
+        success: false
+      });
+    }
+    if (result.outFlagNumCuentaRepetido) {
+      return res.status(409).json({
+        message: 'El nuevo numero de cuenta ya esta registrado',
+        success: false
+      });
+    }
+    if (result.outFlagError) {
+      return res.status(400).json({
+        message: 'No se pudieron validar los datos de la cuenta',
+        success: false
+      });
+    }
+
+    bitacoraService.registrarBitacora('Actualizar cuenta de ahorro', usuario, req.ip, {
+      anterior: anterior || null,
+      nuevo: cuenta
+    });
+
+    return res.status(200).json({
+      message: 'Cuenta de ahorro editada correctamente',
+      success: true
+    });
+  } catch (error) {
+    console.error('Error al editar la cuenta de ahorro:', error);
+    return res.status(500).json({
+      error: 'Error al editar la cuenta de ahorro',
+      success: false
+    });
+  }
+}
+
+async function eliminarCuentaAhorro(req, res) {
+  const { usuario, cuenta } = req.body;
+
+  try {
+    if (!cuenta?.numCuenta) {
+      return res.status(400).json({
+        message: 'No se pudo identificar la cuenta',
+        success: false
+      });
+    }
+
+    const result = await adminService.eliminarCuentaAhorro(
+      usuario,
+      req.ip,
+      cuenta.numCuenta
+    );
+
+    if (result.outFlagError) {
+      return res.status(400).json({
+        message: 'La cuenta no existe o no se pudo eliminar',
+        success: false
+      });
+    }
+
+    bitacoraService.registrarBitacora('Eliminar cuenta de ahorro', usuario, req.ip, {
+      anterior: cuenta,
+      nuevo: null
+    });
+
+    return res.status(200).json({
+      message: 'Cuenta de ahorro eliminada correctamente',
+      success: true
+    });
+  } catch (error) {
+    console.error('Error al eliminar la cuenta de ahorro:', error);
+    return res.status(500).json({
+      error: 'Error al eliminar la cuenta de ahorro',
+      success: false
+    });
+  }
+}
+
+async function editarPersona(req, res) {
+  const { usuario, personaAnterior, personaNueva } = req.body;
+
+  try {
+    if (!personaAnterior?.valorDocuIdentidad || !personaNueva) {
+      return res.status(400).json({ message: 'Faltan datos de la persona', success: false });
+    }
+
+    const result = await adminService.editarPersona(usuario, req.ip, personaAnterior, personaNueva);
+
+    if (result.outFlagExistePersona === false) {
+      return res.status(404).json({ message: 'La persona no existe', success: false });
+    }
+    if (result.outFlagDocuIdentidadRepetido) {
+      return res.status(409).json({ message: 'El documento de identidad ya esta registrado', success: false });
+    }
+    if (result.outFlagExisteTipoDocuIdentidad === false) {
+      return res.status(400).json({ message: 'El tipo de documento no existe', success: false });
+    }
+    if (result.outFlagError) {
+      return res.status(400).json({ message: 'No se pudo actualizar la persona', success: false });
+    }
+
+    bitacoraService.registrarBitacora('Actualizar persona', usuario, req.ip, {
+      anterior: personaAnterior,
+      nuevo: personaNueva
+    });
+
+    return res.status(200).json({ message: 'Persona actualizada correctamente', success: true });
+  } catch (error) {
+    console.error('Error al editar la persona:', error);
+    return res.status(500).json({ error: 'Error al editar la persona', success: false });
+  }
+}
+
+async function editarUsuario(req, res) {
+  const { usuario, usuarioAnterior, usuarioNuevo } = req.body;
+
+  try {
+    if (!usuarioNuevo?.idUsuarioObjetivo) {
+      return res.status(400).json({ message: 'No se pudo identificar el usuario', success: false });
+    }
+
+    const result = await adminService.editarUsuario(
+      usuario,
+      req.ip,
+      usuarioNuevo.idUsuarioObjetivo,
+      usuarioNuevo.usuario,
+      usuarioNuevo.clave,
+      usuarioNuevo.esAdmin
+    );
+
+    if (result.outFlagExisteUsuario === false) {
+      return res.status(404).json({ message: 'El usuario no existe', success: false });
+    }
+    if (result.outFlagUsuarioRepetido) {
+      return res.status(409).json({ message: 'El nombre de usuario ya esta registrado', success: false });
+    }
+    if (result.outFlagError) {
+      return res.status(400).json({ message: 'No se pudo actualizar el usuario', success: false });
+    }
+
+    bitacoraService.registrarBitacora('Actualizar usuario', usuario, req.ip, {
+      anterior: usuarioAnterior,
+      nuevo: usuarioNuevo
+    });
+
+    return res.status(200).json({ message: 'Usuario actualizado correctamente', success: true });
+  } catch (error) {
+    console.error('Error al editar el usuario:', error);
+    return res.status(500).json({ error: 'Error al editar el usuario', success: false });
+  }
+}
+
+async function eliminarPersona(req, res) {
+  const { usuario, persona } = req.body;
+
+  try {
+    if (!persona?.valorDocuIdentidad) {
+      return res.status(400).json({
+        message: 'No se pudo identificar la persona',
+        success: false
+      });
+    }
+
+    const result = await adminService.eliminarPersona(
+      usuario,
+      req.ip,
+      persona.valorDocuIdentidad
+    );
+
+    if (result.outFlagExistePersona === false) {
+      return res.status(404).json({
+        message: 'La persona no existe',
+        success: false
+      });
+    }
+    if (result.outFlagError) {
+      return res.status(400).json({
+        message: 'No se pudo eliminar la persona',
+        success: false
+      });
+    }
+
+    bitacoraService.registrarBitacora('Eliminar persona', usuario, req.ip, {
+      anterior: persona,
+      nuevo: null
+    });
+
+    return res.status(200).json({
+      message: 'Persona y sus datos asociados eliminados correctamente',
+      success: true
+    });
+  } catch (error) {
+    console.error('Error al eliminar la persona:', error);
+    return res.status(500).json({
+      error: 'Error al eliminar la persona',
+      success: false
+    });
+  }
+}
+
+async function eliminarBeneficiarioReasignar(req, res) {
+  const { usuario, beneficiario } = req.body;
+
+  try {
+    if (!beneficiario?.numCuenta || !beneficiario?.valorDocuIdentidad) {
+      return res.status(400).json({
+        message: 'No se pudo identificar el beneficiario',
+        success: false
+      });
+    }
+
+    const result = await adminService.eliminarBeneficiarioReasignar(
+      usuario,
+      req.ip,
+      beneficiario.numCuenta,
+      beneficiario.valorDocuIdentidad
+    );
+
+    if (result.outFlagUnicoBeneficiario) {
+      return res.status(409).json({
+        message: 'No se puede eliminar al unico beneficiario de la cuenta',
+        success: false,
+        outFlagUnicoBeneficiario: true
+      });
+    }
+
+    if (result.outFlagError) {
+      return res.status(400).json({
+        message: 'El beneficiario no existe o no se pudo eliminar',
+        success: false
+      });
+    }
+
+    bitacoraService.registrarBitacora('Eliminar beneficiario y reasignar porcentajes', usuario, req.ip, {
+      anterior: beneficiario,
+      nuevo: null
+    });
+
+    return res.status(200).json({
+      message: 'Beneficiario eliminado y porcentajes reasignados correctamente',
+      success: true
+    });
+  } catch (error) {
+    console.error('Error al eliminar el beneficiario y reasignar porcentajes:', error);
+    return res.status(500).json({
+      error: 'Error al eliminar el beneficiario y reasignar porcentajes',
+      success: false
+    });
+  }
+}
+
+async function leerEventLog(req, res) {
+  try {
+    const inIdUsuario = req.query.idUsuario ? Number(req.query.idUsuario) : null;
+    const inIdTipoOperacion = req.query.idTipoOperacion || null;
+    const inFechaInicio = req.query.fechaInicio ? new Date(req.query.fechaInicio) : null;
+    const inFechaFin = req.query.fechaFin ? new Date(req.query.fechaFin) : null;
+
+    const registros = await adminService.leerEventLog(
+      inIdUsuario,
+      inIdTipoOperacion,
+      inFechaInicio,
+      inFechaFin
+    );
+
+    const datos = registros.map((registro) => {
+      const fecha = new Date(registro.FechaHora);
+      const fyh = Number.isNaN(fecha.getTime())
+        ? ''
+        : `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')} ${String(fecha.getHours()).padStart(2, '0')}:${String(fecha.getMinutes()).padStart(2, '0')}:${String(fecha.getSeconds()).padStart(2, '0')}`;
+
+      let anterior = null;
+      let nuevo = null;
+
+      try {
+        anterior = registro.JsonAntes ? JSON.parse(registro.JsonAntes) : null;
+      } catch (error) {
+        anterior = registro.JsonAntes;
+      }
+
+      try {
+        nuevo = registro.JsonDespues ? JSON.parse(registro.JsonDespues) : null;
+      } catch (error) {
+        nuevo = registro.JsonDespues;
+      }
+
+      return {
+        id: registro.id,
+        fyh,
+        ip: registro.IP,
+        operacion: registro.nombreTipoOperacion,
+        usuario: registro.usuario,
+        detalles: {
+          anterior,
+          nuevo
+        }
+      };
+    });
+
+    return res.status(200).json(datos);
+  } catch (error) {
+    console.error('Error al leer el EventLog:', error);
+    return res.status(500).json({ error: 'Error al leer la bitácora', success: false });
+  }
+}
 
 
 module.exports = {
@@ -419,5 +770,12 @@ module.exports = {
   tablaParentescoActivo,
   tablaTipoCuentaAhorroActivo,
   tablaCuentaAhorroActivo,
-  registrarSalir
+  administrarPersonas,
+  editarCuentaAhorro,
+  eliminarCuentaAhorro,
+  editarPersona,
+  editarUsuario,
+  eliminarPersona,
+  eliminarBeneficiarioReasignar,
+  leerEventLog
 };

@@ -37,10 +37,6 @@ app.get('/lista_cuentas', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'lista_cuentas', 'listaCuentas.html'));
 });
 
-app.get('/api/admin/bitacora', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'bitacora.json'));
-});
-
 // 4. Rutas de la API (Endpoints de datos JSON)
 app.use('/api/login', loginRoutes);
 app.use('/api/admin', adminRoutes);

@@ -383,5 +383,164 @@
     "operacion": "login",
     "usuario": "jaguero",
     "detalles": null
+  },
+  {
+    "id": 33,
+    "fyh": "2026-11-19 22:46:02",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "fquiros",
+    "detalles": null
+  },
+  {
+    "id": 34,
+    "fyh": "2026-11-19 22:52:08",
+    "ip": "::1",
+    "operacion": "logout",
+    "usuario": "fquiros",
+    "detalles": null
+  },
+  {
+    "id": 35,
+    "fyh": "2026-11-19 22:52:18",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "jaguero",
+    "detalles": null
+  },
+  {
+    "id": 36,
+    "fyh": "2026-11-19 22:53:04",
+    "ip": "::1",
+    "operacion": "Logout",
+    "usuario": "jaguero",
+    "detalles": {
+      "anterior": null,
+      "nuevo": null
+    }
+  },
+  {
+    "id": 37,
+    "fyh": "2026-11-19 22:53:21",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "fquiros",
+    "detalles": null
+  },
+  {
+    "id": 38,
+    "fyh": "2026-11-19 22:55:52",
+    "ip": "::1",
+    "operacion": "logout",
+    "usuario": "fquiros",
+    "detalles": null
+  },
+  {
+    "id": 39,
+    "fyh": "2026-11-19 22:56:04",
+    "ip": "::1",
+    "operacion": "login",
+    "usuario": "jaguero",
+    "detalles": null
+  },
+  {
+    "id": 40,
+    "fyh": "2026-11-19 23:00:43",
+    "ip": "::1",
+    "operacion": "consultaEstadoCuenta",
+    "usuario": "jaguero",
+    "detalles": null
+  },
+  {
+    "id": 41,
+    "fyh": "2026-11-19 23:02:08",
+    "ip": "::1",
+    "operacion": "logout",
+    "usuario": "jaguero",
+    "detalles": null
+  },
+  {
+    "id": 42,
+    "fyh": "2026-11-22 02:46:44",
+    "ip": "::1",
+    "operacion": "Actualizar cuenta de ahorro",
+    "usuario": "fquiros",
+    "detalles": {
+      "anterior": {
+        "valorDocuIdentidad": "117370445",
+        "nombrePropietario": "Javith Aguero Hernandez",
+        "idTipoCuenta": "1",
+        "numCuenta": "11000001",
+        "fechaCreacion": "2020-10-13T00:00:00.000Z",
+        "saldo": 0
+      },
+      "nuevo": {
+        "valorDocuIdentidad": "117370445",
+        "nombrePropietario": "Javith Aguero Hernandez",
+        "idTipoCuenta": "1",
+        "numCuenta": "11000001",
+        "fechaCreacion": "2020-10-13",
+        "saldo": "2222",
+        "tipoCuentaNombre": "Proletario"
+      }
+    }
+  },
+  {
+    "id": 43,
+    "fyh": "2026-11-22 02:47:13",
+    "ip": "::1",
+    "operacion": "Actualizar cuenta de ahorro",
+    "usuario": "fquiros",
+    "detalles": {
+      "anterior": {
+        "valorDocuIdentidad": "117370445",
+        "nombrePropietario": "Javith Aguero Hernandez",
+        "idTipoCuenta": "1",
+        "numCuenta": "11000001",
+        "fechaCreacion": "2020-10-13T00:00:00.000Z",
+        "saldo": 2222
+      },
+      "nuevo": {
+        "valorDocuIdentidad": "117370445",
+        "nombrePropietario": "Javith Aguero Hernandez",
+        "idTipoCuenta": "4",
+        "numCuenta": "11000001",
+        "fechaCreacion": "2020-10-13",
+        "saldo": "2222",
+        "tipoCuentaNombre": "Ahorro Dolares"
+      }
+    }
+  },
+  {
+    "id": 44,
+    "fyh": "2026-11-22 02:52:37",
+    "ip": "::1",
+    "operacion": "Eliminar cuenta de ahorro",
+    "usuario": "fquiros",
+    "detalles": {
+      "anterior": {
+        "valorDocuIdentidad": "598338045",
+        "nombrePropietario": "Viviana Porras Chaves",
+        "idTipoCuenta": "1",
+        "numCuenta": "11000025",
+        "fechaCreacion": "2026-09-09T00:00:00.000Z",
+        "saldo": 62000
+      },
+      "nuevo": null
+    }
+  },
+  {
+    "id": 45,
+    "fyh": "2026-11-22 19:10:57",
+    "ip": "::1",
+    "operacion": "Eliminar beneficiario y reasignar porcentajes",
+    "usuario": "fquiros",
+    "detalles": {
+      "anterior": {
+        "numCuenta": "11000001",
+        "valorDocuIdentidad": "12738545"
+      },
+      "nuevo": null
+    }
   }
 ]

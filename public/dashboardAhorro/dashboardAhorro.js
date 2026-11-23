@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch(`/api/ahorro/eliminar_beneficiario?valorDocuIdentidad=${encodeURIComponent(valorDocuIdentidad)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario: usuarioActual })
+        body: JSON.stringify({ usuario: usuarioActual, numCuenta: numCuenta })
       });
       const data = await response.json();
       if (data.success) {
@@ -402,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="mb-2">
               <label class="form-label small fw-bold">Número Documento:</label>
-              <input type="text" class="form-control form-control-sm" value="${b.doc}" onchange="actualizarDatoBeneficiario(${index}, 'doc', this.value)">
+              <input type="text" class="form-control form-control-sm" value="${b.doc}" onchange="actualizarDatoBeneficiario(${index}, 'doc', this.value)" onblur="buscarDatosBeneficiario(${index}, this.value)">
             </div>
             <div class="mb-2">
               <label class="form-label small fw-bold">Nombre:</label>
@@ -528,12 +528,79 @@ document.addEventListener('DOMContentLoaded', () => {
         return; 
       }
 
-      // Procesar guardado de beneficiarios...
-      mostrarAlertaBootstrap('¡Beneficiarios actualizados con éxito!', 'success');
-      modoEdicion = false;
-      btnToggleEdit.textContent = 'Editar Beneficiarios';
-      btnToggleEdit.className = 'btn btn-secondary text-white';
-      renderBeneficiarios();
+      try {
+        for (const beneficiario of beneficiarios) {
+          const original = beneficiariosOriginales.find(item => item.id === beneficiario.id);
+          if (!original) {
+            const response = await fetch('/api/ahorro/insertar_beneficiario', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                usuario: usuarioActual,
+                beneficiario: {
+                  cuentaAsociada: numCuenta,
+                  valorDoc: beneficiario.doc,
+                  parentesco: String(beneficiario.parentesco),
+                  porcentaje: Number(beneficiario.porcentaje)
+                }
+              })
+            });
+
+            const data = await response.json();
+            if (!response.ok || data.success === false) {
+              throw new Error(data.message || data.error || 'No se pudo insertar el beneficiario');
+            }
+            continue;
+          }
+
+          const fechaNacimiento = beneficiario.fechaNacimiento.replace(/\//g, '-');
+          const beneficiarioPayload = {
+            anterior: {
+              valorDoc: original.doc
+            },
+            nuevo: {
+              valorDoc: beneficiario.doc,
+              nombreBeneficiario: beneficiario.nombre,
+              parentesco: String(beneficiario.parentesco),
+              porcentaje: Number(beneficiario.porcentaje),
+              fechaNacimiento,
+              tipoDoc: String(beneficiario.nDoc),
+              email: beneficiario.email,
+              telefono1: beneficiario.telefono1,
+              telefono2: beneficiario.telefono2,
+              cuentaAsociada: numCuenta
+            }
+          };
+
+          const documentoCambio = original.doc !== beneficiario.doc;
+          const ruta = documentoCambio
+            ? '/api/ahorro/editar_beneficiario_DocuDiferente'
+            : '/api/ahorro/editar_beneficiario_DocuIgual';
+
+          const response = await fetch(ruta, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              usuario: usuarioActual,
+              beneficiario: beneficiarioPayload
+            })
+          });
+
+          const data = await response.json();
+          if (!response.ok || data.success === false) {
+            throw new Error(data.message || data.error || 'No se pudo actualizar el beneficiario');
+          }
+        }
+
+        mostrarAlertaBootstrap('¡Beneficiarios actualizados con éxito!', 'success');
+        modoEdicion = false;
+        btnToggleEdit.textContent = 'Editar Beneficiarios';
+        btnToggleEdit.className = 'btn btn-secondary text-white';
+        await recibirBeneficiariosAPI();
+      } catch (error) {
+        console.error('Error al actualizar beneficiarios:', error);
+        mostrarAlertaBootstrap(error.message, 'danger');
+      }
     }
   });
   
@@ -564,14 +631,22 @@ document.addEventListener('DOMContentLoaded', () => {
     renderBeneficiarios();
   };
 
-  window.eliminarBeneficiario = function(index) {
+  window.eliminarBeneficiario = async function(index) {
     if (beneficiarios.length <= 1) {
       mostrarAlertaBootstrap('Debe haber al menos un beneficiario.', 'warning');
       return;
     }
 
-    if (confirm('¿Quieres eliminar este beneficiario?')) {
-      if (eliminarBeneficiarioAPI(beneficiarios[index].doc)) {
+    const confirmar = await confirmarAccionBootstrap({
+      titulo: 'Eliminar beneficiario',
+      mensaje: '¿Quieres eliminar este beneficiario?',
+      textoConfirmar: 'Eliminar',
+      textoCancelar: 'Cancelar',
+      tipoConfirmar: 'danger'
+    });
+    if (confirmar) {
+      const eliminado = await eliminarBeneficiarioAPI(beneficiarios[index].doc);
+      if (eliminado) {
         beneficiarios.splice(index, 1);
         if (beneficiarios.length === 1) {
           beneficiarios[0].porcentaje = 100;
@@ -589,18 +664,47 @@ document.addEventListener('DOMContentLoaded', () => {
     beneficiarios[index][campo] = valor;
   };
 
+  window.buscarDatosBeneficiario = async function(index, valorDocuIdentidad) {
+    const cedula = String(valorDocuIdentidad || '').trim();
+    beneficiarios[index].doc = cedula;
+
+    if (!cedula) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/ahorro/buscar_persona', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ valorDocuIdentidad: cedula })
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.success || !data.persona) {
+        return;
+      }
+
+      const persona = data.persona;
+      beneficiarios[index].nDoc = persona.tipoDocuIdentidad;
+      beneficiarios[index].nombre = persona.nombre || '';
+      beneficiarios[index].fechaNacimiento = persona.fechaNacimiento
+        ? String(persona.fechaNacimiento).slice(0, 10)
+        : '';
+      beneficiarios[index].email = persona.email || '';
+      beneficiarios[index].telefono1 = persona.telefono1 || '';
+      beneficiarios[index].telefono2 = persona.telefono2 || '';
+
+      renderBeneficiarios();
+    } catch (error) {
+      console.error('Error buscando datos del beneficiario:', error);
+    }
+  };
+
 
   // ==========================================
   // 5. GESTIÓN DE MI PERFIL
   // ==========================================
   let perfilData = {
-    tipoDoc: "",
-    documento: "",
-    nombre: "",
-    fechaNacimiento: "",
-    email: "",
-    telefono1: "",
-    telefono2: ""
   };
   let modoEdicionPerfil = false;
   const perfilContainer = document.getElementById('perfil-info-container');
@@ -608,11 +712,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function recibirPerfilAPI() {
     try {
-      // Endpoint simulado o real para consultar los datos del cliente dueño de la cuenta
       const response = await fetch('/api/ahorro/perfil_usuario', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario: usuarioActual, numCuenta: numCuenta })
+        body: JSON.stringify({ usuario: usuarioActual })
       });
       const data = await response.json();
 
@@ -627,16 +730,8 @@ document.addEventListener('DOMContentLoaded', () => {
           telefono2: data.perfil.telefono2 || ""
         };
       } else {
-        // Datos de ejemplo por defecto si el backend responde vacío en la simulación
-        perfilData = {
-          tipoDoc: "1",
-          documento: "1-1234-5678",
-          nombre: usuarioActual || "Paco Pacal",
-          fechaNacimiento: "1990/05/14",
-          email: "paco.pacal@example.com",
-          telefono1: "8888-8888",
-          telefono2: "2222-2222"
-        };
+        console.error(data.message || 'No se encontraron datos del perfil');
+        perfilData = { tipoDoc: "", documento: "", nombre: "", fechaNacimiento: "", email: "", telefono1: "", telefono2: "" };
       }
       renderPerfil();
     } catch (error) {
@@ -776,14 +871,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // 6. SALIR Y CERRAR SESIÓN
   const salirBtn = document.getElementById('salir');
   salirBtn.addEventListener('click', () => {
-    window.location.href = '../login/login.html';
-    
     fetch('/api/ahorro/salir', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ usuario: usuarioActual })
+    }).finally(() => {
+      window.location.href = '../login/login.html';
     });
   });
 

@@ -25,16 +25,67 @@ async function beneficiariosAsociadosCuenta(req, res) {
   }
 }
 
-async function eliminarBeneficiario(req, res) {
+async function personaAsociadaUsuario(req, res) {
   const { usuario } = req.body;
+
+  console.log('usuario recibido en personaAsociadaUsuario:', usuario);
+
+  try {
+    if (!usuario) {
+      return res.status(400).json({ message: 'El usuario es requerido', success: false });
+    }
+
+    const result = await ahorroService.personaAsociadaUsuario(usuario);
+
+    if (!result.outFlagExisteUsuario) {
+      return res.status(404).json({ message: 'El usuario no existe', success: false });
+    }
+
+    if (result.outFlagDatosInaccesibles || !result.persona) {
+      return res.status(404).json({ message: 'No hay datos personales asociados al usuario', success: false });
+    }
+
+    return res.status(200).json({
+      success: true,
+      perfil: {
+        tipoDoc: result.persona.tipoDocuIdentidad,
+        documento: result.persona.valorDocuIdentidad,
+        nombre: result.persona.nombre,
+        fechaNacimiento: result.persona.fechaNacimiento,
+        email: result.persona.email,
+        telefono1: result.persona.telefono1,
+        telefono2: result.persona.telefono2
+      }
+    });
+  } catch (error) {
+    console.error('Error al obtener el perfil del usuario:', error);
+    return res.status(500).json({ error: 'Error al obtener el perfil del usuario', success: false });
+  }
+}
+
+async function eliminarBeneficiario(req, res) {
+  const { usuario, numCuenta } = req.body;
   const valorDocuIdentidad = req.query.valorDocuIdentidad;
   try {
-    const outFlagError = await ahorroService.eliminarBeneficiario(valorDocuIdentidad);
-    bitacoraService.registrarBitacora('Eliminar beneficiario', usuario, req.ip);
-    res.status(200).json({ message: 'Beneficiario eliminado correctamente', success: true });
+    if (!numCuenta) {
+      return res.status(400).json({ message: 'El número de cuenta es requerido', success: false });
+    }
+
+    const outFlagError = await ahorroService.eliminarBeneficiario(
+      usuario,
+      req.ip,
+      numCuenta,
+      valorDocuIdentidad
+    );
+
+    if (outFlagError === true) {
+      return res.status(404).json({ message: 'El beneficiario no existe o no se pudo eliminar', success: false });
+    }
+
+    return res.status(200).json({ message: 'Beneficiario eliminado correctamente', success: true });
   } catch (error) {
     console.error('Error al eliminar el beneficiario:', error);
-    res.status(500).json({ error: 'Error al eliminar el beneficiario' });
+    return res.status(500).json({ error: 'Error al eliminar el beneficiario', success: false });
   }
 }
 
@@ -58,16 +109,6 @@ async function tablaTipoDocuIdentidadActivo(req, res) {
   }
 } 
 
-async function registrarSalir(req, res) {
-  try {
-    const { usuario} = req.body;
-    bitacoraService.registrarBitacora('logout', usuario, req.ip);
-    res.status(200).json({ message: 'Bitácora de estados de cuenta obtenida correctamente', success: true });
-  } catch (error) {
-    console.error('Error al registrar en la bitácora:', error);
-  }
-}
-
 async function registrarEstado(req, res) {
   try {
     const { usuario } = req.body;
@@ -82,15 +123,22 @@ async function registrarEstado(req, res) {
 async function insertarBeneficiario(req, res) {
   const { usuario, beneficiario } = req.body;
   try {
-    console.log('Datos del beneficiario a insertar:', beneficiario.cuentaAsociada, beneficiario.valorDoc, beneficiario.parentesco, beneficiario.porcentaje);
+    const outFlagError = await ahorroService.insertarBeneficiario(
+      usuario,
+      req.ip,
+      beneficiario.cuentaAsociada,
+      beneficiario.valorDoc,
+      beneficiario.parentesco,
+      beneficiario.porcentaje
+    );
 
-    const result = await ahorroService.insertarBeneficiario(beneficiario.cuentaAsociada, beneficiario.valorDoc, beneficiario.parentesco, beneficiario.porcentaje);
+    if (outFlagError === true) {
+      return res.status(409).json({
+        message: 'El beneficiario ya existe o no se pudo insertar',
+        success: false
+      });
+    }
 
-    console.log('Resultado de la inserción del beneficiario:', result);
-    bitacoraService.registrarBitacora('insertarBeneficiario', usuario, req.ip, {
-      anterior: null,
-      nuevo: beneficiario
-    });
     res.status(200).json({ message: 'Beneficiario insertado correctamente', success: true });
   } catch (error) {
     console.error('Error al insertar el beneficiario:', error);
@@ -101,15 +149,25 @@ async function insertarBeneficiario(req, res) {
 async function editarBeneficiarioDocuDiferente(req, res) {
   const { usuario, beneficiario } = req.body;
   try {
-    const result = await ahorroService.editarBeneficiarioDocuDiferente(beneficiario.anterior.valorDoc, beneficiario.nuevo.valorDoc, beneficiario.nuevo.nombreBeneficiario,
+    const result = await ahorroService.editarBeneficiarioDocuDiferente(usuario, req.ip, beneficiario.anterior.valorDoc, beneficiario.nuevo.valorDoc, beneficiario.nuevo.nombreBeneficiario,
       beneficiario.nuevo.parentesco, beneficiario.nuevo.porcentaje, beneficiario.nuevo.fechaNacimiento, beneficiario.nuevo.tipoDoc, beneficiario.nuevo.email,
       beneficiario.nuevo.telefono1, beneficiario.nuevo.telefono2, beneficiario.nuevo.cuentaAsociada);
 
-    bitacoraService.registrarBitacora('Actualizar beneficiario', usuario, req.ip, beneficiario);
-    res.status(200).json({ message: 'Beneficiario editado correctamente (documento diferente)', success: true });
+    if (result.outFlagDocuIdentidadRepetido) {
+      return res.status(409).json({ message: 'El nuevo documento de identidad ya existe', success: false });
+    }
+    if (result.outFlagError) {
+      return res.status(500).json({ message: 'Error al editar el beneficiario', success: false });
+    }
+    if (!result.outFlagExistePersona || !result.outFlagExisteBeneficiario ||
+        !result.outFlagExisteParentesco || !result.outFlagExisteTipoDocuIdentidad) {
+      return res.status(400).json({ message: 'No se pudieron validar todos los datos del beneficiario', success: false });
+    }
+
+    return res.status(200).json({ message: 'Beneficiario editado correctamente (documento diferente)', success: true });
   } catch (error) {
     console.error('Error al editar el beneficiario (documento diferente):', error);
-    res.status(500).json({ error: 'Error al editar el beneficiario (documento diferente)' });
+    res.status(500).json({ error: 'Error al editar el beneficiario (documento diferente)', success: false });
   }
 }
 
@@ -117,12 +175,19 @@ async function editarBeneficiarioDocuIgual(req, res) {
   const { usuario, beneficiario } = req.body;
   try { 
 
-    const result = await ahorroService.editarBeneficiarioDocuIgual(beneficiario.anterior.valorDoc, beneficiario.nuevo.nombreBeneficiario, beneficiario.nuevo.parentesco,
+    const result = await ahorroService.editarBeneficiarioDocuIgual(usuario, req.ip, beneficiario.anterior.valorDoc, beneficiario.nuevo.nombreBeneficiario, beneficiario.nuevo.parentesco,
       beneficiario.nuevo.porcentaje, beneficiario.nuevo.fechaNacimiento, beneficiario.nuevo.tipoDoc, beneficiario.nuevo.email,
       beneficiario.nuevo.telefono1, beneficiario.nuevo.telefono2, beneficiario.nuevo.cuentaAsociada);
 
-    bitacoraService.registrarBitacora('Actualizar beneficiario', usuario, req.ip, beneficiario);
-    res.status(200).json({ message: 'Beneficiario editado correctamente (documento igual)', success: true });
+    if (result.outFlagError) {
+      return res.status(500).json({ message: 'Error al editar el beneficiario', success: false });
+    }
+    if (!result.outFlagExistePersona || !result.outFlagExisteBeneficiario ||
+        !result.outFlagExisteParentesco || !result.outFlagExisteTipoDocuIdentidad) {
+      return res.status(400).json({ message: 'No se pudieron validar todos los datos del beneficiario', success: false });
+    }
+
+    return res.status(200).json({ message: 'Beneficiario editado correctamente (documento igual)', success: true });
 
   } catch (error) {
     console.error('Error al editar el beneficiario (documento igual):', error);
@@ -130,16 +195,49 @@ async function editarBeneficiarioDocuIgual(req, res) {
   }
 }
 
+async function buscarPersonaPorCedula(req, res) {
+  const { valorDocuIdentidad } = req.body;
+
+  try {
+    if (!valorDocuIdentidad?.trim()) {
+      return res.status(400).json({
+        message: 'La cedula es requerida',
+        success: false
+      });
+    }
+
+    const persona = await ahorroService.buscarPersonaPorCedula(valorDocuIdentidad.trim());
+    if (!persona) {
+      return res.status(404).json({
+        message: 'No se encontro una persona con esa cedula',
+        success: false
+      });
+    }
+
+    return res.status(200).json({
+      message: 'Persona encontrada correctamente',
+      success: true,
+      persona
+    });
+  } catch (error) {
+    console.error('Error al buscar persona por cedula:', error);
+    return res.status(500).json({
+      error: 'Error al buscar persona por cedula',
+      success: false
+    });
+  }
+}
 
 module.exports = { 
   top8_EstadoCuenta_AsociadoCuenta, 
   beneficiariosAsociadosCuenta, 
+  personaAsociadaUsuario,
   eliminarBeneficiario, 
   tablaParentescoActivo, 
-  tablaTipoDocuIdentidadActivo, 
-  registrarSalir,
+  tablaTipoDocuIdentidadActivo,
   insertarBeneficiario,
   editarBeneficiarioDocuDiferente,
   editarBeneficiarioDocuIgual,
+  buscarPersonaPorCedula,
   registrarEstado 
 };

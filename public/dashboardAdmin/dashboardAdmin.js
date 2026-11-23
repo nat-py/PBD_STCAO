@@ -6,14 +6,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const salirBtn = document.getElementById('salir');
   salirBtn.addEventListener('click', () => {
-    window.location.href = '../login/login.html';
-    
     fetch('/api/admin/salir', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ usuario: usuarioActual })
+    }).finally(() => {
+      window.location.href = '../login/login.html';
     });
 
   });
@@ -181,7 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     tituloModal.innerText = `Detalle de Operación: ${item.operacion}`;
 
-    const operacionesSimples = ["login", "logout", "consultaEstadoCuenta"];
+    const operacionesSimples = ["Login", "Logout", "Consultar estado de cuenta"];
     let iconoOperacion = "bi-info-circle-fill text-primary";
     if (item.operacion === "login") iconoOption = "bi-box-arrow-in-right text-success";
     if (item.operacion === "logout") iconoOption = "bi-box-arrow-right text-danger";
@@ -230,6 +230,24 @@ document.addEventListener("DOMContentLoaded", () => {
     modalBitacora.show();
   }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // 3. ADMINISTRAR CUENTAS
   const tablaCuentasBody = document.getElementById("tabla-cuentas-body");
   const inputBusquedaCuentas = document.getElementById("inputBusquedaCuentas");
@@ -251,7 +269,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderCuentas(data) {
     tablaCuentasBody.innerHTML = "";
     if (data.length === 0) {
-      tablaCuentasBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">No se encontraron cuentas</td></tr>`;
+      tablaCuentasBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-3">No se encontraron cuentas</td></tr>`;
       return;
     }
 
@@ -260,6 +278,7 @@ document.addEventListener("DOMContentLoaded", () => {
       tr.className = "clickable-row";
       tr.innerHTML = `
         <td>${item.valorDocuIdentidad}</td>
+        <td class="fw-bold">${item.nombrePropietario || "No disponible"}</td>
         <td class="fw-bold">${item.numCuenta}</td>
         <td><span class="badge bg-primary">${item.idTipoCuenta}</span></td>
         <td>${item.fechaCreacion}</td>
@@ -276,12 +295,18 @@ document.addEventListener("DOMContentLoaded", () => {
   inputBusquedaCuentas.addEventListener("input", (e) => {
     const query = e.target.value.toLowerCase();
     const filtradas = cuentasData.filter(c =>
-      [c.valorDocuIdentidad, c.idTipoCuenta, c.numCuenta, c.fechaCreacion, c.saldo]
+      [c.valorDocuIdentidad, c.nombrePropietario, c.idTipoCuenta, c.numCuenta, c.fechaCreacion, c.saldo]
         .some(valor => String(valor ?? "").toLowerCase().includes(query))
     );
     renderCuentas(filtradas);
   });
 
+
+
+
+
+
+  
 // =========================================================================
   // 3.5 ADMINISTRAR CLIENTES Y MODALES DE CLIENTE / CUENTA
   // =========================================================================
@@ -291,78 +316,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalDetalleClienteEl = document.getElementById("modalDetalleCliente");
   const modalDetalleCliente = new bootstrap.Modal(modalDetalleClienteEl);
   const btnEditCliente = document.getElementById("btn-edit-cliente");
+  const btnEliminarCliente = document.getElementById("btn-eliminar-cliente");
 
   const modalDetalleCuentaEl = document.getElementById("modalDetalleCuenta");
   const modalDetalleCuenta = new bootstrap.Modal(modalDetalleCuentaEl);
   const btnEditCuenta = document.getElementById("btn-edit-cuenta");
+  const btnEliminarCuenta = document.getElementById("btn-eliminar-cuenta");
   const btnVerDetalleCuenta = document.getElementById("btn-ver-detalle-cuenta");
 
   // Estado actual de los modales
   let clienteSeleccionado = null;
   let modoEdicionCliente = false;
+  let clienteOriginalEdicion = null;
 
   let cuentaSeleccionada = null;
   let modoEdicionCuenta = false;
   let origenModalCuenta = "cuentas"; // "clientes" o "cuentas"
 
-  // Datos de prueba (reemplazar luego con fetch a tu endpoint de clientes)
-  let clientesData = [
-    {
-      id: "1-1234-5678",
-      nombre: "Paco Pacal",
-      idTipoDocuIdentidad: "1",
-      tipoDocuNombre: "Cédula Nacional",
-      valorDocuIdentidad: "1-1234-5678",
-      fechaNacimiento: "1990-05-14",
-      cuentasAhorro: [
-        {
-          numCuenta: "1700024",
-          idTipoCuenta: "1",
-          tipoCuentaNombre: "Taca Taca",
-          fechaCreacion: "2020-07-12",
-          saldo: "450000.00",
-          valorDocuIdentidad: "1-1234-5678",
-          nombrePropietario: "Paco Pacal"
-        },
-        {
-          numCuenta: "1700089",
-          idTipoCuenta: "2",
-          tipoCuentaNombre: "Ahorro Dólares",
-          fechaCreacion: "2022-03-01",
-          saldo: "1250.00",
-          valorDocuIdentidad: "1-1234-5678",
-          nombrePropietario: "Paco Pacal"
-        }
-      ],
-      cuentasBeneficiario: [
-        {
-          numCuenta: "1800412",
-          parentesco: "Padre / Madre",
-          porcentaje: 50
-        }
-      ]
-    },
-    {
-      id: "2-0987-6543",
-      nombre: "María Fernanda Solís",
-      idTipoDocuIdentidad: "1",
-      tipoDocuNombre: "Cédula Nacional",
-      valorDocuIdentidad: "2-0987-6543",
-      fechaNacimiento: "1988-11-22",
-      cuentasAhorro: [
-        {
-          numCuenta: "1800412",
-          idTipoCuenta: "1",
-          tipoCuentaNombre: "Taca Taca",
-          fechaCreacion: "2021-01-15",
-          saldo: "980000.00",
-          valorDocuIdentidad: "2-0987-6543",
-          nombrePropietario: "María Fernanda Solís"
-        }
-      ],
-      cuentasBeneficiario: []
-    }
-  ];
+  let clientesData = [];
 
   // Cargar clientes al entrar en la pestaña
   navLinks.forEach(link => {
@@ -374,18 +345,21 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   function cargarClientes() {
-    // Cuando tengas el endpoint listo, descomenta esto:
-    /*
-    fetch("/api/admin/clientes")
+    fetch("/api/admin/personas")
       .then(res => res.json())
       .then(data => {
-        clientesData = data.clientes;
+        if (!data.success) throw new Error(data.message || "No se pudieron cargar las personas");
+        clientesData = (data.personas || []).map(persona => ({
+          ...persona,
+          cuentasAhorro: persona.cuentasAhorro || [],
+          cuentasBeneficiario: persona.cuentasBeneficiario || []
+        }));
         renderClientes(clientesData);
       })
       .catch(err => console.error("Error cargando clientes:", err));
-    */
-    renderClientes(clientesData);
   }
+
+  cargarClientes();
 
   function renderClientes(lista) {
     if (!tablaClientesBody) return;
@@ -466,6 +440,38 @@ document.addEventListener("DOMContentLoaded", () => {
           <label class="form-label small fw-bold text-muted">Fecha de Nacimiento:</label>
           <input type="date" id="edit-cliente-fecha" class="form-control form-control-sm" value="${clienteSeleccionado.fechaNacimiento}">
         </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Email:</label>
+          <input type="email" id="edit-cliente-email" class="form-control form-control-sm" value="${clienteSeleccionado.email || ""}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Teléfono 1:</label>
+          <input type="text" id="edit-cliente-telefono1" class="form-control form-control-sm" value="${clienteSeleccionado.telefono1 || ""}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Teléfono 2:</label>
+          <input type="text" id="edit-cliente-telefono2" class="form-control form-control-sm" value="${clienteSeleccionado.telefono2 || ""}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Usuario:</label>
+          <input type="text" id="edit-cliente-usuario" class="form-control form-control-sm" value="${clienteSeleccionado.usuario || ""}" ${clienteSeleccionado.usuario ? "" : "disabled"}>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Contraseña:</label>
+          <div class="input-group input-group-sm">
+            <input type="password" id="cliente-password" class="form-control" value="" placeholder="Dejar vacía para conservar" ${clienteSeleccionado.usuario ? "" : "disabled"}>
+            <button type="button" class="btn btn-outline-secondary" id="toggle-cliente-password" title="Mostrar contraseña">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted">Tipo de Usuario:</label>
+          <select id="edit-cliente-es-admin" class="form-select form-select-sm" ${clienteSeleccionado.usuario ? "" : "disabled"}>
+            <option value="false" ${!clienteSeleccionado.esAdmin ? "selected" : ""}>Usuario</option>
+            <option value="true" ${clienteSeleccionado.esAdmin ? "selected" : ""}>Administrador</option>
+          </select>
+        </div>
       `;
     } else {
       const docObj = tiposDoc.find(d => String(d.id) === String(clienteSeleccionado.idTipoDocuIdentidad));
@@ -488,7 +494,43 @@ document.addEventListener("DOMContentLoaded", () => {
           <label class="form-label small fw-bold text-muted mb-1">Fecha de Nacimiento:</label>
           <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded m-0">${clienteSeleccionado.fechaNacimiento}</p>
         </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted mb-1">Email:</label>
+          <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded m-0">${clienteSeleccionado.email || "No disponible"}</p>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted mb-1">Teléfono 1:</label>
+          <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded m-0">${clienteSeleccionado.telefono1 || "No disponible"}</p>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted mb-1">Teléfono 2:</label>
+          <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded m-0">${clienteSeleccionado.telefono2 || "No disponible"}</p>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted mb-1">Usuario:</label>
+          <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded m-0">${clienteSeleccionado.usuario || "Sin usuario asociado"}</p>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-muted mb-1">Contraseña:</label>
+          <div class="input-group input-group-sm">
+            <input type="password" id="cliente-password" class="form-control" value="${clienteSeleccionado.contrasena || ""}" readonly>
+            <button type="button" class="btn btn-outline-secondary" id="toggle-cliente-password" title="Mostrar contraseña">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+        </div>
       `;
+    }
+
+    const togglePassword = document.getElementById("toggle-cliente-password");
+    const passwordInput = document.getElementById("cliente-password");
+    if (togglePassword && passwordInput) {
+      togglePassword.onclick = () => {
+        const mostrar = passwordInput.type === "password";
+        passwordInput.type = mostrar ? "text" : "password";
+        togglePassword.innerHTML = `<i class="bi ${mostrar ? "bi-eye-slash" : "bi-eye"}"></i>`;
+        togglePassword.title = mostrar ? "Ocultar contraseña" : "Mostrar contraseña";
+      };
     }
 
     // 2. Renderizar Cuentas de Ahorro (Columna Izquierda)
@@ -502,7 +544,7 @@ document.addEventListener("DOMContentLoaded", () => {
         card.innerHTML = `
           <div>
             <div class="fw-bold text-primary">#${cuenta.numCuenta}</div>
-            <span class="badge bg-secondary">${cuenta.tipoCuentaNombre || cuenta.idTipoCuenta}</span>
+            <span class="badge bg-secondary">${cuenta.tipoCuentaNombre}</span>
           </div>
           <div class="text-end">
             <span class="text-muted small d-block">Saldo</span>
@@ -552,46 +594,226 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  async function guardarCambiosCliente() {
+    const personaNueva = {
+      ...clienteSeleccionado,
+      nombre: document.getElementById("edit-cliente-nombre").value.trim(),
+      idTipoDocuIdentidad: document.getElementById("edit-cliente-tipo-doc").value,
+      valorDocuIdentidad: document.getElementById("edit-cliente-doc").value.trim(),
+      fechaNacimiento: document.getElementById("edit-cliente-fecha").value,
+      email: document.getElementById("edit-cliente-email").value.trim(),
+      telefono1: document.getElementById("edit-cliente-telefono1").value.trim(),
+      telefono2: document.getElementById("edit-cliente-telefono2").value.trim()
+    };
+    const personaAnterior = clienteOriginalEdicion || JSON.parse(JSON.stringify(clienteSeleccionado));
+
+    const usuarioNuevoNombre = document.getElementById("edit-cliente-usuario").value.trim();
+    const claveNueva = document.getElementById("cliente-password").value;
+    const esAdminNuevo = document.getElementById("edit-cliente-es-admin").value === "true";
+    const usuarioAnterior = {
+      idUsuarioObjetivo: personaAnterior.idUsuarioObjetivo,
+      usuario: personaAnterior.usuario,
+      esAdmin: personaAnterior.esAdmin
+    };
+    const usuarioNuevo = {
+      idUsuarioObjetivo: personaAnterior.idUsuarioObjetivo,
+      usuario: usuarioNuevoNombre,
+      clave: claveNueva,
+      esAdmin: esAdminNuevo
+    };
+
+    const cambioPersona =
+      personaAnterior.nombre !== personaNueva.nombre ||
+      String(personaAnterior.idTipoDocuIdentidad) !== String(personaNueva.idTipoDocuIdentidad) ||
+      personaAnterior.valorDocuIdentidad !== personaNueva.valorDocuIdentidad ||
+      (personaAnterior.fechaNacimiento || "") !== (personaNueva.fechaNacimiento || "") ||
+      (personaAnterior.email || "") !== personaNueva.email ||
+      (personaAnterior.telefono1 || "") !== personaNueva.telefono1 ||
+      (personaAnterior.telefono2 || "") !== personaNueva.telefono2;
+
+    const cambioUsuario =
+      Boolean(personaAnterior.usuario) &&
+      (
+        personaAnterior.usuario !== usuarioNuevo.usuario ||
+        Boolean(personaAnterior.esAdmin) !== esAdminNuevo ||
+        claveNueva.trim() !== ""
+      );
+
+    if (!cambioPersona && !cambioUsuario) {
+      modoEdicionCliente = false;
+      actualizarBotonEdicion(btnEditCliente, false);
+      renderContenidoModalCliente();
+      mostrarAlertaBootstrap("No se realizaron cambios.", "info");
+      return;
+    }
+
+    try {
+      if (cambioPersona) {
+        const response = await fetch("/api/admin/editarPersona", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            usuario: usuarioActual,
+            personaAnterior,
+            personaNueva
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || data.error || "No se pudo actualizar la persona");
+      }
+
+      if (cambioUsuario) {
+        const response = await fetch("/api/admin/editarUsuario", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            usuario: usuarioActual,
+            usuarioAnterior,
+            usuarioNuevo
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || data.error || "No se pudo actualizar el usuario");
+      }
+
+      const personasResponse = await fetch("/api/admin/personas");
+      const personasData = await personasResponse.json();
+      if (!personasResponse.ok || !personasData.success) {
+        throw new Error(personasData.message || "No se pudo refrescar el cliente");
+      }
+
+      clientesData = (personasData.personas || []).map(persona => ({
+        ...persona,
+        cuentasAhorro: persona.cuentasAhorro || [],
+        cuentasBeneficiario: persona.cuentasBeneficiario || []
+      }));
+      const clienteActualizado = clientesData.find(c => c.id === personaAnterior.id);
+      if (clienteActualizado) clienteSeleccionado = JSON.parse(JSON.stringify(clienteActualizado));
+
+      modoEdicionCliente = false;
+      clienteOriginalEdicion = null;
+      actualizarBotonEdicion(btnEditCliente, false);
+      renderContenidoModalCliente();
+      renderClientes(clientesData);
+      mostrarAlertaBootstrap("Datos actualizados correctamente.", "success");
+    } catch (error) {
+      console.error("Error actualizando persona o usuario:", error);
+      mostrarAlertaBootstrap(error.message, "danger");
+    }
+  }
+
   // Eliminar beneficiario en modo edición (siguiendo el estilo de catálogos)
-  window.eliminarBeneficiarioDeCliente = function(index) {
-    clienteSeleccionado.cuentasBeneficiario.splice(index, 1);
-    renderContenidoModalCliente();
+  window.eliminarBeneficiarioDeCliente = async function(index) {
+    const beneficiario = clienteSeleccionado.cuentasBeneficiario[index];
+    if (!beneficiario) return;
+
+    const confirmacion = await confirmarAccionBootstrap({
+      titulo: 'Eliminar beneficiario',
+      mensaje: `¿Desea eliminar a ${clienteSeleccionado.nombre} como beneficiario de la cuenta #${beneficiario.numCuenta}?`,
+      textoConfirmar: 'Eliminar',
+      tipoConfirmar: 'danger'
+    });
+    if (!confirmacion) return;
+
+    try {
+      const response = await fetch("/api/admin/eliminarBeneficiarioReasignar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          usuario: usuarioActual,
+          beneficiario: {
+            numCuenta: beneficiario.numCuenta,
+            valorDocuIdentidad: beneficiario.valorDocuIdentidad || clienteSeleccionado.valorDocuIdentidad
+          }
+        })
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || data.error || "No se pudo eliminar el beneficiario");
+      }
+
+      clienteSeleccionado.cuentasBeneficiario.splice(index, 1);
+
+      const idx = clientesData.findIndex(c => c.id === clienteSeleccionado.id);
+      if (idx !== -1) {
+        clientesData[idx] = JSON.parse(JSON.stringify(clienteSeleccionado));
+      }
+
+      renderContenidoModalCliente();
+      renderClientes(clientesData);
+      mostrarAlertaBootstrap(data.message, "success");
+    } catch (error) {
+      console.error("Error eliminando beneficiario:", error);
+      mostrarAlertaBootstrap(error.message, "danger");
+    }
   };
 
   if (btnEditCliente) {
     btnEditCliente.addEventListener("click", () => {
       if (!modoEdicionCliente) {
         modoEdicionCliente = true;
+        clienteOriginalEdicion = JSON.parse(JSON.stringify(clienteSeleccionado));
         actualizarBotonEdicion(btnEditCliente, true);
         renderContenidoModalCliente();
       } else {
-        // Capturar valores editados
-        clienteSeleccionado.nombre = document.getElementById("edit-cliente-nombre").value.trim();
-        clienteSeleccionado.idTipoDocuIdentidad = document.getElementById("edit-cliente-tipo-doc").value;
-        clienteSeleccionado.valorDocuIdentidad = document.getElementById("edit-cliente-doc").value.trim();
-        clienteSeleccionado.fechaNacimiento = document.getElementById("edit-cliente-fecha").value;
+        guardarCambiosCliente();
+      }
+    });
+  }
 
-        // Actualizar en el arreglo local (y aquí llamarías a tu fetch POST de actualización)
-        const idx = clientesData.findIndex(c => c.id === clienteSeleccionado.id);
-        if (idx !== -1) {
-          clientesData[idx] = JSON.parse(JSON.stringify(clienteSeleccionado));
+  if (btnEliminarCliente) {
+    btnEliminarCliente.addEventListener("click", async () => {
+      if (!clienteSeleccionado) return;
+
+      const confirmacion = await confirmarAccionBootstrap({
+        titulo: 'Eliminar cliente',
+        mensaje: `¿Desea eliminar a ${clienteSeleccionado.nombre}? Se desactivarán también sus cuentas, usuario y beneficiarios asociados.`,
+        textoConfirmar: 'Eliminar',
+        tipoConfirmar: 'danger'
+      });
+      if (!confirmacion) return;
+
+      try {
+        const response = await fetch("/api/admin/eliminarPersona", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            usuario: usuarioActual,
+            persona: {
+              valorDocuIdentidad: clienteSeleccionado.valorDocuIdentidad
+            }
+          })
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || data.error || "No se pudo eliminar la persona");
         }
 
-        modoEdicionCliente = false;
-        actualizarBotonEdicion(btnEditCliente, false);
-        renderContenidoModalCliente();
+        clientesData = clientesData.filter(
+          cliente => cliente.id !== clienteSeleccionado.id
+        );
         renderClientes(clientesData);
-        mostrarAlertaBootstrap("Datos del cliente actualizados correctamente.", "success");
+        modalDetalleCliente.hide();
+        mostrarAlertaBootstrap(data.message, "success");
+      } catch (error) {
+        console.error("Error eliminando persona:", error);
+        mostrarAlertaBootstrap(error.message, "danger");
       }
     });
   }
 
   // --- LÓGICA MODAL UNIFICADO DE CUENTA DE AHORRO ---
   function abrirModalCuentaAhorro(cuenta, origen = "cuentas") {
-    cuentaSeleccionada = JSON.parse(JSON.stringify(cuenta));
+    cuentaSeleccionada = JSON.parse(JSON.stringify({
+      ...cuenta,
+      nombrePropietario: cuenta.nombrePropietario || "No disponible"
+    }));
     origenModalCuenta = origen;
     modoEdicionCuenta = false;
     actualizarBotonEdicion(btnEditCuenta, false);
+    if (btnEliminarCuenta) btnEliminarCuenta.disabled = false;
 
     document.getElementById("modalCuentaNumeroTitulo").innerText = `Cuenta #${cuentaSeleccionada.numCuenta}`;
     renderContenidoModalCuenta();
@@ -624,11 +846,11 @@ document.addEventListener("DOMContentLoaded", () => {
       container.innerHTML = `
         <div class="col-md-6">
           <label class="form-label small fw-bold text-muted">Número de Cuenta:</label>
-          <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded fw-bold m-0">${cuentaSeleccionada.numCuenta}</p>
+          <input type="text" id="edit-cuenta-numero" maxlength="10" class="form-control form-control-sm fw-bold" value="${cuentaSeleccionada.numCuenta}">
         </div>
         <div class="col-md-6">
           <label class="form-label small fw-bold text-muted">Fecha de Creación:</label>
-          <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded m-0">${cuentaSeleccionada.fechaCreacion}</p>
+          <input type="date" id="edit-cuenta-fecha" class="form-control form-control-sm" value="${String(cuentaSeleccionada.fechaCreacion || "").slice(0, 10)}">
         </div>
         <div class="col-md-6">
           <label class="form-label small fw-bold text-muted">Cédula Propietario:</label>
@@ -636,7 +858,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         <div class="col-md-6">
           <label class="form-label small fw-bold text-muted">Nombre Propietario:</label>
-          <input type="text" id="edit-cuenta-propietario" class="form-control form-control-sm" value="${cuentaSeleccionada.nombrePropietario || ""}">
+          <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded m-0">${cuentaSeleccionada.nombrePropietario || "No disponible"}</p>
         </div>
         <div class="col-md-6">
           <label class="form-label small fw-bold text-muted">Tipo de Cuenta:</label>
@@ -690,18 +912,54 @@ document.addEventListener("DOMContentLoaded", () => {
         actualizarBotonEdicion(btnEditCuenta, true);
         renderContenidoModalCuenta();
       } else {
-        // Guardar cambios de la cuenta
+        guardarCuentaAhorroEditada();
+      }
+    });
+  }
+
+  async function guardarCuentaAhorroEditada() {
+        const anterior = JSON.parse(JSON.stringify(cuentaSeleccionada));
+        const numCuentaNuevo = document.getElementById("edit-cuenta-numero").value.trim();
         const nuevoTipoId = document.getElementById("edit-cuenta-tipo").value;
         const tipoObj = (window.tiposCuentasData || []).find(t => String(t.id) === String(nuevoTipoId));
 
-        cuentaSeleccionada.valorDocuIdentidad = document.getElementById("edit-cuenta-cedula").value.trim();
-        cuentaSeleccionada.nombrePropietario = document.getElementById("edit-cuenta-propietario").value.trim();
-        cuentaSeleccionada.idTipoCuenta = nuevoTipoId;
-        cuentaSeleccionada.tipoCuentaNombre = tipoObj ? tipoObj.nombre : nuevoTipoId;
-        cuentaSeleccionada.saldo = document.getElementById("edit-cuenta-saldo").value.trim();
+        const cuentaNueva = {
+          ...cuentaSeleccionada,
+          numCuenta: numCuentaNuevo,
+          fechaCreacion: document.getElementById("edit-cuenta-fecha").value,
+          valorDocuIdentidad: document.getElementById("edit-cuenta-cedula").value.trim(),
+          idTipoCuenta: nuevoTipoId,
+          tipoCuentaNombre: tipoObj ? tipoObj.nombre : nuevoTipoId,
+          saldo: document.getElementById("edit-cuenta-saldo").value.trim()
+        };
+
+        if (!cuentaNueva.numCuenta || !cuentaNueva.valorDocuIdentidad ||
+            !cuentaNueva.idTipoCuenta || !cuentaNueva.fechaCreacion ||
+            !cuentaNueva.saldo) {
+          mostrarAlertaBootstrap("Complete todos los campos obligatorios.", "warning");
+          return;
+        }
+
+        try {
+          const response = await fetch("/api/admin/editarCuentaAhorro", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              usuario: usuarioActual,
+              cuenta: cuentaNueva,
+              anterior
+            })
+          });
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.message || data.error || "No se pudo editar la cuenta");
+          }
+
+          cuentaSeleccionada = cuentaNueva;
 
         // Sincronizar con cuentasData (tabla de Adm. Cuentas)
-        const idxTablaCuentas = cuentasData.findIndex(c => c.numCuenta === cuentaSeleccionada.numCuenta);
+        const idxTablaCuentas = cuentasData.findIndex(c => c.numCuenta === anterior.numCuenta);
         if (idxTablaCuentas !== -1) {
           cuentasData[idxTablaCuentas] = { ...cuentasData[idxTablaCuentas], ...cuentaSeleccionada };
           renderCuentas(cuentasData);
@@ -709,16 +967,68 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Sincronizar con clienteSeleccionado si vino desde clientes
         if (clienteSeleccionado) {
-          const idxCuentaCliente = clienteSeleccionado.cuentasAhorro.findIndex(c => c.numCuenta === cuentaSeleccionada.numCuenta);
+          const idxCuentaCliente = clienteSeleccionado.cuentasAhorro.findIndex(c => c.numCuenta === anterior.numCuenta);
           if (idxCuentaCliente !== -1) {
             clienteSeleccionado.cuentasAhorro[idxCuentaCliente] = { ...cuentaSeleccionada };
           }
         }
 
+        document.getElementById("modalCuentaNumeroTitulo").innerText = `Cuenta #${cuentaSeleccionada.numCuenta}`;
         modoEdicionCuenta = false;
         actualizarBotonEdicion(btnEditCuenta, false);
         renderContenidoModalCuenta();
         mostrarAlertaBootstrap("Cuenta de ahorro actualizada correctamente.", "success");
+        } catch (error) {
+          console.error("Error editando cuenta:", error);
+          mostrarAlertaBootstrap(error.message, "danger");
+        }
+  }
+
+  if (btnEliminarCuenta) {
+    btnEliminarCuenta.addEventListener("click", async () => {
+      if (!cuentaSeleccionada) return;
+
+      const confirmacion = await confirmarAccionBootstrap({
+        titulo: 'Eliminar cuenta',
+        mensaje: `¿Desea eliminar la cuenta #${cuentaSeleccionada.numCuenta}?`,
+        textoConfirmar: 'Eliminar',
+        tipoConfirmar: 'danger'
+      });
+      if (!confirmacion) return;
+
+      try {
+        const cuentaAEliminar = JSON.parse(JSON.stringify(cuentaSeleccionada));
+        const response = await fetch("/api/admin/eliminarCuentaAhorro", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            usuario: usuarioActual,
+            cuenta: cuentaAEliminar
+          })
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || data.error || "No se pudo eliminar la cuenta");
+        }
+
+        cuentasData = cuentasData.filter(
+          cuenta => cuenta.numCuenta !== cuentaAEliminar.numCuenta
+        );
+        renderCuentas(cuentasData);
+
+        if (clienteSeleccionado?.cuentasAhorro) {
+          clienteSeleccionado.cuentasAhorro =
+            clienteSeleccionado.cuentasAhorro.filter(
+              cuenta => cuenta.numCuenta !== cuentaAEliminar.numCuenta
+            );
+        }
+
+        modalDetalleCuenta.hide();
+        mostrarAlertaBootstrap(data.message, "success");
+      } catch (error) {
+        console.error("Error eliminando cuenta:", error);
+        mostrarAlertaBootstrap(error.message, "danger");
       }
     });
   }
@@ -739,9 +1049,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (editando) {
       boton.innerHTML = `<i class="bi bi-check-lg me-1"></i> Guardar`;
       boton.className = "btn btn-success text-white btn-sm";
+      if (btnEliminarCuenta) btnEliminarCuenta.disabled = true;
     } else {
       boton.innerHTML = `<i class="bi bi-pencil me-1"></i> Editar`;
       boton.className = "btn btn-secondary text-white btn-sm";
+      if (btnEliminarCuenta) btnEliminarCuenta.disabled = false;
     }
   }
 
