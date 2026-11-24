@@ -6,23 +6,39 @@
   <title>Dashboard de Ahorro</title>
   <link rel="stylesheet" href="../style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    .movimientos-contenedor {
+      max-height: 430px;
+      transition: max-height 0.35s ease;
+    }
+    .movimientos-contenedor.expandido {
+      max-height: 540px;
+      overflow-y: auto;
+    }
+    .fecha-movimiento-sub {
+      font-size: 0.78rem;
+      color: #718096;
+      line-height: 1.2;
+      margin-top: 2px;
+    }
+  </style>
 </head>
 <body data-bs-spy="scroll" data-bs-target="#sidebar-menu" data-bs-offset="150" tabindex="0">
 
   <!-- HEADER SUPERIOR -->
   <header class="navbar navbar-expand-lg shadow-sm px-4 mb-4 fixed-top con-fondo" style="z-index: 1030;">
-    <div class="container-fluid d-flex justify-content-between align-items-center" >
+    <div class="container-fluid d-flex justify-content-between align-items-center">
       <!-- Izquierda: Icono y Nombre -->
       <div class="d-flex align-items-center gap-3" style="color: #F7FAFC;">
         <i class="bi bi-bank2 display-4"></i>
-        <span class="fw-bold fs-5" >STCAO</span>
+        <span class="fw-bold fs-5">STCAO</span>
       </div>
 
       <!-- Derecha: Usuario y Salir -->
       <div class="d-flex align-items-center gap-3">
         <div class="d-flex align-items-center gap-2" style="color: #F7FAFC;">
           <i class="bi bi-person-circle"></i>
-          <span id="usuarioHeader" class="fw-semibold ">Usuario</span>
+          <span id="usuarioHeader" class="fw-semibold">Usuario</span>
         </div>
 
         <a class="btn btn-outline-b d-flex align-items-center gap-1" id="salir">
@@ -60,51 +76,71 @@
 
       <!-- SECCIONES PRINCIPALES (UNA BAJO LA OTRA) -->
       <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-        
+
         <h2>Bienvenido a tu Dashboard de Ahorro</h2>
-        
+
         <!-- 1. MOVIMIENTOS -->
         <section id="seccion-movimientos" class="section-container fondo-b mb-5">
           <div class="d-flex justify-content-between align-items-center mb-4">
             <h3 class="text-primary fw-bold m-0"><i class="bi bi-arrow-left-right"></i> Movimientos</h3>
-            
+
             <!-- Selector para Agregar Movimiento -->
             <div class="dropdown">
               <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownAgregarMovimiento" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-plus-circle me-1"></i> Agregar Movimiento
               </button>
               <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="dropdownAgregarMovimiento">
-                <li><a class="dropdown-item tipo-movimiento" href="#" data-tipo="retiro-persona"><i class="bi bi-person me-2"></i>Retiro en persona</a></li>
-                <li><a class="dropdown-item tipo-movimiento" href="#" data-tipo="retiro-cajero"><i class="bi bi-cash-stack me-2"></i>Retiro en cajero</a></li>
-                <li><a class="dropdown-item tipo-movimiento" href="#" data-tipo="deposito"><i class="bi bi-piggy-bank me-2"></i>Depósito</a></li>
-                <li><a class="dropdown-item tipo-movimiento" href="#" data-tipo="sinpe"><i class="bi bi-phone me-2"></i>SINPE</a></li>
-                <li><a class="dropdown-item tipo-movimiento" href="#" data-tipo="transferencia"><i class="bi bi-arrow-left-right me-2"></i>Transferencia</a></li>
+                <!-- Se llena dinámicamente desde sp_ObtenerTiposMovimiento -->
               </ul>
             </div>
           </div>
 
-          <div class="table-responsive">
-            <table class="table table-hover align-middle bg-white rounded shadow-sm">
-              <thead class="table-light">
-                <tr>
-                  <th>#</th>
-                  <th>Descripción</th>
-                  <th>Saldo</th>
-                </tr>
+          <div id="panelMovimientosSesion" class="card border-0 shadow-sm mb-3">
+            <div class="card-body py-3">
+              <div class="row align-items-center g-3">
+                <div class="col-md-4">
+                  <div class="d-flex align-items-center justify-content-between justify-content-md-start gap-3">
+                    <span class="text-secondary fw-semibold"><i class="bi bi-wallet2 me-2"></i>Saldo actual</span>
+                    <span id="saldoActualMovimiento" class="fs-5 fw-bold text-dark">--</span>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="d-flex align-items-center justify-content-between justify-content-md-start gap-3">
+                    <span class="text-secondary fw-semibold"><i class="bi bi-arrow-repeat me-2"></i>Saldo flotante</span>
+                    <span id="saldoFlotanteMovimiento" class="fs-5 fw-bold text-primary">--</span>
+                  </div>
+                </div>
+                <div class="col-md-4 text-md-end">
+                  <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#movimientosSesionDesplegable" aria-expanded="false" aria-controls="movimientosSesionDesplegable">
+                    <i class="bi bi-chevron-down me-1"></i>Ver movimientos flotantes
+                    <span id="cantidadMovimientosSesion" class="badge bg-primary ms-1">0</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="collapse mt-3" id="movimientosSesionDesplegable">
+                <hr>
+                <div id="listaMovimientosSesion" class="d-flex flex-column gap-2" style="max-height: 220px; overflow-y: auto;">
+                  <p class="text-muted small text-center mb-0">Sin movimientos nuevos</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-responsive movimientos-contenedor" id="contenedorTablaMovimientos">
+            <table class="table table-hover align-middle bg-white rounded shadow-sm mb-0" id="tablaMovimientos">
+              <thead class="table-light" id="encabezadoMovimientos">
+                <!-- Se renderiza dinámicamente -->
               </thead>
-              <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>Depósito Nómina</td>
-                  <td class="text-success fw-bold">1,250.00</td>
-                </tr>
-                <tr>
-                  <td>2</td>
-                  <td>Pago de Servicios</td>
-                  <td class="text-danger fw-bold">-150.00</td>
-                </tr>
+              <tbody id="cuerpoMovimientos">
               </tbody>
             </table>
+          </div>
+
+          <div class="d-flex justify-content-center mt-3 d-none" id="contenedorVerMasMovimientos">
+            <button type="button" class="btn btn-outline-primary btn-sm px-4" id="btnVerMasMovimientos">
+              <i class="bi bi-chevron-down me-1"></i>Ver más
+            </button>
           </div>
         </section>
 
@@ -150,7 +186,7 @@
                 </tr>
               </thead>
               <tbody>
-                
+
               </tbody>
             </table>
           </div>
@@ -169,8 +205,27 @@
           </div>
         </section>
 
-
       </main>
+    </div>
+  </div>
+
+  <!-- MODAL DETALLE DE MOVIMIENTO -->
+  <div class="modal fade" id="modalDetalleMovimiento" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content p-4">
+        <div class="modal-header border-0 pb-2">
+          <h5 class="modal-title fw-bold text-primary">
+            <i class="bi bi-receipt me-2"></i>Detalle del Movimiento
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="cuerpoDetalleMovimiento">
+          <!-- Detalle dinámico -->
+        </div>
+        <div class="modal-footer border-0 pt-2">
+          <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
     </div>
   </div>
 

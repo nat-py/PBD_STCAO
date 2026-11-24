@@ -253,18 +253,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const inputBusquedaCuentas = document.getElementById("inputBusquedaCuentas");
   let cuentasData = [];
 
-  fetch("/api/admin/tablaCuentaAhorroActivo")
-    .then(response => {
+  async function cargarCuentas() {
+    try {
+      const response = await fetch("/api/admin/tablaCuentaAhorroActivo");
       if (!response.ok) {
         throw new Error("Error al obtener las cuentas de ahorro activas");
       }
-      return response.json();
-    })
-    .then(data => {
-      cuentasData = data.cuentas;
+      const data = await response.json();
+      cuentasData = data.cuentas || [];
       renderCuentas(cuentasData);
-    })
-    .catch(err => console.error("Error cargando cuentas:", err));
+    } catch (error) {
+      console.error("Error cargando cuentas:", error);
+    }
+  }
+
+  cargarCuentas();
 
   function renderCuentas(data) {
     tablaCuentasBody.innerHTML = "";
@@ -344,19 +347,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  function cargarClientes() {
-    fetch("/api/admin/personas")
-      .then(res => res.json())
-      .then(data => {
-        if (!data.success) throw new Error(data.message || "No se pudieron cargar las personas");
-        clientesData = (data.personas || []).map(persona => ({
-          ...persona,
-          cuentasAhorro: persona.cuentasAhorro || [],
-          cuentasBeneficiario: persona.cuentasBeneficiario || []
-        }));
-        renderClientes(clientesData);
-      })
-      .catch(err => console.error("Error cargando clientes:", err));
+  async function cargarClientes() {
+    try {
+      const response = await fetch("/api/admin/personas");
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "No se pudieron cargar las personas");
+      }
+      clientesData = (data.personas || []).map(persona => ({
+        ...persona,
+        cuentasAhorro: persona.cuentasAhorro || [],
+        cuentasBeneficiario: persona.cuentasBeneficiario || []
+      }));
+      renderClientes(clientesData);
+    } catch (error) {
+      console.error("Error cargando clientes:", error);
+    }
   }
 
   cargarClientes();
@@ -695,6 +701,7 @@ document.addEventListener("DOMContentLoaded", () => {
       actualizarBotonEdicion(btnEditCliente, false);
       renderContenidoModalCliente();
       renderClientes(clientesData);
+      await cargarCuentas();
       mostrarAlertaBootstrap("Datos actualizados correctamente.", "success");
     } catch (error) {
       console.error("Error actualizando persona o usuario:", error);
@@ -742,6 +749,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       renderContenidoModalCliente();
       renderClientes(clientesData);
+      await cargarClientes();
+      await cargarCuentas();
       mostrarAlertaBootstrap(data.message, "success");
     } catch (error) {
       console.error("Error eliminando beneficiario:", error);
@@ -795,6 +804,8 @@ document.addEventListener("DOMContentLoaded", () => {
           cliente => cliente.id !== clienteSeleccionado.id
         );
         renderClientes(clientesData);
+        await cargarClientes();
+        await cargarCuentas();
         modalDetalleCliente.hide();
         mostrarAlertaBootstrap(data.message, "success");
       } catch (error) {
@@ -846,7 +857,7 @@ document.addEventListener("DOMContentLoaded", () => {
       container.innerHTML = `
         <div class="col-md-6">
           <label class="form-label small fw-bold text-muted">Número de Cuenta:</label>
-          <input type="text" id="edit-cuenta-numero" maxlength="10" class="form-control form-control-sm fw-bold" value="${cuentaSeleccionada.numCuenta}">
+          <input type="text" id="edit-cuenta-numero" maxlength="10" class="form-control form-control-sm" value="${cuentaSeleccionada.numCuenta}" disabled>
         </div>
         <div class="col-md-6">
           <label class="form-label small fw-bold text-muted">Fecha de Creación:</label>
@@ -858,7 +869,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         <div class="col-md-6">
           <label class="form-label small fw-bold text-muted">Nombre Propietario:</label>
-          <p class="form-control-plaintext form-control-sm border bg-light px-2 rounded m-0">${cuentaSeleccionada.nombrePropietario || "No disponible"}</p>
+          <p id="edit-cuenta-nombre" class="form-control-plaintext form-control-sm border bg-light px-2 rounded m-0">${cuentaSeleccionada.nombrePropietario || "No disponible"}</p>
         </div>
         <div class="col-md-6">
           <label class="form-label small fw-bold text-muted">Tipo de Cuenta:</label>
@@ -903,6 +914,42 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
     }
+
+    if (modoEdicionCuenta) {
+      const inputCedula = document.getElementById("edit-cuenta-cedula");
+      const nombrePropietario = document.getElementById("edit-cuenta-nombre");
+
+      const buscarNombrePropietario = () => {
+        const cedula = inputCedula.value.trim();
+        const persona = clientesData.find(cliente =>
+          String(cliente.valorDocuIdentidad || "").trim() === cedula
+        );
+
+        if (!cedula) {
+          nombrePropietario.textContent = "Ingrese una cédula";
+          nombrePropietario.classList.remove("text-danger");
+          nombrePropietario.classList.add("text-muted");
+          cuentaSeleccionada.nombrePropietario = "";
+          return;
+        }
+
+        if (persona) {
+          nombrePropietario.textContent = persona.nombre || "Nombre no disponible";
+          nombrePropietario.classList.remove("text-danger", "text-muted");
+          nombrePropietario.classList.add("text-success");
+          cuentaSeleccionada.nombrePropietario = persona.nombre || "";
+        } else {
+          nombrePropietario.textContent = "No existe una persona con esta cédula";
+          nombrePropietario.classList.remove("text-success", "text-muted");
+          nombrePropietario.classList.add("text-danger");
+          cuentaSeleccionada.nombrePropietario = "";
+        }
+      };
+
+      inputCedula.addEventListener("input", buscarNombrePropietario);
+      inputCedula.addEventListener("blur", buscarNombrePropietario);
+      buscarNombrePropietario();
+    }
   }
 
   if (btnEditCuenta) {
@@ -922,12 +969,22 @@ document.addEventListener("DOMContentLoaded", () => {
         const numCuentaNuevo = document.getElementById("edit-cuenta-numero").value.trim();
         const nuevoTipoId = document.getElementById("edit-cuenta-tipo").value;
         const tipoObj = (window.tiposCuentasData || []).find(t => String(t.id) === String(nuevoTipoId));
+        const cedulaNueva = document.getElementById("edit-cuenta-cedula").value.trim();
+        const personaNueva = clientesData.find(cliente =>
+          String(cliente.valorDocuIdentidad || "").trim() === cedulaNueva
+        );
+
+        if (!personaNueva) {
+          mostrarAlertaBootstrap("La cédula no coincide con ninguna persona registrada.", "danger");
+          return;
+        }
 
         const cuentaNueva = {
           ...cuentaSeleccionada,
           numCuenta: numCuentaNuevo,
           fechaCreacion: document.getElementById("edit-cuenta-fecha").value,
-          valorDocuIdentidad: document.getElementById("edit-cuenta-cedula").value.trim(),
+          valorDocuIdentidad: cedulaNueva,
+          nombrePropietario: personaNueva.nombre,
           idTipoCuenta: nuevoTipoId,
           tipoCuentaNombre: tipoObj ? tipoObj.nombre : nuevoTipoId,
           saldo: document.getElementById("edit-cuenta-saldo").value.trim()
@@ -977,6 +1034,8 @@ document.addEventListener("DOMContentLoaded", () => {
         modoEdicionCuenta = false;
         actualizarBotonEdicion(btnEditCuenta, false);
         renderContenidoModalCuenta();
+        await cargarCuentas();
+        await cargarClientes();
         mostrarAlertaBootstrap("Cuenta de ahorro actualizada correctamente.", "success");
         } catch (error) {
           console.error("Error editando cuenta:", error);
@@ -1024,6 +1083,8 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         }
 
+        await cargarCuentas();
+        await cargarClientes();
         modalDetalleCuenta.hide();
         mostrarAlertaBootstrap(data.message, "success");
       } catch (error) {
@@ -1188,6 +1249,39 @@ Promise.all([
   console.error("Error al cargar los catálogos desde la base de datos:", error);
   renderAllCatalogos();
 });
+
+async function cargarCatalogos() {
+  try {
+    const [
+      documentos,
+      documentosTodos,
+      monedas,
+      monedasTodos,
+      parentescos,
+      parentescosTodos,
+      cuentas
+    ] = await Promise.all([
+      fetch("/api/admin/tablaTipoDocuIdentidadActivo").then(res => res.json()),
+      fetch("/api/admin/tablaTipoDocuIdentidad").then(res => res.json()),
+      fetch("/api/admin/tablaTipoMonedaActivo").then(res => res.json()),
+      fetch("/api/admin/tablaTipoMoneda").then(res => res.json()),
+      fetch("/api/admin/tablaParentescoActivo").then(res => res.json()),
+      fetch("/api/admin/tablaParentesco").then(res => res.json()),
+      fetch("/api/admin/tablaTipoCuentaAhorroActivo").then(res => res.json())
+    ]);
+
+    window.tiposDocData = documentos.tiposDocumento || [];
+    window.tiposDocTodosData = documentosTodos.tiposDocumento || [];
+    window.tiposMonedaData = monedas.tiposMoneda || [];
+    window.tiposMonedaTodosData = monedasTodos.tiposMoneda || [];
+    window.parentezcosData = parentescos.parentescos || [];
+    window.parentezcosTodosData = parentescosTodos.parentescos || [];
+    window.tiposCuentasData = cuentas.tiposCuentas || [];
+    renderAllCatalogos();
+  } catch (error) {
+    console.error("Error al recargar los catálogos:", error);
+  }
+}
 
 function renderAllCatalogos() {
   renderAccordionCatalogo(
@@ -1574,7 +1668,7 @@ window.eliminarItemCatalogo = async function(nombreVar, index) {
     // de que el backend confirme la eliminación.
     window[nombreVar].splice(index, 1);
 
-    renderAllCatalogos();
+    await cargarCatalogos();
 
     mostrarResultadoEliminacion(
       nombreCatalogo,
@@ -1794,7 +1888,7 @@ window.eliminarCuentaAhorro = async function(index) {
     }
 
     window.tiposCuentasData.splice(index, 1);
-    renderAllCatalogos();
+    await cargarCatalogos();
     mostrarAlertaBootstrap("Tipo de cuenta de ahorro eliminado correctamente", "success");
   } catch (error) {
     console.error("Error al eliminar el tipo de cuenta de ahorro:", error);
@@ -2074,7 +2168,7 @@ if (btnEditCatalogos) {
           "success"
         );
 
-        renderAllCatalogos();
+        await cargarCatalogos();
 
       } catch (error) {
 

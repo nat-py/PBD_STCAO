@@ -109,6 +109,116 @@ async function tablaTipoDocuIdentidadActivo(req, res) {
   }
 } 
 
+async function obtenerTiposMovimientoActivos(req, res) {
+  try {
+    const tiposMovimiento = await ahorroService.obtenerTiposMovimientoActivos();
+    res.status(200).json({
+      message: 'Tipos de movimiento listados correctamente',
+      tiposMovimiento,
+      success: true
+    });
+  } catch (error) {
+    console.error('Error al obtener los tipos de movimiento activos:', error);
+    res.status(500).json({ error: 'Error al obtener los tipos de movimiento activos', success: false });
+  }
+}
+
+async function movimientosCuentaUltimos4Meses(req, res) {
+  const { numCuenta } = req.body;
+
+  if (!numCuenta) {
+    return res.status(400).json({
+      message: 'El numero de cuenta es requerido',
+      success: false
+    });
+  }
+
+  try {
+    const movimientos = await ahorroService.movimientosCuentaUltimos4Meses(numCuenta);
+    return res.status(200).json({
+      message: 'Movimientos listados correctamente',
+      movimientos,
+      success: true
+    });
+  } catch (error) {
+    console.error('Error al obtener los movimientos de la cuenta:', error);
+    return res.status(500).json({
+      error: 'Error al obtener los movimientos de la cuenta',
+      success: false
+    });
+  }
+}
+
+async function guardarMovimiento(req, res) {
+  const { idTipoMovimiento, numCuenta, monto, descripcion, idComprobante } = req.body;
+
+  if (!idTipoMovimiento || !numCuenta || monto === undefined || monto === null || !String(descripcion || '').trim()) {
+    return res.status(400).json({
+      message: 'Tipo de movimiento, cuenta, monto y descripcion son requeridos',
+      success: false
+    });
+  }
+
+  try {
+    const montoNumerico = Number(monto);
+    if (!Number.isFinite(montoNumerico) || montoNumerico <= 0) {
+      return res.status(400).json({
+        message: 'El monto debe ser mayor que cero',
+        success: false
+      });
+    }
+
+    const resultado = await ahorroService.guardarMovimiento(
+      idTipoMovimiento,
+      numCuenta,
+      montoNumerico,
+      String(descripcion).trim().slice(0, 50),
+      idComprobante || null
+    );
+
+    if (resultado.flagError) {
+      let message = 'No se pudo guardar el movimiento';
+
+      if (resultado.flagTipoMovimientoNoExiste) {
+        message = 'El tipo de movimiento no existe o esta inactivo';
+      } else if (resultado.flagAccionInvalida) {
+        message = 'La accion del tipo de movimiento no es Credito ni Debito';
+      } else if (resultado.flagMontoInvalido) {
+        message = 'El monto debe ser mayor que cero';
+      } else if (resultado.flagCuentaNoExiste) {
+        message = 'La cuenta no existe o esta inactiva';
+      } else if (resultado.flagSaldoInsuficiente) {
+        message = 'Saldo insuficiente para realizar el movimiento';
+      }
+
+      return res.status(400).json({
+        message,
+        success: false,
+        errorCode: {
+          tipoMovimientoNoExiste: resultado.flagTipoMovimientoNoExiste,
+          accionInvalida: resultado.flagAccionInvalida,
+          montoInvalido: resultado.flagMontoInvalido,
+          cuentaNoExiste: resultado.flagCuentaNoExiste,
+          saldoInsuficiente: resultado.flagSaldoInsuficiente
+        }
+      });
+      
+    }
+
+    return res.status(200).json({
+      message: 'Movimiento guardado correctamente',
+      nuevoSaldo: resultado.nuevoSaldo,
+      success: true
+    });
+  } catch (error) {
+    console.error('Error al guardar el movimiento:', error);
+    return res.status(500).json({
+      error: 'Error al guardar el movimiento',
+      success: false
+    });
+  }
+}
+
 async function registrarEstado(req, res) {
   try {
     const { usuario } = req.body;
@@ -239,6 +349,9 @@ module.exports = {
   eliminarBeneficiario, 
   tablaParentescoActivo, 
   tablaTipoDocuIdentidadActivo,
+  obtenerTiposMovimientoActivos,
+  movimientosCuentaUltimos4Meses,
+  guardarMovimiento,
   insertarBeneficiario,
   editarBeneficiarioDocuDiferente,
   editarBeneficiarioDocuIgual,

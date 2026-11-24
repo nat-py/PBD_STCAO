@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  
+
   // 1. Manejo del Modal de Pantalla en Proceso
   const modalProcesoEl = document.getElementById('modalEnProceso');
   const modalProceso = new bootstrap.Modal(modalProcesoEl);
@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 2. Recibir usuario, enviar estados de cuenta y beneficiarios
+  // 2. Recibir usuario, enviar estados de cuenta, movimientos y beneficiarios
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
 
@@ -21,16 +21,254 @@ document.addEventListener('DOMContentLoaded', () => {
   const usuarioHeader = document.getElementById('usuarioHeader');
   if (usuarioActual && numCuenta) {
     usuarioHeader.textContent = usuarioActual;
+    recibirMovimientosAPI();
     recibirEstadosCuentaAPI();
     recibirBeneficiariosAPI();
   } else {
     usuarioHeader.textContent = "Usuario no encontrado";
+    renderMovimientos();
   }
 
   function formatearFecha(fechaStr) {
     if (!fechaStr) return '';
     return fechaStr.substring(0, 10).replace(/-/g, '/');
   }
+
+  // ==========================================
+  // 2B. LISTADO DE MOVIMIENTOS (TOP 5 + VER MÁS + DETALLE)
+  // ==========================================
+  const contenedorTablaMovimientos = document.getElementById('contenedorTablaMovimientos');
+  const encabezadoMovimientos = document.getElementById('encabezadoMovimientos');
+  const cuerpoMovimientos = document.getElementById('cuerpoMovimientos');
+  const contenedorVerMasMovimientos = document.getElementById('contenedorVerMasMovimientos');
+  const btnVerMasMovimientos = document.getElementById('btnVerMasMovimientos');
+
+  const modalDetalleMovimientoEl = document.getElementById('modalDetalleMovimiento');
+  const modalDetalleMovimiento = new bootstrap.Modal(modalDetalleMovimientoEl);
+  const cuerpoDetalleMovimiento = document.getElementById('cuerpoDetalleMovimiento');
+
+  let movimientos = [];
+  let movimientosExpandido = false;
+  let saldoActual = null;
+  let saldoFlotante = 0;
+  const movimientosSesion = [];
+
+  const saldoActualMovimiento = document.getElementById('saldoActualMovimiento');
+  const saldoFlotanteMovimiento = document.getElementById('saldoFlotanteMovimiento');
+  const listaMovimientosSesion = document.getElementById('listaMovimientosSesion');
+  const cantidadMovimientosSesion = document.getElementById('cantidadMovimientosSesion');
+  saldoFlotanteMovimiento.textContent = '0.00';
+
+  function formatearMonto(monto) {
+    const valor = Number(monto);
+    return Number.isFinite(valor) ? valor.toFixed(2) : '--';
+  }
+
+  function actualizarSaldoActual(nuevoSaldo) {
+    if (nuevoSaldo === null || nuevoSaldo === undefined || nuevoSaldo === '') return;
+    saldoActual = Number(nuevoSaldo);
+    if (Number.isFinite(saldoActual)) {
+      saldoActualMovimiento.textContent = saldoActual.toFixed(2);
+    }
+  }
+
+  function actualizarSaldoFlotante(monto, esDebito) {
+    const valor = Number(monto);
+    if (!Number.isFinite(valor)) return;
+    saldoFlotante += esDebito ? -Math.abs(valor) : Math.abs(valor);
+    saldoFlotanteMovimiento.textContent = saldoFlotante.toFixed(2);
+  }
+
+  function renderMovimientosSesion() {
+    cantidadMovimientosSesion.textContent = String(movimientosSesion.length);
+
+    if (movimientosSesion.length === 0) {
+      listaMovimientosSesion.innerHTML = '<p class="text-muted small text-center mb-0">Sin movimientos nuevos</p>';
+      return;
+    }
+
+    listaMovimientosSesion.innerHTML = movimientosSesion.map((movimiento) => `
+      <div class="border rounded p-2 bg-light">
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="fw-semibold small">${escaparHTML(movimiento.nombre)}</span>
+          <span class="${movimiento.debito ? 'text-danger' : 'text-success'} fw-bold small">
+            ${movimiento.debito ? '-' : '+'}${formatearMonto(movimiento.monto)}
+          </span>
+        </div>
+        <div class="text-muted small text-truncate" title="${escaparHTML(movimiento.descripcion)}">${escaparHTML(movimiento.descripcion)}</div>
+      </div>
+    `).join('');
+  }
+
+  async function recibirMovimientosAPI() {
+    try {
+      const response = await fetch('/api/ahorro/movimientos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ numCuenta: numCuenta })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && Array.isArray(data.movimientos)) {
+          movimientos = data.movimientos;
+          if (movimientos.length > 0) {
+            actualizarSaldoActual(movimientos[0].nuevoSaldo);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error al recibir movimientos:', error);
+    } finally {
+      renderMovimientos();
+    }
+  }
+
+  function renderMovimientos() {
+    encabezadoMovimientos.innerHTML = movimientosExpandido
+      ? `
+        <tr>
+          <th>Tipo Movimiento</th>
+          <th>Monto</th>
+          <th>ID Comprobante</th>
+          <th>Cuenta Acreditado</th>
+          <th>Descripción</th>
+        </tr>
+      `
+      : `
+        <tr>
+          <th>Tipo Movimiento</th>
+          <th>Monto</th>
+        </tr>
+      `;
+
+    cuerpoMovimientos.innerHTML = '';
+
+    if (!Array.isArray(movimientos) || movimientos.length === 0) {
+      contenedorVerMasMovimientos.classList.add('d-none');
+      contenedorTablaMovimientos.classList.remove('expandido');
+      const colspan = movimientosExpandido ? 5 : 2;
+      cuerpoMovimientos.innerHTML = `
+        <tr>
+          <td colspan="${colspan}" class="text-center text-muted py-4">No hay movimientos</td>
+        </tr>
+      `;
+      return;
+    }
+
+    const visibles = movimientosExpandido ? movimientos : movimientos.slice(0, 5);
+
+    if (movimientosExpandido) {
+      contenedorTablaMovimientos.classList.add('expandido');
+    } else {
+      contenedorTablaMovimientos.classList.remove('expandido');
+    }
+
+    if (movimientos.length > 5) {
+      contenedorVerMasMovimientos.classList.remove('d-none');
+      btnVerMasMovimientos.innerHTML = movimientosExpandido
+        ? `<i class="bi bi-chevron-up me-1"></i>Ver menos`
+        : `<i class="bi bi-chevron-down me-1"></i>Ver más`;
+    } else {
+      contenedorVerMasMovimientos.classList.add('d-none');
+    }
+
+    visibles.forEach((mov) => {
+      const tipoMov = mov.tipoMovimiento || mov.nombreTipoMovimiento || mov.tipo || 'Movimiento';
+      const fecha = formatearFecha(mov.fecha || mov.fechaMovimiento || '');
+      const accion = String(mov.accionTipoMovimiento || mov.accion || '').trim().toLowerCase();
+      const montoNum = Math.abs(Number(mov.monto ?? mov.saldo ?? 0));
+      const esDebito = accion === 'debito' || accion === 'débito';
+      const esCredito = accion === 'credito' || accion === 'crédito';
+      const montoTexto = Number.isNaN(montoNum)
+        ? (mov.monto ?? '')
+        : `${esDebito ? '-' : esCredito ? '+' : ''}${montoNum.toFixed(2)}`;
+      const esNegativo = esDebito;
+      const idComprobante = mov.idComprobante ?? mov.comprobante ?? 'N/A';
+      const cuentaAcreditado = mov.cuentaAcreditado ?? mov.codigoCuenta ?? mov.cuentaDestino ?? 'N/A';
+      const descripcion = mov.descripcion ?? mov.detalle ?? 'Sin descripción';
+
+      const tr = document.createElement('tr');
+      tr.style.cursor = 'pointer';
+
+      if (movimientosExpandido) {
+        tr.innerHTML = `
+          <td>
+            <div class="fw-semibold">${tipoMov}</div>
+            <div class="fecha-movimiento-sub">${fecha}</div>
+          </td>
+          <td class="${esNegativo ? 'text-danger' : 'text-success'} fw-bold">${montoTexto}</td>
+          <td>${idComprobante}</td>
+          <td>${cuentaAcreditado}</td>
+          <td>${descripcion}</td>
+        `;
+      } else {
+        tr.innerHTML = `
+          <td>
+            <div class="fw-semibold">${tipoMov}</div>
+            <div class="fecha-movimiento-sub">${fecha}</div>
+          </td>
+          <td class="${esNegativo ? 'text-danger' : 'text-success'} fw-bold">${montoTexto}</td>
+        `;
+      }
+
+      tr.addEventListener('click', () => {
+        abrirDetalleMovimiento({
+          tipoMovimiento: tipoMov,
+          fecha,
+          monto: montoTexto,
+          idComprobante,
+          cuentaAcreditado,
+          descripcion,
+          saldoPosterior: mov.saldoPosterior ?? mov.nuevoSaldo ?? null
+        });
+      });
+
+      cuerpoMovimientos.appendChild(tr);
+    });
+  }
+
+  function abrirDetalleMovimiento(detalle) {
+    cuerpoDetalleMovimiento.innerHTML = `
+      <div class="list-group list-group-flush">
+        <div class="list-group-item d-flex justify-content-between px-0">
+          <span class="text-muted fw-semibold">Tipo de Movimiento:</span>
+          <span class="fw-bold">${detalle.tipoMovimiento}</span>
+        </div>
+        <div class="list-group-item d-flex justify-content-between px-0">
+          <span class="text-muted fw-semibold">Fecha:</span>
+          <span>${detalle.fecha || 'N/A'}</span>
+        </div>
+        <div class="list-group-item d-flex justify-content-between px-0">
+          <span class="text-muted fw-semibold">Monto:</span>
+          <span class="fw-bold text-primary">${detalle.monto}</span>
+        </div>
+        <div class="list-group-item d-flex justify-content-between px-0">
+          <span class="text-muted fw-semibold">ID Comprobante:</span>
+          <span>${detalle.idComprobante}</span>
+        </div>
+        <div class="list-group-item d-flex justify-content-between px-0">
+          <span class="text-muted fw-semibold">Cuenta Acreditado:</span>
+          <span>${detalle.cuentaAcreditado}</span>
+        </div>
+        <div class="list-group-item px-0">
+          <div class="text-muted fw-semibold mb-1">Descripción:</div>
+          <div>${detalle.descripcion}</div>
+        </div>
+        ${detalle.saldoPosterior !== null ? `
+          <div class="list-group-item d-flex justify-content-between px-0">
+            <span class="text-muted fw-semibold">Saldo Posterior:</span>
+            <span class="fw-bold">${detalle.saldoPosterior}</span>
+          </div>
+        ` : ''}
+      </div>
+    `;
+    modalDetalleMovimiento.show();
+  }
+
+  btnVerMasMovimientos.addEventListener('click', () => {
+    movimientosExpandido = !movimientosExpandido;
+    renderMovimientos();
+  });
 
   let parentescos = [];
   let tiposDocumento = [];
@@ -47,10 +285,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const dataTiposDoc = await tiposDocumentoResponse.json();
 
       if (dataParentescos.success) {
-        parentescos = dataParentescos.parentescos; 
+        parentescos = dataParentescos.parentescos;
       }
       if (dataTiposDoc.success) {
-        tiposDocumento = dataTiposDoc.tiposDocumento; 
+        tiposDocumento = dataTiposDoc.tiposDocumento;
       }
 
     } catch (error) {
@@ -72,8 +310,12 @@ document.addEventListener('DOMContentLoaded', () => {
         tbody.innerHTML = '';
 
         data.cuentas.forEach((cuenta, index) => {
+          if (index === 0 && saldoActual === null) {
+            actualizarSaldoActual(cuenta.saldoFin);
+          }
+
           const tr = document.createElement('tr');
-          tr.style.cursor = 'pointer'; 
+          tr.style.cursor = 'pointer';
 
           tr.innerHTML = `
             <td>${index + 1}</td>
@@ -122,22 +364,72 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalMovimientoCuerpo = document.getElementById('modalMovimientoCuerpo');
   const btnEjecutarMovimiento = document.getElementById('btnEjecutarMovimiento');
   let tipoMovimientoActual = '';
+  let idTipoMovimientoActual = null;
+  let accionMovimientoActual = '';
 
-  document.querySelectorAll('.tipo-movimiento').forEach(item => {
-    item.addEventListener('click', (e) => {
-      e.preventDefault();
-      tipoMovimientoActual = item.getAttribute('data-tipo');
-      configurarModalMovimiento(tipoMovimientoActual);
-      modalMovimiento.show();
-    });
-  });
+  async function recibirTiposMovimientoAPI() {
+    const menu = document.querySelector('#dropdownAgregarMovimiento + .dropdown-menu');
 
-  function configurarModalMovimiento(tipo) {
-    let titulo = '';
+    try {
+      const response = await fetch('/api/ahorro/tipos_movimiento', { method: 'POST' });
+      const data = await response.json();
+
+      if (!response.ok || !data.success || !Array.isArray(data.tiposMovimiento) || data.tiposMovimiento.length === 0) {
+        menu.innerHTML = '<li><span class="dropdown-item-text text-muted">No hay movimientos disponibles</span></li>';
+        return;
+      }
+
+      menu.innerHTML = data.tiposMovimiento.map(tipo => {
+        const clave = normalizarTipoMovimiento(tipo.accion || tipo.nombre);
+        return `
+          <li>
+            <a class="dropdown-item tipo-movimiento" href="#" data-id="${escaparHTML(tipo.id)}" data-tipo="${escaparHTML(clave)}" data-nombre="${escaparHTML(tipo.nombre)}" data-accion="${escaparHTML(tipo.accion)}">
+              <i class="bi bi-arrow-left-right me-2"></i>${escaparHTML(tipo.nombre)}
+            </a>
+          </li>
+        `;
+      }).join('');
+
+      menu.querySelectorAll('.tipo-movimiento').forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          idTipoMovimientoActual = item.getAttribute('data-id');
+          tipoMovimientoActual = item.getAttribute('data-tipo');
+          accionMovimientoActual = item.getAttribute('data-accion') || '';
+          configurarModalMovimiento(tipoMovimientoActual, item.getAttribute('data-nombre'));
+          modalMovimiento.show();
+        });
+      });
+    } catch (error) {
+      console.error('Error al recibir tipos de movimiento:', error);
+      menu.innerHTML = '<li><span class="dropdown-item-text text-danger">Error al cargar movimientos</span></li>';
+    }
+  }
+
+  function normalizarTipoMovimiento(valor) {
+    return String(valor || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
+  function escaparHTML(valor) {
+    const div = document.createElement('div');
+    div.textContent = String(valor ?? '');
+    return div.innerHTML;
+  }
+
+  recibirTiposMovimientoAPI();
+
+  function configurarModalMovimiento(tipo, nombreTipo) {
+    let titulo = nombreTipo || '';
     let htmlForm = '';
 
     switch (tipo) {
       case 'retiro-persona':
+      case 'retiro-en-persona':
         titulo = 'Retiro en Persona';
         htmlForm = `
           <div class="mb-3">
@@ -151,6 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         break;
       case 'retiro-cajero':
+      case 'retiro-en-cajero':
         titulo = 'Retiro en Cajero Automático';
         htmlForm = `
           <div class="mb-3">
@@ -210,16 +503,80 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         `;
         break;
+      default:
+        htmlForm = `
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Monto:</label>
+            <input type="number" step="0.01" class="form-control" id="montoMovimiento" placeholder="0.00">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Descripción:</label>
+            <input type="text" class="form-control" id="detalleMovimiento" placeholder="Detalle del movimiento">
+          </div>
+        `;
+        break;
     }
 
     modalMovimientoTitulo.textContent = titulo;
     modalMovimientoCuerpo.innerHTML = htmlForm;
   }
 
-  btnEjecutarMovimiento.addEventListener('click', () => {
-    // Aquí puedes realizar la llamada a tu API respectiva según el tipoMovimientoActual
-    mostrarAlertaBootstrap(`Movimiento (${tipoMovimientoActual}) registrado con éxito.`, 'success');
-    modalMovimiento.hide();
+  btnEjecutarMovimiento.addEventListener('click', async () => {
+    const montoInput = document.getElementById('montoMovimiento');
+    const monto = montoInput ? Number(montoInput.value) : 0;
+
+    if (!idTipoMovimientoActual || !Number.isFinite(monto) || monto <= 0) {
+      mostrarAlertaBootstrap('Ingrese un monto válido para el movimiento.', 'danger');
+      return;
+    }
+
+    const detalleInput =
+      document.getElementById('detalleSinpe') ||
+      document.getElementById('detalleTransferencia') ||
+      document.getElementById('detalleMovimiento');
+    const descripcion = detalleInput?.value?.trim()
+      || document.getElementById('cuentaTransferencia')?.value?.trim()
+      || document.getElementById('telefonoSinpe')?.value?.trim()
+      || tipoMovimientoActual;
+
+    try {
+      const response = await fetch('/api/ahorro/guardar_movimiento', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idTipoMovimiento: idTipoMovimientoActual,
+          numCuenta,
+          monto,
+          descripcion,
+          idComprobante: null
+        })
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        mostrarAlertaBootstrap(data.message || data.error || 'No se pudo guardar el movimiento.', 'danger');
+        return;
+      }
+
+      actualizarSaldoActual(data.nuevoSaldo);
+      const esDebitoSesion = String(accionMovimientoActual).trim().toLowerCase() === 'debito'
+        || String(accionMovimientoActual).trim().toLowerCase() === 'débito';
+      actualizarSaldoFlotante(monto, esDebitoSesion);
+      movimientosSesion.unshift({
+        nombre: document.getElementById('modalMovimientoTitulo').textContent,
+        monto,
+        descripcion,
+        debito: esDebitoSesion
+      });
+      renderMovimientosSesion();
+
+      mostrarAlertaBootstrap(`Movimiento registrado con éxito. Nuevo saldo: ${Number(data.nuevoSaldo).toFixed(2)}`, 'success');
+      modalMovimiento.hide();
+      await recibirMovimientosAPI();
+    } catch (error) {
+      console.error('Error al guardar el movimiento:', error);
+      mostrarAlertaBootstrap('Error al guardar el movimiento.', 'danger');
+    }
   });
 
 
@@ -237,14 +594,14 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ numCuenta: numCuenta })
       });
       const data = await response.json();
-      
+
       await obtenerParentescosYTiposDocumentoAPI();
 
       if (data.success) {
         beneficiarios = data.beneficiarios.map((b, index) => {
           let parentescoID = 0;
           let tipoDocID = 0;
-          
+
           parentescos.forEach(p => {
             if (p.nombre === b.nombreParentesco) {
               parentescoID = p.id;
@@ -376,7 +733,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const esUnico = beneficiarios.length === 1;
 
         let opcionesTiposDoc = tiposDocumento.map(t => {
-          let idTipo = t.id !== undefined ? t.id : t; 
+          let idTipo = t.id !== undefined ? t.id : t;
           let nombreTipo = t.nombre;
           let seleccionado = (String(b.nDoc) === String(idTipo)) ? 'selected' : '';
           return `<option value="${idTipo}" ${seleccionado}>${nombreTipo}</option>`;
@@ -399,7 +756,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <i class="bi bi-trash-fill"></i>
                 </button>` : ''}
             </div>
-            
+
             <div class="mb-2">
               <label class="form-label small fw-bold">Tipo Documento:</label>
               <select class="form-select form-select-sm" onchange="actualizarDatoBeneficiario(${index}, 'nDoc', this.value)">
@@ -438,9 +795,9 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="mt-2">
               <label class="form-label fw-semibold small">Porcentaje: <span id="val-range-${index}" class="text-primary">${b.porcentaje}%</span></label>
-              <input type="range" class="form-range" min="0" max="100" value="${b.porcentaje}" 
+              <input type="range" class="form-range" min="0" max="100" value="${b.porcentaje}"
                 ${esUnico ? 'disabled' : ''}
-                oninput="document.getElementById('val-range-${index}').innerText = this.value + '%'" 
+                oninput="document.getElementById('val-range-${index}').innerText = this.value + '%'"
                 onchange="cambiarPorcentaje(${index}, Number(this.value))">
             </div>
           </div>
@@ -524,14 +881,14 @@ document.addEventListener('DOMContentLoaded', () => {
         let b = beneficiarios[i];
         if (!b.nDoc || !b.doc || !b.nombre || !b.parentesco || !b.fechaNacimiento || !b.telefono1 || !b.email) {
           mostrarAlertaBootstrap(`Por favor, complete todos los campos obligatorios del Beneficiario ${i + 1} antes de guardar.`, 'danger');
-          return; 
+          return;
         }
       }
 
       let sumaTotal = beneficiarios.reduce((acc, b) => acc + b.porcentaje, 0);
       if (sumaTotal !== 100) {
         mostrarAlertaBootstrap(`La suma de los porcentajes es ${sumaTotal}%. Debe sumar exactamente 100%.`, 'danger');
-        return; 
+        return;
       }
 
       try {
@@ -609,10 +966,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
-  
+
   window.agregarBeneficiario = function(index) {
     if (beneficiarios.length >= 3) return;
-    
+
     modoEdicion = true;
     btnToggleEdit.textContent = 'Guardar Cambios';
     btnToggleEdit.className = 'btn btn-success text-white';
@@ -634,9 +991,9 @@ document.addEventListener('DOMContentLoaded', () => {
       telefono1: '',
       telefono2: '',
       email: '',
-      porcentaje: 100 - (nuevoPorcentaje * beneficiarios.length) 
+      porcentaje: 100 - (nuevoPorcentaje * beneficiarios.length)
     };
-    
+
     beneficiarios.splice(index, 0, nuevo);
     renderBeneficiarios();
   };
@@ -663,7 +1020,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           let resto = Math.round(100 / beneficiarios.length);
           beneficiarios.forEach(b => b.porcentaje = resto);
-          beneficiarios[0].porcentaje += (100 - (resto * beneficiarios.length)); 
+          beneficiarios[0].porcentaje += (100 - (resto * beneficiarios.length));
         }
         renderBeneficiarios();
       }

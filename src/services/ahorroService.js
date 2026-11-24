@@ -70,6 +70,54 @@ async function tablaTipoDocuIdentidadActivo()
   return result.recordset;
 }
 
+async function obtenerTiposMovimientoActivos()
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .execute('dbo.sp_ObtenerTiposMovimientoComprobante');
+
+  return result.recordset;
+}
+
+async function movimientosCuentaUltimos4Meses(numCuenta)
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inCodigoCuenta', sql.VarChar(10), numCuenta)
+    .execute('dbo.sp_MovimientosCuentaUltimos4Meses');
+
+  return result.recordset;
+}
+
+async function guardarMovimiento(idTipoMovimiento, numCuenta, monto, descripcion, idComprobante)
+{
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('inIdTipoMovimiento', sql.VarChar(4), String(idTipoMovimiento))
+    .input('inCodigoCuenta', sql.VarChar(10), numCuenta)
+    .input('inMonto', sql.Money, monto)
+    .input('inDescripcion', sql.VarChar(50), descripcion)
+    .input('inIdComprobante', sql.Int, idComprobante || null)
+    .output('outNuevoSaldo', sql.Money)
+    .output('outFlagTipoMovimientoNoExiste', sql.BIT)
+    .output('outFlagAccionInvalida', sql.BIT)
+    .output('outFlagMontoInvalido', sql.BIT)
+    .output('outFlagCuentaNoExiste', sql.BIT)
+    .output('outFlagSaldoInsuficiente', sql.BIT)
+    .output('outFlagError', sql.BIT)
+    .execute('dbo.sp_GuardarMovimiento');
+
+  return {
+    nuevoSaldo: result.output.outNuevoSaldo,
+    flagTipoMovimientoNoExiste: result.output.outFlagTipoMovimientoNoExiste === true || result.output.outFlagTipoMovimientoNoExiste === 1,
+    flagAccionInvalida: result.output.outFlagAccionInvalida === true || result.output.outFlagAccionInvalida === 1,
+    flagMontoInvalido: result.output.outFlagMontoInvalido === true || result.output.outFlagMontoInvalido === 1,
+    flagCuentaNoExiste: result.output.outFlagCuentaNoExiste === true || result.output.outFlagCuentaNoExiste === 1,
+    flagSaldoInsuficiente: result.output.outFlagSaldoInsuficiente === true || result.output.outFlagSaldoInsuficiente === 1,
+    flagError: result.output.outFlagError === true || result.output.outFlagError === 1
+  };
+}
+
 async function insertarBeneficiario(idUsuarioOrUsuario, ip, numCuenta, valorDocuIdentidad, idParentesco, porcentaje)
 {
   const pool = await poolPromise;
@@ -217,6 +265,9 @@ module.exports = {
   eliminarBeneficiario, 
   tablaParentescoActivo, 
   tablaTipoDocuIdentidadActivo,
+  obtenerTiposMovimientoActivos,
+  movimientosCuentaUltimos4Meses,
+  guardarMovimiento,
   insertarBeneficiario,
   editarBeneficiarioDocuDiferente,
   editarBeneficiarioDocuIgual,

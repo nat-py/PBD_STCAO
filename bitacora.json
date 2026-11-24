@@ -542,5 +542,109 @@
       },
       "nuevo": null
     }
+  },
+  {
+    "id": 46,
+    "fyh": "2026-11-24 02:04:33",
+    "ip": "::1",
+    "operacion": "Actualizar cuenta de ahorro",
+    "usuario": "fquiros",
+    "detalles": {
+      "anterior": {
+        "valorDocuIdentidad": "117370445",
+        "nombrePropietario": "Javith Aguero Hernandez",
+        "idTipoCuenta": "4",
+        "numCuenta": "11000001",
+        "fechaCreacion": "2020-10-13T00:00:00.000Z",
+        "saldo": 2468
+      },
+      "nuevo": {
+        "valorDocuIdentidad": "117370445",
+        "nombrePropietario": "Javith Aguero Hernandez",
+        "idTipoCuenta": "4",
+        "numCuenta": "11000001",
+        "fechaCreacion": "2020-10-13",
+        "saldo": "2468",
+        "tipoCuentaNombre": "Ahorro Dolares"
+      }
+    }
+  },
+  {
+    "id": 47,
+    "fyh": "2026-11-24 04:54:06",
+    "ip": "::1",
+    "operacion": "Actualizar cuenta de ahorro",
+    "usuario": "fquiros",
+    "detalles": {
+      "anterior": {
+        "valorDocuIdentidad": "11111111",
+        "nombrePropietario": "ola",
+        "idTipoCuenta": "1",
+        "numCuenta": "11000029",
+        "fechaCreacion": "2026-11-24T00:00:00.000Z",
+        "saldo": 0.98
+      },
+      "nuevo": {
+        "valorDocuIdentidad": "1",
+        "nombrePropietario": "ola",
+        "idTipoCuenta": "1",
+        "numCuenta": "11000029",
+        "fechaCreacion": "2026-11-24",
+        "saldo": "0.98",
+        "tipoCuentaNombre": "Proletario"
+      }
+    }
+  },
+  {
+    "id": 48,
+    "fyh": "2026-11-24 04:56:48",
+    "ip": "::1",
+    "operacion": "Actualizar cuenta de ahorro",
+    "usuario": "fquiros",
+    "detalles": {
+      "anterior": {
+        "valorDocuIdentidad": "1",
+        "nombrePropietario": "jav",
+        "idTipoCuenta": "1",
+        "numCuenta": "11000029",
+        "fechaCreacion": "2026-11-24T00:00:00.000Z",
+        "saldo": 0.98
+      },
+      "nuevo": {
+        "valorDocuIdentidad": "1111",
+        "nombrePropietario": "jav",
+        "idTipoCuenta": "1",
+        "numCuenta": "11000029",
+        "fechaCreacion": "2026-11-24",
+        "saldo": "0.98",
+        "tipoCuentaNombre": "Proletario"
+      }
+    }
+  },
+  {
+    "id": 49,
+    "fyh": "2026-11-24 04:56:58",
+    "ip": "::1",
+    "operacion": "Actualizar cuenta de ahorro",
+    "usuario": "fquiros",
+    "detalles": {
+      "anterior": {
+        "valorDocuIdentidad": "1111",
+        "nombrePropietario": "ola",
+        "idTipoCuenta": "1",
+        "numCuenta": "11000029",
+        "fechaCreacion": "2026-11-24T00:00:00.000Z",
+        "saldo": 0.98
+      },
+      "nuevo": {
+        "valorDocuIdentidad": "11111111",
+        "nombrePropietario": "ola",
+        "idTipoCuenta": "1",
+        "numCuenta": "11000029",
+        "fechaCreacion": "2026-11-24",
+        "saldo": "0.98",
+        "tipoCuentaNombre": "Proletario"
+      }
+    }
   }
 ]
