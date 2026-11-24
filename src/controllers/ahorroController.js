@@ -122,6 +122,9 @@ async function registrarEstado(req, res) {
 
 async function insertarBeneficiario(req, res) {
   const { usuario, beneficiario } = req.body;
+
+  console.log('beneficiario recibido en insertarBeneficiario:', beneficiario);
+
   try {
     const outFlagError = await ahorroService.insertarBeneficiario(
       usuario,
@@ -131,6 +134,7 @@ async function insertarBeneficiario(req, res) {
       beneficiario.parentesco,
       beneficiario.porcentaje
     );
+    
 
     if (outFlagError === true) {
       return res.status(409).json({

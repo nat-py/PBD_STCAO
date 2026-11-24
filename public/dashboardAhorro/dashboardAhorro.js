@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     usuarioHeader.textContent = usuarioActual;
     recibirEstadosCuentaAPI();
     recibirBeneficiariosAPI();
-    recibirPerfilAPI();
   } else {
     usuarioHeader.textContent = "Usuario no encontrado";
   }
@@ -314,7 +313,14 @@ document.addEventListener('DOMContentLoaded', () => {
     container.innerHTML = '';
 
     if (beneficiarios.length === 0) {
-      container.innerHTML = `<p class="text-center text-muted">No hay beneficiarios asociados a esta cuenta.</p>`;
+      container.innerHTML = `
+        <div class="col-12 text-center">
+          <p class="text-muted">No hay beneficiarios asociados a esta cuenta.</p>
+          <button class="btn btn-outline-primary shadow-sm" title="Agregar beneficiario" onclick="agregarBeneficiario(0)">
+            <i class="bi bi-person-plus me-1"></i>Agregar beneficiario
+          </button>
+        </div>
+      `;
       return;
     }
 
@@ -325,10 +331,10 @@ document.addEventListener('DOMContentLoaded', () => {
       let botonesLateralesHTML = '';
       if (beneficiarios.length < 3) {
         if (index === 0) {
-          botonesLateralesHTML += `<button class="btn btn-outline position-absolute top-50 shadow-sm" style="z-index:5; left: -30px;" title="Agregar a la izquierda" onclick="agregarBeneficiario(${index})"> <i class="bi bi-person-plus"></i></button>`;
+          botonesLateralesHTML += `<button class="btn btn-outline position-absolute top-50 shadow-sm" style="z-index:5; left: -55px;" title="Agregar a la izquierda" onclick="agregarBeneficiario(${index})"> <i class="bi bi-person-plus"></i></button>`;
         }
         if (index === beneficiarios.length - 1) {
-          botonesLateralesHTML += `<button class="btn btn-outline position-absolute top-50 shadow-sm" style="z-index:5; right: -30px;" title="Agregar a la derecha" onclick="agregarBeneficiario(${index + 1})"> <i class="bi bi-person-plus"></i></button>`;
+          botonesLateralesHTML += `<button class="btn btn-outline position-absolute top-50 shadow-sm" style="z-index:5; right: -55px;" title="Agregar a la derecha" onclick="agregarBeneficiario(${index + 1})"> <i class="bi bi-person-plus"></i></button>`;
         }
       }
 
@@ -616,10 +622,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const nuevo = {
       id: Date.now(),
-      nDoc: tiposDocumento.length > 0 ? (tiposDocumento[0].nombre || tiposDocumento[0]) : '',
+      nDoc: tiposDocumento.length > 0
+        ? (tiposDocumento[0].id !== undefined ? tiposDocumento[0].id : tiposDocumento[0])
+        : '',
       doc: '',
       nombre: '',
-      parentesco: parentescos.length > 0 ? (parentescos[0].nombre || parentescos[0]) : '',
+      parentesco: parentescos.length > 0
+        ? (parentescos[0].id !== undefined ? parentescos[0].id : parentescos[0])
+        : '',
       fechaNacimiento: '',
       telefono1: '',
       telefono2: '',
@@ -699,173 +709,6 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Error buscando datos del beneficiario:', error);
     }
   };
-
-
-  // ==========================================
-  // 5. GESTIÓN DE MI PERFIL
-  // ==========================================
-  let perfilData = {
-  };
-  let modoEdicionPerfil = false;
-  const perfilContainer = document.getElementById('perfil-info-container');
-  const btnToggleEditPerfil = document.getElementById('btn-toggle-edit-perfil');
-
-  async function recibirPerfilAPI() {
-    try {
-      const response = await fetch('/api/ahorro/perfil_usuario', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario: usuarioActual })
-      });
-      const data = await response.json();
-
-      if (data.success && data.perfil) {
-        perfilData = {
-          tipoDoc: data.perfil.tipoDoc || "1",
-          documento: data.perfil.documento || "",
-          nombre: data.perfil.nombre || "",
-          fechaNacimiento: formatearFecha(data.perfil.fechaNacimiento) || "",
-          email: data.perfil.email || "",
-          telefono1: data.perfil.telefono1 || "",
-          telefono2: data.perfil.telefono2 || ""
-        };
-      } else {
-        console.error(data.message || 'No se encontraron datos del perfil');
-        perfilData = { tipoDoc: "", documento: "", nombre: "", fechaNacimiento: "", email: "", telefono1: "", telefono2: "" };
-      }
-      renderPerfil();
-    } catch (error) {
-      console.error('Error al recibir perfil:', error);
-      renderPerfil();
-    }
-  }
-
-  function renderPerfil() {
-    if (!perfilContainer) return;
-    perfilContainer.innerHTML = '';
-
-    let opcionesTiposDoc = tiposDocumento.map(t => {
-      let idTipo = t.id !== undefined ? t.id : t; 
-      let nombreTipo = t.nombre;
-      let seleccionado = (String(perfilData.tipoDoc) === String(idTipo)) ? 'selected' : '';
-      return `<option value="${idTipo}" ${seleccionado}>${nombreTipo}</option>`;
-    }).join('');
-
-    if (!modoEdicionPerfil) {
-      let nombreTipoDocActual = "Cédula Nacional";
-      tiposDocumento.forEach(t => {
-        if (String(t.id) === String(perfilData.tipoDoc)) nombreTipoDocActual = t.nombre;
-      });
-
-      perfilContainer.innerHTML = `
-        <div class="col-md-6">
-          <label class="form-label small fw-bold text-muted">Tipo de Documento de Identidad:</label>
-          <p class="form-control-plaintext border bg-light px-3 py-2 rounded">${nombreTipoDocActual}</p>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label small fw-bold text-muted">Documento de Identidad:</label>
-          <p class="form-control-plaintext border bg-light px-3 py-2 rounded">${perfilData.documento}</p>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label small fw-bold text-muted">Nombre Completo:</label>
-          <p class="form-control-plaintext border bg-light px-3 py-2 rounded">${perfilData.nombre}</p>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label small fw-bold text-muted">Fecha de Nacimiento:</label>
-          <p class="form-control-plaintext border bg-light px-3 py-2 rounded">${perfilData.fechaNacimiento}</p>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label small fw-bold text-muted">Correo Electrónico (Email):</label>
-          <p class="form-control-plaintext border bg-light px-3 py-2 rounded">${perfilData.email}</p>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label small fw-bold text-muted">Teléfono 1:</label>
-          <p class="form-control-plaintext border bg-light px-3 py-2 rounded">${perfilData.telefono1}</p>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label small fw-bold text-muted">Teléfono 2:</label>
-          <p class="form-control-plaintext border bg-light px-3 py-2 rounded">${perfilData.telefono2}</p>
-        </div>
-      `;
-    } else {
-      perfilContainer.innerHTML = `
-        <div class="col-md-6">
-          <label class="form-label small fw-bold">Tipo de Documento de Identidad:</label>
-          <select class="form-select" id="inputPerfilTipoDoc">
-            ${opcionesTiposDoc}
-          </select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label small fw-bold">Documento de Identidad:</label>
-          <input type="text" class="form-control" id="inputPerfilDoc" value="${perfilData.documento}">
-        </div>
-        <div class="col-md-6">
-          <label class="form-label small fw-bold">Nombre Completo:</label>
-          <input type="text" class="form-control" id="inputPerfilNombre" value="${perfilData.nombre}">
-        </div>
-        <div class="col-md-6">
-          <label class="form-label small fw-bold">Fecha de Nacimiento:</label>
-          <input type="date" class="form-control" id="inputPerfilFecha" value="${perfilData.fechaNacimiento.replace(/\//g, '-')}">
-        </div>
-        <div class="col-md-6">
-          <label class="form-label small fw-bold">Correo Electrónico (Email):</label>
-          <input type="email" class="form-control" id="inputPerfilEmail" value="${perfilData.email}">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label small fw-bold">Teléfono 1:</label>
-          <input type="text" class="form-control" id="inputPerfilTel1" value="${perfilData.telefono1}">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label small fw-bold">Teléfono 2:</label>
-          <input type="text" class="form-control" id="inputPerfilTel2" value="${perfilData.telefono2}">
-        </div>
-      `;
-    }
-  }
-
-  btnToggleEditPerfil.addEventListener('click', async () => {
-    if (!modoEdicionPerfil) {
-      modoEdicionPerfil = true;
-      btnToggleEditPerfil.textContent = 'Guardar Cambios';
-      btnToggleEditPerfil.className = 'btn btn-success text-white';
-      renderPerfil();
-    } else {
-      // Capturar datos editados
-      perfilData.tipoDoc = document.getElementById('inputPerfilTipoDoc').value;
-      perfilData.documento = document.getElementById('inputPerfilDoc').value.trim();
-      perfilData.nombre = document.getElementById('inputPerfilNombre').value.trim();
-      perfilData.fechaNacimiento = document.getElementById('inputPerfilFecha').value;
-      perfilData.email = document.getElementById('inputPerfilEmail').value.trim();
-      perfilData.telefono1 = document.getElementById('inputPerfilTel1').value.trim();
-      perfilData.telefono2 = document.getElementById('inputPerfilTel2').value.trim();
-
-      if (!perfilData.documento || !perfilData.nombre || !perfilData.email || !perfilData.telefono1) {
-        mostrarAlertaBootstrap('Por favor, complete los campos obligatorios del perfil.', 'danger');
-        return;
-      }
-
-      try {
-        const response = await fetch('/api/ahorro/editar_perfil', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ perfil: perfilData, usuario: usuarioActual })
-        });
-        const data = await response.json();
-        if (data && data.success === false) {
-          mostrarAlertaBootstrap('Error al actualizar el perfil en el servidor.', 'danger');
-          return;
-        }
-      } catch (error) {
-        console.error('Error al guardar perfil:', error);
-      }
-
-      mostrarAlertaBootstrap('¡Perfil actualizado con éxito!', 'success');
-      modoEdicionPerfil = false;
-      btnToggleEditPerfil.textContent = 'Editar Perfil';
-      btnToggleEditPerfil.className = 'btn btn-secondary text-white';
-      renderPerfil();
-    }
-  });
 
 
   // 6. SALIR Y CERRAR SESIÓN
