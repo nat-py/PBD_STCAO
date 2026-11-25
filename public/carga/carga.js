@@ -1,83 +1,79 @@
 document.addEventListener("DOMContentLoaded", () => {
+  const btnLecturaDatos = document.getElementById("btn-lectura-datos");
+  const btnProcesoOperaciones = document.getElementById("btn-proceso-operaciones-inicial");
+  let lecturaCompleta = false;
 
-  // 1. IMPORTAR XML (DRAG & DROP Y EXPLORADOR)
-  const dropZone = document.getElementById("dropZoneXml");
-  const fileInput = document.getElementById("fileInputXml");
-  const fileInfo = document.getElementById("fileInfo");
+  btnLecturaDatos.addEventListener("click", async () => {
+    btnLecturaDatos.disabled = true;
+    const textoOriginal = btnLecturaDatos.innerHTML;
+    btnLecturaDatos.innerHTML = '<span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span> Leyendo datos...';
 
-  dropZone.addEventListener("click", () => fileInput.click());
+    try {
+      const respuesta = await fetch('/api/carga/lectura', { method: 'POST' });
+      const resultado = await respuesta.json();
 
-  dropZone.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    dropZone.classList.add("dragover");
-  });
-
-  dropZone.addEventListener("dragleave", () => {
-    dropZone.classList.remove("dragover");
-  });
-
-  dropZone.addEventListener("drop", (e) => {
-    e.preventDefault();
-    dropZone.classList.remove("dragover");
-    if (e.dataTransfer.files.length > 0) {
-      validarYProcesarArchivo(e.dataTransfer.files[0]);
-    }
-  });
-
-  fileInput.addEventListener("change", (e) => {
-    if (e.target.files.length > 0) {
-      validarYProcesarArchivo(e.target.files[0]);
-    }
-  });
-
-  function validarYProcesarArchivo(file) {
-    if (file.type === "text/xml" || file.name.endsWith(".xml")) {
-      fileInfo.innerText = `Archivo: ${file.name}, listo para ser procesado`;
-      validarCatalogoYNoCatalogo(file);
-    } else {
-      // Reemplazo de alert por Bootstrap alert
-      mostrarAlertaBootstrap("Por favor, seleccione únicamente un archivo en formato XML.", "danger");
-      fileInput.value = "";
-    }
-  }
-  
-  async function validarCatalogoYNoCatalogo(file) {
-    const reader = new FileReader();
-
-    reader.onload = async function (e) {
-      const contenidoXML = e.target.result;
-      
-      try {
-          const respuesta = await fetch('/api/carga/catalogos', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ xmlData: contenidoXML })
-          });
-          const resultado = await respuesta.json();
-          if (!respuesta.ok) {
-              // Reemplazo de alert por Bootstrap alert
-              mostrarAlertaBootstrap(resultado.message, "danger");
-              return;
-          }
-          
-          // Reemplazo de alert por Bootstrap alert (éxito)
-          mostrarAlertaBootstrap("Archivo procesado correctamente.", "success");
-
-          // Mandar a login tras un breve momento para que se alcance a ver la alerta
-          setTimeout(() => {
-              window.location.href = "/login/login.html";
-          }, 1500);
-
-      } catch (error) {
-          console.error("Error:", error);
-          mostrarAlertaBootstrap("Ocurrió un error al procesar la solicitud.", "danger");
+      if (!respuesta.ok) {
+        throw new Error(resultado.message || 'No se pudieron leer los datos iniciales.');
       }
-    };
-    reader.readAsText(file);
-  }
 
+      lecturaCompleta = true;
+      btnProcesoOperaciones.classList.remove("d-none");
+      mostrarAlertaBootstrap(resultado.message, "success");
+    } catch (error) {
+      console.error("Error al ejecutar la lectura inicial:", error);
+      mostrarAlertaBootstrap(error.message, "danger");
+    } finally {
+      btnLecturaDatos.disabled = lecturaCompleta;
+      btnLecturaDatos.innerHTML = textoOriginal;
+    }
+  });
+
+  btnProcesoOperaciones.addEventListener("click", async () => {
+    btnProcesoOperaciones.disabled = true;
+    const textoOriginal = btnProcesoOperaciones.innerHTML;
+    btnProcesoOperaciones.innerHTML = '<span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span> Procesando operaciones...';
+
+    try {
+      const respuesta = await fetch('/api/admin/procesoOperaciones', { method: 'POST' });
+      const resultado = await respuesta.json();
+
+      if (!respuesta.ok) {
+        throw new Error(resultado.message || 'No se pudo ejecutar el proceso de operaciones.');
+      }
+
+      const errores = [
+        ["outFlagErrorInsercion", "Se produjo un error al insertar las operaciones."],
+        ["outFlagErrorMovimientos", "Se produjo un error al procesar los movimientos."],
+        ["outFlagErrorEstadosCuenta", "Se produjo un error al actualizar los estados de cuenta."]
+      ];
+      if (!resultado.resultado || typeof resultado.resultado !== "object") {
+        throw new Error("La respuesta del proceso no contiene sus indicadores de resultado.");
+      }
+
+      const erroresEncontrados = errores.filter(([flag]) => {
+        const valor = resultado.resultado[flag];
+        if (![true, false, 0, 1].includes(valor)) {
+          throw new Error(`No se recibió un valor válido para ${flag}.`);
+        }
+        return valor === true || valor === 1;
+      });
+
+      if (erroresEncontrados.length > 0) {
+        erroresEncontrados.forEach(([, mensaje]) => mostrarAlertaBootstrap(mensaje, "danger"));
+      } else {
+        mostrarAlertaBootstrap("El proceso de operaciones se ejecutó correctamente.", "success");
+        setTimeout(() => {
+          window.location.href = "/login/login.html";
+        }, 1500);
+      }
+    } catch (error) {
+      console.error("Error al ejecutar el proceso de operaciones:", error);
+      mostrarAlertaBootstrap(error.message, "danger");
+    } finally {
+      btnProcesoOperaciones.disabled = false;
+      btnProcesoOperaciones.innerHTML = textoOriginal;
+    }
+  });
 });
 
 // Función auxiliar para mostrar alertas flotantes de Bootstrap en la esquina inferior derecha

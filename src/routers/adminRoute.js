@@ -37,6 +37,7 @@ router.get('/tablaCuentaAhorroActivo', adminController.tablaCuentaAhorroActivo);
 router.get('/personas', adminController.administrarPersonas);
 router.get('/bitacora', adminController.leerEventLog);
 
+router.post('/procesoOperaciones', adminController.procesoOperaciones);
 router.post('/salir', loginController.registrarCierreSesion);
 
 module.exports = router;

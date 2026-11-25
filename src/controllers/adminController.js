@@ -748,6 +748,23 @@ async function leerEventLog(req, res) {
   }
 }
 
+async function procesoOperaciones(req, res) {
+  try {
+    const resultado = await adminService.procesoOperaciones();
+    return res.status(200).json({
+      message: 'Proceso batch ejecutado',
+      resultado,
+      success: true
+    });
+  } catch (error) {
+    console.error('Error al ejecutar el proceso batch de operaciones:', error);
+    return res.status(500).json({
+      message: 'No se pudo ejecutar el proceso batch de operaciones',
+      success: false
+    });
+  }
+}
+
 
 module.exports = {
   insertarTipoDocuIdentidad,
@@ -777,5 +794,6 @@ module.exports = {
   editarUsuario,
   eliminarPersona,
   eliminarBeneficiarioReasignar,
-  leerEventLog
+  leerEventLog,
+  procesoOperaciones
 };

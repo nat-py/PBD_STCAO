@@ -12,6 +12,15 @@ async function existenTablasCatalogo()
   return result.output.outFlagExiste; 
 }
 
+async function leerDatos() {
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .output('outFlagError', sql.BIT)
+    .execute('dbo.sp_LecturaDatos');
+
+  return result.output.outFlagError;
+}
+
 /* ------------------------------------------------------ CATALOGOS ------------------------------------------------------ */
 async function insertarTipoDocuIdentidad(id, nombre) 
 {
@@ -340,4 +349,4 @@ async function xmlBD(jsonData) {
 
 
 
-module.exports = { xmlBD };
+module.exports = { xmlBD, leerDatos };

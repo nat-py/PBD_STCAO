@@ -641,6 +641,17 @@ async function leerEventLog(inIdUsuario = null, inIdTipoOperacion = null, inFech
   return result.recordset;
 }
 
+async function procesoOperaciones() {
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .output('outFlagErrorInsercion', sql.BIT)
+    .output('outFlagErrorMovimientos', sql.BIT)
+    .output('outFlagErrorEstadosCuenta', sql.BIT)
+    .execute('dbo.sp_ProcesoOperaciones');
+
+  return result.output;
+}
+
 module.exports = { 
   insertarTipoDocuIdentidad,
   insertarTipoMoneda,
@@ -672,5 +683,6 @@ module.exports = {
   editarCuentaAhorro,
   eliminarCuentaAhorro,
   tablaBeneficiarioActivo,
-  leerEventLog
+  leerEventLog,
+  procesoOperaciones
 };

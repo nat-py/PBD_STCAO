@@ -43,6 +43,51 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", () => modalEnProceso.show());
   });
 
+  const btnProcesoOperaciones = document.getElementById("btn-proceso-operaciones");
+  btnProcesoOperaciones.addEventListener("click", async () => {
+    btnProcesoOperaciones.disabled = true;
+    const textoOriginal = btnProcesoOperaciones.innerHTML;
+    btnProcesoOperaciones.innerHTML = '<span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span> Procesando...';
+
+    try {
+      const response = await fetch("/api/admin/procesoOperaciones", { method: "POST" });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "No se pudo ejecutar el proceso batch de operaciones.");
+      }
+
+      const errores = [
+        ["outFlagErrorInsercion", "Se produjo un error al insertar las operaciones."],
+        ["outFlagErrorMovimientos", "Se produjo un error al procesar los movimientos."],
+        ["outFlagErrorEstadosCuenta", "Se produjo un error al actualizar los estados de cuenta."]
+      ];
+      if (!data.resultado || typeof data.resultado !== "object") {
+        throw new Error("La respuesta del proceso batch no contiene sus indicadores de resultado.");
+      }
+
+      const erroresEncontrados = errores.filter(([flag]) => {
+        const valor = data.resultado[flag];
+        if (![true, false, 0, 1].includes(valor)) {
+          throw new Error(`No se recibió un valor válido para ${flag}.`);
+        }
+        return valor === true || valor === 1;
+      });
+
+      if (erroresEncontrados.length > 0) {
+        erroresEncontrados.forEach(([, mensaje]) => mostrarAlertaBootstrap(mensaje, "danger"));
+      } else {
+        mostrarAlertaBootstrap("El proceso batch de operaciones se ejecutó correctamente.", "success");
+      }
+    } catch (error) {
+      console.error("Error al ejecutar el proceso batch de operaciones:", error);
+      mostrarAlertaBootstrap(error.message, "danger");
+    } finally {
+      btnProcesoOperaciones.disabled = false;
+      btnProcesoOperaciones.innerHTML = textoOriginal;
+    }
+  });
+
   // 2. CARGA Y GESTIÓN DE BITÁCORAS
   let bitacorasData = [];
   const tablaBitacorasBody = document.getElementById("tabla-bitacoras-body");
