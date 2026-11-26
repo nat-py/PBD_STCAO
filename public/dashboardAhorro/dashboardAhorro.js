@@ -34,6 +34,11 @@ document.addEventListener('DOMContentLoaded', () => {
     return fechaStr.substring(0, 10).replace(/-/g, '/');
   }
 
+  function normalizarFechaISO(fechaStr) {
+    if (!fechaStr) return '';
+    return String(fechaStr).substring(0, 10);
+  }
+
   // ==========================================
   // 2B. LISTADO DE MOVIMIENTOS (TOP 5 + VER MÁS + DETALLE)
   // ==========================================
@@ -123,6 +128,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function mapearDetalleMovimiento(mov) {
+    const tipoMov = mov.tipoMovimiento || mov.nombreTipoMovimiento || mov.tipo || 'Movimiento';
+    const fecha = formatearFecha(mov.fecha || mov.fechaMovimiento || '');
+    const accion = String(mov.accionTipoMovimiento || mov.accion || '').trim().toLowerCase();
+    const montoNum = Math.abs(Number(mov.monto ?? mov.saldo ?? 0));
+    const esDebito = accion === 'debito' || accion === 'débito';
+    const esCredito = accion === 'credito' || accion === 'crédito';
+    const montoTexto = Number.isNaN(montoNum)
+      ? (mov.monto ?? '')
+      : `${esDebito ? '-' : esCredito ? '+' : ''}${montoNum.toFixed(2)}`;
+    const idComprobante = mov.idComprobante ?? mov.comprobante ?? 'N/A';
+    const cuentaAcreditado = mov.cuentaAcreditado ?? mov.codigoCuenta ?? mov.cuentaDestino ?? 'N/A';
+    const descripcion = mov.descripcion ?? mov.detalle ?? 'Sin descripción';
+
+    return {
+      tipoMovimiento: tipoMov,
+      fecha,
+      monto: montoTexto,
+      esNegativo: esDebito,
+      idComprobante,
+      cuentaAcreditado,
+      descripcion,
+      saldoPosterior: mov.saldoPosterior ?? mov.nuevoSaldo ?? null
+    };
+  }
+
   function renderMovimientos() {
     encabezadoMovimientos.innerHTML = movimientosExpandido
       ? `
@@ -173,54 +204,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     visibles.forEach((mov) => {
-      const tipoMov = mov.tipoMovimiento || mov.nombreTipoMovimiento || mov.tipo || 'Movimiento';
-      const fecha = formatearFecha(mov.fecha || mov.fechaMovimiento || '');
-      const accion = String(mov.accionTipoMovimiento || mov.accion || '').trim().toLowerCase();
-      const montoNum = Math.abs(Number(mov.monto ?? mov.saldo ?? 0));
-      const esDebito = accion === 'debito' || accion === 'débito';
-      const esCredito = accion === 'credito' || accion === 'crédito';
-      const montoTexto = Number.isNaN(montoNum)
-        ? (mov.monto ?? '')
-        : `${esDebito ? '-' : esCredito ? '+' : ''}${montoNum.toFixed(2)}`;
-      const esNegativo = esDebito;
-      const idComprobante = mov.idComprobante ?? mov.comprobante ?? 'N/A';
-      const cuentaAcreditado = mov.cuentaAcreditado ?? mov.codigoCuenta ?? mov.cuentaDestino ?? 'N/A';
-      const descripcion = mov.descripcion ?? mov.detalle ?? 'Sin descripción';
-
+      const detalle = mapearDetalleMovimiento(mov);
       const tr = document.createElement('tr');
       tr.style.cursor = 'pointer';
 
       if (movimientosExpandido) {
         tr.innerHTML = `
           <td>
-            <div class="fw-semibold">${tipoMov}</div>
-            <div class="fecha-movimiento-sub">${fecha}</div>
+            <div class="fw-semibold">${escaparHTML(detalle.tipoMovimiento)}</div>
+            <div class="fecha-movimiento-sub">${escaparHTML(detalle.fecha)}</div>
           </td>
-          <td class="${esNegativo ? 'text-danger' : 'text-success'} fw-bold">${montoTexto}</td>
-          <td>${idComprobante}</td>
-          <td>${cuentaAcreditado}</td>
-          <td>${descripcion}</td>
+          <td class="${detalle.esNegativo ? 'text-danger' : 'text-success'} fw-bold">${escaparHTML(detalle.monto)}</td>
+          <td>${escaparHTML(detalle.idComprobante)}</td>
+          <td>${escaparHTML(detalle.cuentaAcreditado)}</td>
+          <td>${escaparHTML(detalle.descripcion)}</td>
         `;
       } else {
         tr.innerHTML = `
           <td>
-            <div class="fw-semibold">${tipoMov}</div>
-            <div class="fecha-movimiento-sub">${fecha}</div>
+            <div class="fw-semibold">${escaparHTML(detalle.tipoMovimiento)}</div>
+            <div class="fecha-movimiento-sub">${escaparHTML(detalle.fecha)}</div>
           </td>
-          <td class="${esNegativo ? 'text-danger' : 'text-success'} fw-bold">${montoTexto}</td>
+          <td class="${detalle.esNegativo ? 'text-danger' : 'text-success'} fw-bold">${escaparHTML(detalle.monto)}</td>
         `;
       }
 
       tr.addEventListener('click', () => {
-        abrirDetalleMovimiento({
-          tipoMovimiento: tipoMov,
-          fecha,
-          monto: montoTexto,
-          idComprobante,
-          cuentaAcreditado,
-          descripcion,
-          saldoPosterior: mov.saldoPosterior ?? mov.nuevoSaldo ?? null
-        });
+        abrirDetalleMovimiento(detalle);
       });
 
       cuerpoMovimientos.appendChild(tr);
@@ -232,32 +242,32 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="list-group list-group-flush">
         <div class="list-group-item d-flex justify-content-between px-0">
           <span class="text-muted fw-semibold">Tipo de Movimiento:</span>
-          <span class="fw-bold">${detalle.tipoMovimiento}</span>
+          <span class="fw-bold">${escaparHTML(detalle.tipoMovimiento)}</span>
         </div>
         <div class="list-group-item d-flex justify-content-between px-0">
           <span class="text-muted fw-semibold">Fecha:</span>
-          <span>${detalle.fecha || 'N/A'}</span>
+          <span>${escaparHTML(detalle.fecha || 'N/A')}</span>
         </div>
         <div class="list-group-item d-flex justify-content-between px-0">
           <span class="text-muted fw-semibold">Monto:</span>
-          <span class="fw-bold text-primary">${detalle.monto}</span>
+          <span class="fw-bold text-primary">${escaparHTML(detalle.monto)}</span>
         </div>
         <div class="list-group-item d-flex justify-content-between px-0">
           <span class="text-muted fw-semibold">ID Comprobante:</span>
-          <span>${detalle.idComprobante}</span>
+          <span>${escaparHTML(detalle.idComprobante)}</span>
         </div>
         <div class="list-group-item d-flex justify-content-between px-0">
           <span class="text-muted fw-semibold">Cuenta Acreditado:</span>
-          <span>${detalle.cuentaAcreditado}</span>
+          <span>${escaparHTML(detalle.cuentaAcreditado)}</span>
         </div>
         <div class="list-group-item px-0">
           <div class="text-muted fw-semibold mb-1">Descripción:</div>
-          <div>${detalle.descripcion}</div>
+          <div>${escaparHTML(detalle.descripcion)}</div>
         </div>
         ${detalle.saldoPosterior !== null ? `
           <div class="list-group-item d-flex justify-content-between px-0">
             <span class="text-muted fw-semibold">Saldo Posterior:</span>
-            <span class="fw-bold">${detalle.saldoPosterior}</span>
+            <span class="fw-bold">${escaparHTML(detalle.saldoPosterior)}</span>
           </div>
         ` : ''}
       </div>
@@ -296,6 +306,202 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ==========================================
+  // 2C. ESTADOS DE CUENTA (RESUMEN + DESGLOSE + MOVIMIENTOS DEL ESTADO)
+  // ==========================================
+  const modalDetalleEstadoCuentaEl = document.getElementById('modalDetalleEstadoCuenta');
+  const modalDetalleEstadoCuenta = new bootstrap.Modal(modalDetalleEstadoCuentaEl);
+  const cuerpoDetalleEstadoCuenta = document.getElementById('cuerpoDetalleEstadoCuenta');
+  const btnVerMovimientosEstado = document.getElementById('btnVerMovimientosEstado');
+
+  const modalMovimientosEstadoEl = document.getElementById('modalMovimientosEstado');
+  const modalMovimientosEstado = new bootstrap.Modal(modalMovimientosEstadoEl);
+  const tituloMovimientosEstado = document.getElementById('tituloMovimientosEstado');
+  const cuerpoMovimientosEstado = document.getElementById('cuerpoMovimientosEstado');
+
+  let estadoCuentaSeleccionado = null;
+
+  async function registrarEventoEstadoCuenta(idTipoOperacion) {
+    const response = await fetch('/api/ahorro/registrar_evento_estado', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario: usuarioActual, idTipoOperacion })
+    });
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || data.error || 'No se pudo registrar la operación');
+    }
+  }
+
+  function mostrarErrorRegistroEstado(error, tipoOperacion) {
+    console.error(`Error al registrar la operación ${tipoOperacion} del estado de cuenta:`, error);
+    mostrarAlertaBootstrap('No se pudo registrar la consulta del estado de cuenta.', 'danger');
+  }
+
+  function abrirDetalleEstadoCuenta(cuenta) {
+    estadoCuentaSeleccionado = cuenta;
+
+    cuerpoDetalleEstadoCuenta.innerHTML = `
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="p-3 bg-light rounded">
+            <div class="small text-muted fw-semibold">Fecha Inicio</div>
+            <div class="fw-bold">${escaparHTML(formatearFecha(cuenta.fechaIni) || 'N/A')}</div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="p-3 bg-light rounded">
+            <div class="small text-muted fw-semibold">Fecha Fin</div>
+            <div class="fw-bold">${escaparHTML(formatearFecha(cuenta.fechaFin) || 'N/A')}</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded">
+            <div class="small text-muted fw-semibold">Saldo Inicial</div>
+            <div class="fw-bold">${escaparHTML(cuenta.saldoIni ?? '--')}</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded">
+            <div class="small text-muted fw-semibold">Saldo Mínimo</div>
+            <div class="fw-bold">${escaparHTML(cuenta.saldoMini ?? '--')}</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded">
+            <div class="small text-muted fw-semibold">Saldo Final</div>
+            <div class="fw-bold text-primary">${escaparHTML(cuenta.saldoFin ?? '--')}</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded">
+            <div class="small text-muted fw-semibold">Interés Acumulado</div>
+            <div class="fw-bold text-success">${escaparHTML(cuenta.interesesAcumulados ?? '--')}</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded">
+            <div class="small text-muted fw-semibold">Cant. Retiros</div>
+            <div class="fw-bold">${escaparHTML(cuenta.cantidadRetiros ?? 0)}</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="p-3 bg-light rounded">
+            <div class="small text-muted fw-semibold">Cant. Depósitos</div>
+            <div class="fw-bold">${escaparHTML(cuenta.cantidadDepositos ?? 0)}</div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="p-3 bg-light rounded">
+            <div class="small text-muted fw-semibold">Cant. SINPE Enviados</div>
+            <div class="fw-bold">${escaparHTML(cuenta.cantidadSinpeSalientes ?? 0)}</div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="p-3 bg-light rounded">
+            <div class="small text-muted fw-semibold">Cant. SINPE Recibidos</div>
+            <div class="fw-bold">${escaparHTML(cuenta.cantidadSinpeEntrantes ?? 0)}</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    modalDetalleEstadoCuenta.show();
+  }
+
+  async function obtenerMovimientosDeEstado(cuenta) {
+    const fechaIniISO = normalizarFechaISO(cuenta.fechaIni);
+    const fechaFinISO = normalizarFechaISO(cuenta.fechaFin);
+
+    try {
+      const response = await fetch('/api/ahorro/movimientos_estado_cuenta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          numCuenta,
+          fechaIni: cuenta.fechaIni,
+          fechaFin: cuenta.fechaFin
+        })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && Array.isArray(data.movimientos)) {
+          return data.movimientos;
+        }
+      }
+    } catch (_) {
+      // Fallback al listado cargado si el endpoint específico no está disponible
+    }
+
+    return movimientos.filter((mov) => {
+      const fMov = normalizarFechaISO(mov.fecha || mov.fechaMovimiento || '');
+      if (!fMov) return false;
+      if (fechaIniISO && fMov < fechaIniISO) return false;
+      if (fechaFinISO && fMov > fechaFinISO) return false;
+      return true;
+    });
+  }
+
+  btnVerMovimientosEstado.addEventListener('click', async () => {
+    if (!estadoCuentaSeleccionado) return;
+
+    registrarEventoEstadoCuenta('8').catch((error) => mostrarErrorRegistroEstado(error, 8));
+
+    const iniTexto = formatearFecha(estadoCuentaSeleccionado.fechaIni);
+    const finTexto = formatearFecha(estadoCuentaSeleccionado.fechaFin);
+    tituloMovimientosEstado.innerHTML = `
+      <i class="bi bi-list-ul me-2"></i>Movimientos del Estado (${escaparHTML(iniTexto)} - ${escaparHTML(finTexto)})
+    `;
+
+    cuerpoMovimientosEstado.innerHTML = `
+      <div class="text-center text-muted py-4">Cargando movimientos...</div>
+    `;
+
+    modalDetalleEstadoCuenta.hide();
+    modalMovimientosEstado.show();
+
+    const listaEstado = await obtenerMovimientosDeEstado(estadoCuentaSeleccionado);
+
+    if (!Array.isArray(listaEstado) || listaEstado.length === 0) {
+      cuerpoMovimientosEstado.innerHTML = `
+        <div class="text-center text-muted py-4">No hay movimientos en este estado de cuenta</div>
+      `;
+      return;
+    }
+
+    cuerpoMovimientosEstado.innerHTML = `
+      <table class="table table-hover align-middle bg-white rounded shadow-sm mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Tipo Movimiento</th>
+            <th>Monto</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyMovimientosEstado"></tbody>
+      </table>
+    `;
+
+    const tbodyEstado = document.getElementById('tbodyMovimientosEstado');
+    listaEstado.forEach((mov) => {
+      const detalle = mapearDetalleMovimiento(mov);
+      const tr = document.createElement('tr');
+      tr.style.cursor = 'pointer';
+      tr.innerHTML = `
+        <td>
+          <div class="fw-semibold">${escaparHTML(detalle.tipoMovimiento)}</div>
+          <div class="fecha-movimiento-sub">${escaparHTML(detalle.fecha)}</div>
+        </td>
+        <td class="${detalle.esNegativo ? 'text-danger' : 'text-success'} fw-bold">${escaparHTML(detalle.monto)}</td>
+      `;
+      tr.addEventListener('click', () => {
+        modalMovimientosEstado.hide();
+        abrirDetalleMovimiento(detalle);
+      });
+      tbodyEstado.appendChild(tr);
+    });
+  });
+
   // Obtener estados de cuenta
   async function recibirEstadosCuentaAPI() {
     try {
@@ -318,40 +524,20 @@ document.addEventListener('DOMContentLoaded', () => {
           tr.style.cursor = 'pointer';
 
           tr.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${formatearFecha(cuenta.fechaIni)}</td>
-            <td>${formatearFecha(cuenta.fechaFin)}</td>
-            <td>${cuenta.saldoIni}</td>
-            <td>${cuenta.saldoMini}</td>
-            <td>${cuenta.saldoFin}</td>
-            <td>${cuenta.interesesAcumulados}</td>
-            <td>${cuenta.cantidadRetiros}</td>
-            <td>${cuenta.cantidadDepositos}</td>
-            <td>${cuenta.cantidadSinpeEntrantes}</td>
-            <td>${cuenta.cantidadSinpeSalientes}</td>
+            <td>${escaparHTML(formatearFecha(cuenta.fechaIni))}</td>
+            <td>${escaparHTML(formatearFecha(cuenta.fechaFin))}</td>
+            <td>${escaparHTML(cuenta.saldoMini)}</td>
+            <td>${escaparHTML(cuenta.interesesAcumulados)}</td>
           `;
           tbody.appendChild(tr);
           tr.addEventListener('click', () => {
-            registrarEstado();
-            modalProceso.show();
+            abrirDetalleEstadoCuenta(cuenta);
+            registrarEventoEstadoCuenta('7').catch((error) => mostrarErrorRegistroEstado(error, 7));
           });
         });
       }
     } catch (error) {
       console.error('Error al recibir estados de cuenta:', error);
-    }
-  }
-
-  // Seguimiento de estado de cuenta
-  async function registrarEstado() {
-    try {
-      await fetch('/api/ahorro/registrar_estado', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario: usuarioActual })
-      });
-    } catch (error) {
-      console.error('Error al obtener la bitácora de estados de cuenta:', error);
     }
   }
 

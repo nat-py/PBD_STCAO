@@ -1,5 +1,4 @@
 const ahorroService = require('../services/ahorroService');
-const bitacoraService = require('../services/bitacora');
 
 async function top8_EstadoCuenta_AsociadoCuenta(req, res) {
   const { numCuenta } = req.body;
@@ -219,14 +218,49 @@ async function guardarMovimiento(req, res) {
   }
 }
 
-async function registrarEstado(req, res) {
+async function registrarEventoEstadoCuenta(req, res) {
+  const { usuario, idTipoOperacion } = req.body;
+
+  if (!usuario?.trim()) {
+    return res.status(400).json({
+      message: 'El usuario es requerido',
+      success: false
+    });
+  }
+
+  const tipoOperacion = String(idTipoOperacion || '');
+  if (!['7', '8'].includes(tipoOperacion)) {
+    return res.status(400).json({
+      message: 'El tipo de operación debe ser 7 u 8',
+      success: false
+    });
+  }
+
   try {
-    const { usuario } = req.body;
-    bitacoraService.registrarBitacora('consultaEstadoCuenta', usuario, req.ip);
-    res.status(200).json({ message: 'Bitácora de estados de cuenta obtenida correctamente', success: true });
+    const resultado = await ahorroService.registrarEventoEstadoCuenta(
+      usuario.trim(),
+      tipoOperacion,
+      req.ip
+    );
+
+    if (resultado.usuarioNoExiste) {
+      return res.status(404).json({
+        message: 'El usuario no existe',
+        success: false
+      });
+    }
+
+    return res.status(200).json({
+      message: 'Evento de estado de cuenta registrado correctamente',
+      idEventLog: resultado.idEventLog,
+      success: true
+    });
   } catch (error) {
-    console.error('Error al obtener la bitácora de estados de cuenta:', error);
-    res.status(500).json({ error: 'Error al obtener la bitácora de estados de cuenta' });
+    console.error('Error al registrar el evento del estado de cuenta:', error);
+    return res.status(500).json({
+      error: 'Error al registrar el evento del estado de cuenta',
+      success: false
+    });
   }
 }
 
@@ -356,5 +390,5 @@ module.exports = {
   editarBeneficiarioDocuDiferente,
   editarBeneficiarioDocuIgual,
   buscarPersonaPorCedula,
-  registrarEstado 
+  registrarEventoEstadoCuenta
 };

@@ -145,17 +145,10 @@
             <table class="table table-hover align-middle bg-white rounded shadow-sm" id="tablaEstadosCuenta">
               <thead class="table-light">
                 <tr>
-                  <th>#</th>
                   <th>Fecha Inicio</th>
                   <th>Fecha Fin</th>
-                  <th>Saldo Inicial</th>
                   <th>Saldo Mínimo</th>
-                  <th>Saldo Final</th>
                   <th>Interés Acumulado</th>
-                  <th>Cant. Retiros</th>
-                  <th>Cant. Depósitos</th>
-                  <th>Cant. SINPES env</th>
-                  <th>Cant. SINPES rec</th>
                 </tr>
               </thead>
               <tbody>
@@ -179,6 +172,49 @@
         </section>
 
       </main>
+    </div>
+  </div>
+
+  <!-- MODAL DETALLE ESTADO DE CUENTA -->
+  <div class="modal fade" id="modalDetalleEstadoCuenta" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content p-4">
+        <div class="modal-header border-0 pb-2">
+          <h5 class="modal-title fw-bold text-primary">
+            <i class="bi bi-file-earmark-spreadsheet me-2"></i>Detalle del Estado de Cuenta
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="cuerpoDetalleEstadoCuenta">
+          <!-- Detalle completo dinámico -->
+        </div>
+        <div class="modal-footer border-0 pt-2 d-flex justify-content-between">
+          <button type="button" class="btn btn-outline-primary" id="btnVerMovimientosEstado">
+            <i class="bi bi-arrow-left-right me-1"></i>Ver movimientos de este estado
+          </button>
+          <button type="button" class="btn btn-secondary text-white px-4" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL MOVIMIENTOS DE UN ESTADO DE CUENTA -->
+  <div class="modal fade" id="modalMovimientosEstado" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content p-4">
+        <div class="modal-header border-0 pb-2">
+          <h5 class="modal-title fw-bold text-primary" id="tituloMovimientosEstado">
+            <i class="bi bi-list-ul me-2"></i>Movimientos del Estado de Cuenta
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="max-height: 440px; overflow-y: auto;" id="cuerpoMovimientosEstado">
+          <!-- Lista de movimientos del estado -->
+        </div>
+        <div class="modal-footer border-0 pt-2">
+          <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
     </div>
   </div>
 

@@ -13,7 +13,7 @@ router.post('/tipos_movimiento', ahorroController.obtenerTiposMovimientoActivos)
 router.post('/movimientos', ahorroController.movimientosCuentaUltimos4Meses);
 router.post('/guardar_movimiento', ahorroController.guardarMovimiento);
 router.post('/salir', loginController.registrarCierreSesion);
-router.post('/registrar_estado', ahorroController.registrarEstado);
+router.post('/registrar_evento_estado', ahorroController.registrarEventoEstadoCuenta);
 router.post('/insertar_beneficiario', ahorroController.insertarBeneficiario);
 router.post('/buscar_persona', ahorroController.buscarPersonaPorCedula);
 router.put('/editar_beneficiario_DocuDiferente', ahorroController.editarBeneficiarioDocuDiferente);

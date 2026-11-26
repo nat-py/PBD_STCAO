@@ -10,6 +10,42 @@ async function top8_EstadoCuenta_AsociadoCuenta(numCuenta)
   return result.recordset; //record es toda la respuesta dada por la BD, recordset es el conjunto de registros que devuelve el SP
 }
 
+async function registrarEventoEstadoCuenta(usuario, tipoOperacion, ip)
+{
+  const pool = await poolPromise;
+  const usuarioResult = await pool.request()
+    .input('inUser', sql.VarChar(20), usuario)
+    .query('SELECT TOP (1) id FROM dbo.Usuario WHERE usuario = @inUser');
+
+  const idUsuario = usuarioResult.recordset[0]?.id;
+  if (idUsuario == null || !Number.isInteger(Number(idUsuario))) {
+    return { usuarioNoExiste: true };
+  }
+
+  const result = await pool.request()
+    .input('inIdUsuario', sql.Int, Number(idUsuario))
+    .input('inIdTipoOperacion', sql.VarChar(4), tipoOperacion)
+    .input('inIP', sql.VarChar(32), ip)
+    .input('inJsonAntes', sql.NVarChar(sql.MAX), null)
+    .input('inJsonDespues', sql.NVarChar(sql.MAX), null)
+    .output('outIdEventLog', sql.Int)
+    .output('outFlagError', sql.BIT)
+    .execute('dbo.sp_GuardarEventLog');
+
+  if (result.output.outFlagError) {
+    throw new Error('El procedimiento sp_GuardarEventLog no pudo guardar el evento');
+  }
+
+  if (result.output.outIdEventLog == null || !Number.isInteger(Number(result.output.outIdEventLog))) {
+    throw new Error('sp_GuardarEventLog no devolvió el identificador del evento');
+  }
+
+  return {
+    usuarioNoExiste: false,
+    idEventLog: result.output.outIdEventLog
+  };
+}
+
 async function beneficiariosAsociadosCuenta(numCuenta) 
 {
   const pool = await poolPromise;
@@ -260,6 +296,7 @@ async function buscarPersonaPorCedula(valorDocuIdentidad) {
 
 module.exports = { 
   top8_EstadoCuenta_AsociadoCuenta, 
+  registrarEventoEstadoCuenta,
   beneficiariosAsociadosCuenta, 
   personaAsociadaUsuario,
   eliminarBeneficiario, 
